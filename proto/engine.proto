@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package engine;
+
+option go_package = "eval/proto/engine";
+
+message EvalRequest {
+    int64 number = 1;
+}
+
+message EvalResponse {
+    int64 number = 1;
+}
+
+service EngineService {
+    rpc Eval(EvalRequest) returns (EvalResponse) {}
+}

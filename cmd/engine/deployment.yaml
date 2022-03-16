@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eval-engine-deployment
+  labels:
+    app: eval-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eval-engine
+  template:
+    metadata:
+      labels:
+        app: eval-engine
+    spec:
+      containers:
+      - name: engine
+        image: localhost:5001/main:dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eval-engine
+spec:
+  selector:
+    app: eval-engine
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  type: NodePort

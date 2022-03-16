@@ -1,0 +1,40 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "engine_proto",
+    srcs = ["engine.proto"],
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "engine_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "eval/proto/engine",
+    proto = ":engine_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "go_default_library",
+    embed = [":engine_go_proto"],
+    importpath = "eval/proto/engine",
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "engin_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "eval/proto/engin",
+    proto = ":engine_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_proto_library(
+    name = "proto_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "eval/proto",
+    proto = ":engine_proto",
+    visibility = ["//visibility:public"],
+)
