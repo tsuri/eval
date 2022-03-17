@@ -10,7 +10,7 @@ load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
 go_library(
     name = "go_default_library",
     srcs = ["main.go"],
-    importpath = "eval/cmd/engine",
+    importpath = "eval/cmd/grunt",
     visibility = ["//visibility:private"],
     deps = [
         "//proto:go_default_library",
@@ -20,7 +20,7 @@ go_library(
 )
 
 go_binary(
-    name = "engine",
+    name = "grunt",
     embed = [":go_default_library"],
     visibility = ["//visibility:public"],
 )
@@ -29,11 +29,11 @@ container_image(
     name = "container",
     base = "@distroless_base_debian10//image",
     cmd = [
-        "/dist/engine",
+        "/dist/grunt",
     ],
     directory = "/dist",
     files = [
-        ":engine",
+        ":grunt",
     ],
     visibility = ["//:__pkg__"],
     workdir = "/dist",

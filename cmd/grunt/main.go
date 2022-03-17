@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	// only for testing
 	pb "eval/proto/engine"
 
 	"google.golang.org/grpc"
@@ -17,32 +18,13 @@ const (
 
 type server struct{}
 
-func grunt(n int64) int64 {
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(
-		"eval-grunt.default.svc.cluster.local:10051",
-		grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	defer conn.Close()
-
-	c := pb.NewEngineServiceClient(conn)
-	response, err := c.Eval(context.Background(), &pb.EvalRequest{Number: n})
-	if err != nil {
-		log.Fatalf("Error when calling Eval: %s", err)
-	}
-	log.Printf("Response from grunt: %s", response.Number)
-	return response.Number
-}
-
 func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse, error) {
-	return &pb.EvalResponse{Number: grunt(in.Number) + 1}, nil
+
+	return &pb.EvalResponse{Number: in.Number + 1}, nil
 }
 
 func main() {
-	log.Print("Hello there")
-
+	log.Print("Hello there, this is a grunt squad")
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

@@ -1,0 +1,9 @@
+* Week 1
+  - initial bazel setup for go, protobufs, docker and kubernetes rules
+  - setup of a local kubernetes cluster using kind
+  - beginning of a engine service, using gRPC
+  - beginning of evalctl
+  - beginning of grunt, the executor
+
+* TODO
+  - rename grunt to grunt-squad

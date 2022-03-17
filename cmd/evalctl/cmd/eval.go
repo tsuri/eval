@@ -31,7 +31,7 @@ var evalCmd = &cobra.Command{
 		fmt.Println("Eval " + args[0])
 
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial(":50051", grpc.WithInsecure())
+		conn, err = grpc.Dial("localhost:55555", grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
