@@ -14,11 +14,18 @@ spec:
       labels:
         app: eval-engine
     spec:
+      volumes:
+      - name: data
+        hostPath:
+          path: /data  # matches kind containerPath:
       containers:
       - name: engine
         image: localhost:5001/main:dev
         ports:
         - containerPort: 50051
+        volumeMounts:
+        - name: data
+          mountPath: /data
 ---
 apiVersion: v1
 kind: Service

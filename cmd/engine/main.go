@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net"
+	"os"
 
 	pb "eval/proto/engine"
 
@@ -16,6 +18,12 @@ const (
 )
 
 type server struct{}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
+}
 
 func grunt(n int64) int64 {
 	var conn *grpc.ClientConn
@@ -42,6 +50,18 @@ func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse
 
 func main() {
 	log.Print("Hello there")
+
+	d1 := []byte("hello\ngo\n")
+	err := os.WriteFile("/data/hello.txt", d1, 0644)
+	check(err)
+	log.Print("Done")
+
+	fileBytes, err := ioutil.ReadFile("/data/hello.txt")
+	check(err)
+	fileString := string(fileBytes)
+	log.Print("------------\n")
+	log.Print(fileString)
+	log.Print("------------\n")
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

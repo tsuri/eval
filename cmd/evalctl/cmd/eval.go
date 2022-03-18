@@ -31,7 +31,8 @@ var evalCmd = &cobra.Command{
 		fmt.Println("Eval " + args[0])
 
 		var conn *grpc.ClientConn
-		conn, err = grpc.Dial("localhost:55555", grpc.WithInsecure())
+		//		conn, err = grpc.Dial("localhost:55555", grpc.WithInsecure())
+		conn, err = grpc.Dial("engine:443", grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
@@ -41,7 +42,7 @@ var evalCmd = &cobra.Command{
 		print(c)
 		response, err := c.Eval(context.Background(), &pb.EvalRequest{Number: n})
 		if err != nil {
-			log.Fatalf("Error when calling SayHello: %s", err)
+			log.Fatalf("Error when calling Eval: %s", err)
 		}
 		log.Printf("Response from server: %s", response.Number)
 

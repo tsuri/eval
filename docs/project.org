@@ -4,6 +4,28 @@
   - beginning of a engine service, using gRPC
   - beginning of evalctl
   - beginning of grunt, the executor
+  - add storage to the cluster (we have
+    host /data/cluster
+    mounted as /data in workers and
+    made visible as /data to pods)
+  - add an ingress to kind cluster
+    given up on ambassador, nginx work fine (althouh in retrospect it might have been me
+    trying to pass through non-standard ports in 'kind' without touching the configuration
+    of ambassador. Anyhow, nginx now works w/ port 80 and 443
 
 * TODO
+  - make a single command to deploy all services. Either bazel or a script.
   - rename grunt to grunt-squad
+  - add a cache service
+  - separate proto bufs
+  - verify nginx ingress with gRPC traffic to actual services instead of the demo deployments. Usual TLS problems
+
+* TOCONSIDER
+  - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
+  - k8s golang framework: https://github.com/openfaas/faas
+  - kv store: https://github.com/dgraph-io/badger
+  - golang kit: https://github.com/go-kit/kit (examples: https://github.com/go-kit/examples)
+  - ML: https://platform9.com/blog/kubernetes-for-machine-learning/
+  - https://nickjanetakis.com/blog/configuring-a-kind-cluster-with-nginx-ingress-using-terraform-and-helm
+  - kind, grpc, nginx: https://github.com/mahendrabagul/golang2021-meetup
+  - certificates: https://cert-manager.io/docs/configuration/selfsigned/

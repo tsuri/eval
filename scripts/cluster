@@ -25,9 +25,15 @@ containerdConfigPatches:
 nodes:
 - role: control-plane
 - role: worker
+  extraMounts:
+  - hostPath: /data/eval
+    containerPath: /data
   extraPortMappings:
-  - containerPort: 50051
-    hostPort: 50051
+  - containerPort: 80
+    hostPort: 80
+    protocol: TCP
+  - containerPort: 443
+    hostPort: 443
     protocol: TCP
   kubeadmConfigPatches:
   - |
@@ -60,6 +66,19 @@ docker pull gcr.io/google-samples/hello-app:1.0
 docker tag gcr.io/google-samples/hello-app:1.0 localhost:5001/hello-app:1.0
 docker push localhost:5001/hello-app:1.0
 kubectl create deployment hello-server --image=localhost:5001/hello-app:1.0
+
+kubectl apply -f deployments/nginx-ingress.yaml
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller  --timeout=90s
+
+kubectl apply -f deployments/demo.yaml
+
+kubectl wait --namespace default --for=condition=ready pod --selector=app=foo  --timeout=90s
+kubectl wait --namespace default --for=condition=ready pod --selector=app=bar  --timeout=90s
+
+sleep 30
+
+curl localhost/foo
+curl localhost/bar
 
 
 exit 0
