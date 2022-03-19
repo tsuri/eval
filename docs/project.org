@@ -19,6 +19,7 @@
   - add a cache service
   - separate proto bufs
   - verify nginx ingress with gRPC traffic to actual services instead of the demo deployments. Usual TLS problems
+  - document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
 
 * TOCONSIDER
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
@@ -29,3 +30,7 @@
   - https://nickjanetakis.com/blog/configuring-a-kind-cluster-with-nginx-ingress-using-terraform-and-helm
   - kind, grpc, nginx: https://github.com/mahendrabagul/golang2021-meetup
   - certificates: https://cert-manager.io/docs/configuration/selfsigned/
+  - https://agrimprasad.com/post/supercharge-kubernetes-setup/
+  - https://github.com/derailed/popeye
+  - https://github.com/wercker/stern
+  - https://loft.sh/blog/kubernetes-nginx-ingress-10-useful-configuration-options/

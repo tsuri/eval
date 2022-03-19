@@ -31,15 +31,15 @@ var evalCmd = &cobra.Command{
 		fmt.Println("Eval " + args[0])
 
 		var conn *grpc.ClientConn
-		//		conn, err = grpc.Dial("localhost:55555", grpc.WithInsecure())
-		conn, err = grpc.Dial("engine:443", grpc.WithInsecure())
+		conn, err = grpc.Dial("localhost:50051", grpc.WithInsecure())
+		// conn, err = grpc.Dial("engine.eval.net:443", grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
 		defer conn.Close()
 
 		c := pb.NewEngineServiceClient(conn)
-		print(c)
+		fmt.Print(c)
 		response, err := c.Eval(context.Background(), &pb.EvalRequest{Number: n})
 		if err != nil {
 			log.Fatalf("Error when calling Eval: %s", err)

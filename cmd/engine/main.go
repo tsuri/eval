@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"io/ioutil"
 	"log"
 	"net"
-	"os"
 
 	pb "eval/proto/engine"
 
@@ -14,7 +12,7 @@ import (
 )
 
 const (
-	port = ":50051"
+	port = "0.0.0.0:50051"
 )
 
 type server struct{}
@@ -27,11 +25,14 @@ func check(e error) {
 
 func grunt(n int64) int64 {
 	var conn *grpc.ClientConn
+	log.Printf("Asking grunt")
+	return 42
 	conn, err := grpc.Dial(
 		"eval-grunt.default.svc.cluster.local:10051",
 		grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %s", err)
+		//		log.Fatalf("did not connect: %s", err)
+		return 42
 	}
 	defer conn.Close()
 
@@ -45,23 +46,24 @@ func grunt(n int64) int64 {
 }
 
 func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse, error) {
+	log.Printf("Eval service")
 	return &pb.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 
 func main() {
 	log.Print("Hello there")
 
-	d1 := []byte("hello\ngo\n")
-	err := os.WriteFile("/data/hello.txt", d1, 0644)
-	check(err)
-	log.Print("Done")
+	// d1 := []byte("hello\ngo\n")
+	// err := os.WriteFile("/data/hello.txt", d1, 0644)
+	// check(err)
+	// log.Print("Done")
 
-	fileBytes, err := ioutil.ReadFile("/data/hello.txt")
-	check(err)
-	fileString := string(fileBytes)
-	log.Print("------------\n")
-	log.Print(fileString)
-	log.Print("------------\n")
+	// fileBytes, err := ioutil.ReadFile("/data/hello.txt")
+	// check(err)
+	// fileString := string(fileBytes)
+	// log.Print("------------\n")
+	// log.Print(fileString)
+	// log.Print("------------\n")
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
