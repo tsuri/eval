@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: eval-engine-deployment
+  namespace: eval
+  name: engine
   labels:
     app: eval-engine
 spec:
@@ -18,20 +19,39 @@ spec:
       - name: data
         hostPath:
           path: /data  # matches kind containerPath:
+      - name: grpc-server-certificates
+        secret:
+          secretName: grpc-server-certificates
       containers:
       - name: engine
         image: localhost:5001/main:dev
         ports:
         - containerPort: 50051
           name: grpc
+        readinessProbe:
+          tcpSocket:
+            port: grpc
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        livenessProbe:
+          tcpSocket:
+            port: grpc
+          initialDelaySeconds: 15
+          periodSeconds: 30
         volumeMounts:
         - name: data
           mountPath: /data
+        - name: grpc-server-certificates
+          mountPath: /app/Certs/
+          readOnly: true
 ---
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: eval
   name: eval-engine
+  labels:
+    app: eval-engine
 spec:
   selector:
     app: eval-engine
@@ -39,3 +59,4 @@ spec:
     - name: grpc
       port: 50051
       targetPort: 50051
+  type: NodePort

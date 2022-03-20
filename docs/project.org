@@ -34,3 +34,7 @@
   - https://github.com/derailed/popeye
   - https://github.com/wercker/stern
   - https://loft.sh/blog/kubernetes-nginx-ingress-10-useful-configuration-options/
+  - This looks much better than the kubernetes rules: https://github.com/adobe/rules_gitops
+  - https://blog.pilosus.org/posts/2019/05/26/k8s-ingress-troubleshooting/
+  - https://ddcode.net/2019/06/30/bring-in-grpc-ca-based-tls-certificate-authentication/
+  - https://go.dev/src/crypto/tls/generate_cert.go#L126

@@ -60,4 +60,6 @@ k8s_object(
     kind = "deployment",
     # A template of a Kubernetes Deployment object yaml.
     template = ":deployment.yaml",
+    # really should be only //:eval but we a package_group to avoid dependency cycles
+    visibility = ["//visibility:public"],
 )
