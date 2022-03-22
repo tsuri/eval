@@ -30,7 +30,7 @@ let generateCredentials = () => {
 }
 
 let grpcClient = new EmployeeService(`golang2021.conf42.com:443`,
-    generateCredentials());
+                                     generateCredentials());
 
 let employeeId;
 
