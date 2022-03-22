@@ -1,4 +1,5 @@
-* Week 1
+* Development Log
+** Week 1
   - initial bazel setup for go, protobufs, docker and kubernetes rules
   - setup of a local kubernetes cluster using kind
   - beginning of a engine service, using gRPC
@@ -12,9 +13,16 @@
     given up on ambassador, nginx work fine (althouh in retrospect it might have been me
     trying to pass through non-standard ports in 'kind' without touching the configuration
     of ambassador. Anyhow, nginx now works w/ port 80 and 443
+  - dashboard
+  - make a single command to deploy all services. Either bazel or a script. Done, bazel "//:eval.apply" target
+  - added a nodejs client tha shows that mTLS and ingress do work. This was one random setup I got from the
+    intertubes. Why the golang client doesn't work is still a mistery
+
+** Week 2
+  -
+
 
 * TODO
-  - make a single command to deploy all services. Either bazel or a script.
   - rename grunt to grunt-squad
   - add a cache service
   - separate proto bufs
@@ -38,3 +46,5 @@
   - https://blog.pilosus.org/posts/2019/05/26/k8s-ingress-troubleshooting/
   - https://ddcode.net/2019/06/30/bring-in-grpc-ca-based-tls-certificate-authentication/
   - https://go.dev/src/crypto/tls/generate_cert.go#L126
+  - credential creation: https://youngkin.github.io/post/gohttpsclientserver/
+  - mTLS https://www.handracs.info/blog/grpcmtlsgo/
