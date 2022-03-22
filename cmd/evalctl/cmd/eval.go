@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"strconv"
 
 	pb "eval/proto/engine"
@@ -20,10 +21,16 @@ var (
 	conn *grpc.ClientConn
 )
 
-func getConnection(address string) (*grpc.ClientConn, error) {
+func getConnection(endpoint string) (*grpc.ClientConn, error) {
+	host, _, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		log.Fatalf("bad endpoint err: %v", err)
+	}
+
 	cert, err := tls.LoadX509KeyPair(
 		"/data/eval/certificates/clientCertificates/grpc-client.crt",
-		"/data/eval/certificates/clientCertificates/grpc-client.key")
+		"/data/eval/certificates/clientCertificates/grpc-client.key",
+	)
 	if err != nil {
 		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
 	}
@@ -40,38 +47,16 @@ func getConnection(address string) (*grpc.ClientConn, error) {
 
 	c := credentials.NewTLS(&tls.Config{
 		Certificates:       []tls.Certificate{cert},
-		ServerName:         "ingress.local",
+		ServerName:         host,
 		InsecureSkipVerify: true,
 		RootCAs:            certPool,
 	})
 
-	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(c))
+	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(c))
 	if err != nil {
 		log.Fatalf("CANNOT CONNECT")
 	}
 	return conn, err
-
-	// b, err := ioutil.ReadFile("/data/eval/certificates/serverCA/grpc-server-ca.crt")
-	// if err != nil {
-	// 	log.Fatalf("Cannot read CA certificate")
-	// }
-	// cp := x509.NewCertPool()
-	// if !cp.AppendCertsFromPEM(b) {
-	// 	return nil, errors.New("credentials: failed to append certificates")
-	// }
-	// config := &tls.Config{
-	// 	//		InsecureSkipVerify: true,
-	// 	RootCAs: cp,
-	// }
-	// // config := &tls.Config{
-	// // 	InsecureSkipVerify: false,
-	// // 	RootCAs:            cp,
-	// // }
-	// conn, err := grpc.Dial(address, grpc.WithTransportCredentials(credentials.NewTLS(config)))
-	// if err != nil {
-	// 	log.Fatalf("CANNOT CONNECT")
-	// }
-	// return conn, err
 }
 
 // getCmd represents the get command
@@ -89,15 +74,14 @@ var evalCmd = &cobra.Command{
 		fmt.Println("Eval " + args[0])
 
 		var conn *grpc.ClientConn
-		//		conn, err = grpc.Dial("golang2021.conf42.com:443", grpc.WithInsecure())
-		conn, err = getConnection("golang2021.conf42.com:443")
+		conn, err = getConnection("engine.eval.net:443")
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
 		defer conn.Close()
 
-		c := pb.NewEngineServiceClient(conn)
-		response, err := c.Eval(context.Background(), &pb.EvalRequest{Number: n})
+		client := pb.NewEngineServiceClient(conn)
+		response, err := client.Eval(context.Background(), &pb.EvalRequest{Number: n})
 		if err != nil {
 			log.Fatalf("Error when calling Eval: %s", err)
 		}
