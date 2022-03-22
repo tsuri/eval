@@ -8,6 +8,35 @@ kubectl -n eval create secret generic grpc-server-certificates \
 
 exit 0
 
+CERTIFICATE_DIR=/data/eval/C
+
+if [[ -d ${CERTIFICATE_DIR} ]]; then
+    rm -rf ${CERTIFICATE_DIR}
+fi
+mkdir ${CERTIFICATE_DIR}
+
+certstrap --depot-path ${CERTIFICATE_DIR} init          \
+          --organization "Imaginary Prototypes"         \
+          --organizational-unit "Protoypical Protos"    \
+          --country "US"                                \
+          --common-name "evalCA"
+
+
+for SERVICE in evalctl engine.eval.net; do
+    certstrap --depot-path ${CERTIFICATE_DIR} request-cert --common-name ${SERVICE}
+    certstrap --depot-path ${CERTIFICATE_DIR} sign ${SERVICE} --CA evalCA
+done
+
+for SERVICE in engine.eval.net; do
+    kubectl -n eval create secret generic grpc-server-certificates      \
+            --from-file=tls.crt=${CERTIFICATE_DIR}/${SERVICE}.crt       \
+            --from-file=tls.key=${CERTIFICATE_DIR}/${SERVICE}.key       \
+            --from-file=ca.crt=${CERTIFICATE_DIR}/evalCA.crt
+done
+
+exit 0
+
+
 PASSWORD=pass:notsecure
 
 CERT_DIR=/data/eval/certificates
