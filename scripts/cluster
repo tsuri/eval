@@ -82,7 +82,7 @@ kubectl apply -f deployments/namespaces.yaml
 bazel run :eval.apply
 kubectl apply -f deployments/ingress.yaml
 
-
+kubectl apply -f deployments/dashboard.yaml
 exit 0
 
 # kubectl apply -f deployments/ambassador-operator-crds.yaml
