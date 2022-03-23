@@ -80,3 +80,4 @@
   - https://go.dev/src/crypto/tls/generate_cert.go#L126
   - credential creation: https://youngkin.github.io/post/gohttpsclientserver/
   - mTLS https://www.handracs.info/blog/grpcmtlsgo/
+  - https://docs.buf.build/lint/usage
