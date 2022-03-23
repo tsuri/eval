@@ -81,3 +81,12 @@
   - credential creation: https://youngkin.github.io/post/gohttpsclientserver/
   - mTLS https://www.handracs.info/blog/grpcmtlsgo/
   - https://docs.buf.build/lint/usage
+  - https://github.com/taskctl/taskctl/blob/master/cmd/taskctl/graph.go
+  - https://github.com/maxcnunes/gaper/blob/master/runner.go
+  - https://github.com/go-gilbert/gilbert
+  - https://github.com/goyek/goyek
+  - https://github.com/vectaport/flowgraph
+  - https://github.com/chrislusf/gleam
+  - https://github.com/andy2046/failured
+  - https://github.com/go-kratos/kratos
+  - https://github.com/sagikazarmark/modern-go-application
