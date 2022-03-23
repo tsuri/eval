@@ -1,0 +1,34 @@
+#!/bin/bash
+# -*- shell-script -*-
+
+CERTIFICATE_DIR=/data/eval/C
+
+if [[ -d ${CERTIFICATE_DIR} ]]; then
+    rm -rf ${CERTIFICATE_DIR}
+fi
+mkdir ${CERTIFICATE_DIR}
+
+certstrap --depot-path ${CERTIFICATE_DIR} init          \
+          --organization "Imaginary Prototypes"         \
+          --organizational-unit "Protoypical Protos"    \
+          --country "US"                                \
+          --common-name "evalCA"
+
+
+CLOUD_SERVICES="engine.eval.net"
+CLI_SERVICES="evalctl"
+
+for SERVICE in ${CLI_SERVICES} ${CLOUD_SERVICES}; do
+    certstrap --depot-path ${CERTIFICATE_DIR} request-cert --common-name ${SERVICE} --domain ${SERVICE}
+    certstrap --depot-path ${CERTIFICATE_DIR} sign ${SERVICE} --CA evalCA
+done
+
+# We don't use a k8s TLS secret as those do not support the CA certificate
+# Furthermore, we don't have much choice as to the filenames as these are
+# what the nginx ingress assumes by default
+for SERVICE in ${CLOUD_SERVICES}; do
+    kubectl -n eval create secret generic grpc-server-certificates      \
+            --from-file=tls.crt=${CERTIFICATE_DIR}/${SERVICE}.crt       \
+            --from-file=tls.key=${CERTIFICATE_DIR}/${SERVICE}.key       \
+            --from-file=ca.crt=${CERTIFICATE_DIR}/evalCA.crt
+done
