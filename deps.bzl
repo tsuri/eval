@@ -268,6 +268,14 @@ def go_dependencies():
         version = "v1.5.1",
     )
     go_repository(
+        name = "com_github_fullstorydev_grpcurl",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/fullstorydev/grpcurl",
+        sum = "h1:WylAwnPauJIofYSHqqMTC1eEfUIzqzevXyogBxnQquo=",
+        version = "v1.8.6",
+    )
+
+    go_repository(
         name = "com_github_ghodss_yaml",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/ghodss/yaml",
@@ -428,6 +436,14 @@ def go_dependencies():
         sum = "h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=",
         version = "v0.0.0-20181017120253-0766667cb4d1",
     )
+    go_repository(
+        name = "com_github_gordonklaus_ineffassign",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/gordonklaus/ineffassign",
+        sum = "h1:vc7Dmrk4JwS0ZPS6WZvWlwDflgDTA26jItmbSj83nug=",
+        version = "v0.0.0-20200309095847-7953dde2c7bf",
+    )
+
     go_repository(
         name = "com_github_gorilla_websocket",
         build_file_proto_mode = "disable_global",
@@ -617,6 +633,14 @@ def go_dependencies():
         sum = "h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=",
         version = "v1.0.0",
     )
+    go_repository(
+        name = "com_github_jhump_protoreflect",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/jhump/protoreflect",
+        sum = "h1:8ogeubpKh2TiulA0apmGlW5YAH4U1Vi4TINIP+gpNfQ=",
+        version = "v1.10.3",
+    )
+
     go_repository(
         name = "com_github_jonboulle_clockwork",
         build_file_proto_mode = "disable_global",
@@ -813,6 +837,14 @@ def go_dependencies():
         sum = "h1:F9x/1yl3T2AeKLr2AMdilSD8+f9bvMnNN8VS5iDtovc=",
         version = "v0.0.0-20161129095857-cc309e4a2223",
     )
+    go_repository(
+        name = "com_github_nishanths_predeclared",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/nishanths/predeclared",
+        sum = "h1:3f0nxAmdj/VoCGN/ijdMy7bj6SBagaqYg1B0hu8clMA=",
+        version = "v0.0.0-20200524104333-86fad755b4d3",
+    )
+
     go_repository(
         name = "com_github_oklog_ulid",
         build_file_proto_mode = "disable_global",
@@ -1282,8 +1314,8 @@ def go_dependencies():
         name = "org_golang_google_grpc",
         build_file_proto_mode = "disable_global",
         importpath = "google.golang.org/grpc",
-        sum = "h1:Eeu7bZtDZ2DpRCsLhUlcrLnvYaMK1Gz86a+hMVvELmM=",
-        version = "v1.43.0",
+        sum = "h1:weqSxi/TMs1SqFRMHCtBgXRs8k3X39QIDEZ0pRcttUg=",
+        version = "v1.44.0",
     )
     go_repository(
         name = "org_golang_google_grpc_cmd_protoc_gen_go_grpc",

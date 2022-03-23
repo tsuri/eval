@@ -15,7 +15,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
 
@@ -24,7 +23,8 @@ const (
 )
 
 const (
-	CertChain  = "ca.crt"
+	baseDir    = "/app/Certs"
+	CaCert     = "ca.crt"
 	ServerCert = "tls.crt"
 	ServerKey  = "tls.key"
 )
@@ -67,33 +67,50 @@ func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse
 func main() {
 	log.Print("Hello there")
 
-	// d1 := []byte("hello\ngo\n")
-	// err := os.WriteFile("/data/hello.txt", d1, 0644)
-	// check(err)
-	// log.Print("Done")
+	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, ServerCert),
+		filepath.Join(baseDir, ServerKey))
+	if err != nil {
+		log.Fatalf("Failed to get certificate")
+	}
 
-	// fileBytes, err := ioutil.ReadFile("/data/hello.txt")
-	// check(err)
-	// fileString := string(fileBytes)
-	// log.Print("------------\n")
-	// log.Print(fileString)
-	// log.Print("------------\n")
+	certPool := x509.NewCertPool()
+	bs, err := ioutil.ReadFile(filepath.Join(baseDir, CaCert))
+	if err != nil {
+		log.Fatalf("failed to read certificates chain: %s", err)
+	}
+	ok := certPool.AppendCertsFromPEM(bs)
+	if !ok {
+		log.Fatalf("failed to append certs")
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.Creds(
+			credentials.NewTLS(&tls.Config{
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+				Certificates: []tls.Certificate{cert},
+				ClientCAs:    certPool})),
+	}
+
+	s := grpc.NewServer(opts...)
+	pb.RegisterEngineServiceServer(s, &server{})
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	tc := getTlsConfig()
-	serverOption := grpc.Creds(credentials.NewTLS(tc))
-
-	s := grpc.NewServer(serverOption)
-	pb.RegisterEngineServiceServer(s, &server{})
-	// Register reflection service on gRPC server.
-	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+	// tc := getTlsConfig()
+	// serverOption := grpc.Creds(credentials.NewTLS(tc))
+
+	// s := grpc.NewServer(serverOption)
+	// pb.RegisterEngineServiceServer(s, &server{})
+	// // Register reflection service on gRPC server.
+	// reflection.Register(s)
+	// if err := s.Serve(lis); err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
 }
 
 func getTlsConfig() *tls.Config {
@@ -109,7 +126,7 @@ func getTlsConfig() *tls.Config {
 
 func getCertPool() *x509.CertPool {
 	certPool := x509.NewCertPool()
-	bs, err := ioutil.ReadFile(filepath.Join("/app", "Certs", CertChain))
+	bs, err := ioutil.ReadFile(filepath.Join("/app", "Certs", CaCert))
 	if err != nil {
 		log.Fatalf("failed to read certificates chain: %s", err)
 	}

@@ -19,8 +19,40 @@
     intertubes. Why the golang client doesn't work is still a mistery
 
 ** Week 2
-  -
+  - Two days beyond schedule and a lot of misery. The nodejs client kept working. The go client kept not working.
+    As they say for telescopes, the best way to build a 10" telescope is to build a 5" telescope first, so I started from the basic principles:
+    - wrote a small server/client pair with no authentication
+    - modified to use server-side certificates
+    - modified to use it for mTLS
+    - wrote my own CA and certificate creation scripts (well, using certstrap, openssl becomes annoying fast)
+    - bought gRPC up and running
+    All of this was fine and dandy, but behind an nginx ingress, still no dice. Then I saw by accident these two lines in
+    a configuration for ks8 ingresses somebody posted somewhere:
 
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+    And this did it!!!
+
+    Now let's recoup the lost time. It is Tue night. I still have 3 days. I hope to get the grunt squad up and running (which will require
+    in cluster communication w/ mTLS and possibly run a golang wrapper invoking a python main. Both will be initially rather empty but they'll be
+    he most beautiful empty pieces of software.
+
+    I'm keeping running:
+    bazel run cmd/evalctl:evalctl  -- eval 1000
+    INFO: Invocation ID: 0e4e910e-b1a4-4f24-8640-0569c3d8d1fe
+    INFO: Analyzed target //cmd/evalctl:evalctl (0 packages loaded, 0 targets configured).
+    INFO: Found 1 target...
+    Target //cmd/evalctl:evalctl up-to-date:
+      bazel-bin/cmd/evalctl/evalctl_/evalctl
+    INFO: Elapsed time: 0.117s, Critical Path: 0.00s
+    INFO: 1 process: 1 internal.
+    INFO: Build completed successfully, 1 total action
+    INFO: Build completed successfully, 1 total action
+    Eval 1000
+    2022/03/22 23:11:59 Response from server: %!s(int64=1002)
+
+    ok, the server just add 2 to the number it receives. Not very interesting, I admit.
 
 * TODO
   - rename grunt to grunt-squad

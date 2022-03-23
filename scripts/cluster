@@ -78,7 +78,9 @@ kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.
 # curl localhost/bar
 
 kubectl apply -f deployments/namespaces.yaml
-./scripts/certificates
+#./scripts/certificates
+./scripts/newworld
+
 bazel run :eval.apply
 kubectl apply -f deployments/ingress.yaml
 

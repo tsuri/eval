@@ -8,13 +8,14 @@ metadata:
     nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
     nginx.ingress.kubernetes.io/auth-tls-secret: eval/grpc-server-certificates
     nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
-    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "2"
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
     nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"
     nginx.ingress.kubernetes.io/grpc-backend: "true"
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   rules:
-    - host: golang2021.conf42.com
+    - host: engine.eval.net
       http:
         paths:
           - path: /
@@ -26,7 +27,7 @@ spec:
                   number: 50051
   tls:
     - hosts:
-        - golang2021.conf42.com
+        - engine.eval.net
       secretName: grpc-server-certificates
   # This secret must exist beforehand
   # The cert must also contain the subj-name grpctest.dev.mydomain.com

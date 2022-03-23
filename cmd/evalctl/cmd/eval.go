@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"time"
 
 	pb "eval/proto/engine"
 
@@ -28,15 +29,15 @@ func getConnection(endpoint string) (*grpc.ClientConn, error) {
 	}
 
 	cert, err := tls.LoadX509KeyPair(
-		"/data/eval/certificates/clientCertificates/grpc-client.crt",
-		"/data/eval/certificates/clientCertificates/grpc-client.key",
+		"/data/eval/C/evalctl.crt",
+		"/data/eval/C/evalctl.key",
 	)
 	if err != nil {
 		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
 	}
 
 	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile("/data/eval/certificates/certificatesChain/grpc-root-ca-and-grpc-server-ca-and-grpc-client-ca-chain.crt")
+	ca, err := ioutil.ReadFile("/data/eval/C/evalCA.crt")
 	if err != nil {
 		log.Fatalf("ioutil.ReadFile err: %v", err)
 	}
@@ -52,7 +53,8 @@ func getConnection(endpoint string) (*grpc.ClientConn, error) {
 		RootCAs:            certPool,
 	})
 
-	conn, err := grpc.Dial(endpoint, grpc.WithTransportCredentials(c))
+	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	conn, err := grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
 	if err != nil {
 		log.Fatalf("CANNOT CONNECT")
 	}
