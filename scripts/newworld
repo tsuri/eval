@@ -12,15 +12,16 @@ certstrap --depot-path ${CERTIFICATE_DIR} init          \
           --organization "Imaginary Prototypes"         \
           --organizational-unit "Protoypical Protos"    \
           --country "US"                                \
-          --common-name "evalCA"
+          --common-name "evalCA"                        \
+          --passphrase ""
 
 
 CLOUD_SERVICES="engine.eval.net"
 CLI_SERVICES="evalctl"
 
 for SERVICE in ${CLI_SERVICES} ${CLOUD_SERVICES}; do
-    certstrap --depot-path ${CERTIFICATE_DIR} request-cert --common-name ${SERVICE} --domain ${SERVICE}
-    certstrap --depot-path ${CERTIFICATE_DIR} sign ${SERVICE} --CA evalCA
+    certstrap --depot-path ${CERTIFICATE_DIR} request-cert --passphrase "" --common-name ${SERVICE} --domain ${SERVICE}
+    certstrap --depot-path ${CERTIFICATE_DIR} sign --passphrase "" ${SERVICE} --CA evalCA
 done
 
 # We don't use a k8s TLS secret as those do not support the CA certificate
