@@ -2,66 +2,24 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net"
+	"path/filepath"
 	"strconv"
-	"time"
 
+	"eval/pkg/grpc/client"
 	pb "eval/proto/engine"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
-var (
-	conn *grpc.ClientConn
+const (
+	baseDir    = "/data/eval/C"
+	caCert     = "evalCA.crt"
+	clientCert = "evalctl.crt"
+	clientKey  = "evalctl.key"
 )
 
-func getConnection(endpoint string) (*grpc.ClientConn, error) {
-	host, _, err := net.SplitHostPort(endpoint)
-	if err != nil {
-		log.Fatalf("bad endpoint err: %v", err)
-	}
-
-	cert, err := tls.LoadX509KeyPair(
-		"/data/eval/C/evalctl.crt",
-		"/data/eval/C/evalctl.key",
-	)
-	if err != nil {
-		log.Fatalf("tls.LoadX509KeyPair err: %v", err)
-	}
-
-	certPool := x509.NewCertPool()
-	ca, err := ioutil.ReadFile("/data/eval/C/evalCA.crt")
-	if err != nil {
-		log.Fatalf("ioutil.ReadFile err: %v", err)
-	}
-
-	if ok := certPool.AppendCertsFromPEM(ca); !ok {
-		log.Fatalf("certPool.AppendCertsFromPEM err")
-	}
-
-	c := credentials.NewTLS(&tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		ServerName:         host,
-		InsecureSkipVerify: true,
-		RootCAs:            certPool,
-	})
-
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	conn, err := grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
-	if err != nil {
-		log.Fatalf("CANNOT CONNECT")
-	}
-	return conn, err
-}
-
-// getCmd represents the get command
 var evalCmd = &cobra.Command{
 	Use:   "eval",
 	Short: "causes the evaluation of a graph",
@@ -73,15 +31,15 @@ var evalCmd = &cobra.Command{
 			log.Fatalf("bad argument: %s", err)
 		}
 
-		fmt.Println("Eval " + args[0])
-
 		var conn *grpc.ClientConn
-		conn, err = getConnection("engine.eval.net:443")
+		conn, err = client.NewConnection("engine.eval.net:443",
+			filepath.Join(baseDir, caCert),
+			filepath.Join(baseDir, clientCert),
+			filepath.Join(baseDir, clientKey))
 		if err != nil {
 			log.Fatalf("did not connect: %s", err)
 		}
 		defer conn.Close()
-
 		client := pb.NewEngineServiceClient(conn)
 		response, err := client.Eval(context.Background(), &pb.EvalRequest{Number: n})
 		if err != nil {

@@ -9,10 +9,10 @@ go_library(
     importpath = "eval/cmd/evalctl/cmd",
     visibility = ["//visibility:public"],
     deps = [
+        "//pkg/grpc/client:go_default_library",
         "//proto:go_default_library",
         "@com_github_spf13_cobra//:go_default_library",
         "@com_github_spf13_viper//:go_default_library",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//credentials:go_default_library",
     ],
 )
