@@ -1,3 +1,0 @@
-#!/bin/bash
-
-GODEBUG=http2debug=2 bazel run cmd/evalctl:evalctl  -- eval 1000

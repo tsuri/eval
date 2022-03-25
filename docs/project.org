@@ -54,11 +54,15 @@
 
     ok, the server just add 2 to the number it receives. Not very interesting, I admit.
 
+    added a 'grunt' service. Now 'engine' forwards a number to
+    'grunt', grunt adds 1000 and then engine further adds 1. Hence
+    eval 1 --> 1002
+
 * TODO
+  - add redis DB
   - rename grunt to grunt-squad
   - add a cache service
   - separate proto bufs
-  - verify nginx ingress with gRPC traffic to actual services instead of the demo deployments. Usual TLS problems
   - document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
 
 * TOCONSIDER

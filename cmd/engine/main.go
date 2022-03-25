@@ -32,9 +32,8 @@ type server struct{}
 
 func grunt(n int64) int64 {
 	log.Printf("Asking grunt")
-	return n + 1000
 	var conn *grpc.ClientConn
-	conn, err := client.NewConnection("eval-grunt.default.svc.cluster.local:50051",
+	conn, err := client.NewConnection("eval-grunt.eval.svc.cluster.local:50051",
 		filepath.Join(baseDir, caCert),
 		filepath.Join(baseDir, clientCert),
 		filepath.Join(baseDir, clientKey))
@@ -42,13 +41,15 @@ func grunt(n int64) int64 {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
+	log.Println("About to create client")
 	client := pb.NewEngineServiceClient(conn)
+	log.Println("After create client")
 	response, err := client.Eval(context.Background(), &pb.EvalRequest{Number: n})
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
 
-	return response.Number + 1
+	return response.Number*2 + 1
 	// conn, err := grpc.Dial(
 	// 	"eval-grunt.default.svc.cluster.local:10051",
 	// 	grpc.WithInsecure())

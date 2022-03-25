@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
@@ -30,7 +31,8 @@ const (
 type server struct{}
 
 func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse, error) {
-
+	fmt.Println("EVAL")
+	log.Printf("Grunt of %v is %v, no?", in.Number, 1000+in.Number)
 	return &pb.EvalResponse{Number: in.Number + 1000}, nil
 }
 

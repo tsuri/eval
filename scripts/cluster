@@ -62,20 +62,8 @@ data:
     help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
 EOF
 
-# docker pull gcr.io/google-samples/hello-app:1.0
-# docker tag gcr.io/google-samples/hello-app:1.0 localhost:5001/hello-app:1.0
-# docker push localhost:5001/hello-app:1.0
-# kubectl create deployment hello-server --image=localhost:5001/hello-app:1.0
-
 kubectl apply -f deployments/nginx-ingress.yaml
 kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller  --timeout=90s
-
-# kubectl apply -f deployments/demo.yaml
-# kubectl wait --namespace default --for=condition=ready pod --selector=app=foo  --timeout=90s
-# kubectl wait --namespace default --for=condition=ready pod --selector=app=bar  --timeout=90s
-# sleep 10
-# curl localhost/foo
-# curl localhost/bar
 
 kubectl apply -f deployments/namespaces.yaml
 #./scripts/certificates
@@ -85,40 +73,3 @@ bazel run :eval.apply
 kubectl apply -f deployments/ingress.yaml
 
 kubectl apply -f deployments/dashboard.yaml
-exit 0
-
-# kubectl apply -f deployments/ambassador-operator-crds.yaml
-# kubectl apply -f deployments/ambassador-operator-kind.yaml
-# kubectl wait --timeout=180s -n ambassador --for=condition=deployed ambassadorinstallations/ambassador
-
-kubectl apply --filename https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/provider/kind/deploy.yaml
-
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=90s
-
-kubectl run hello \
-  --expose \
-  --image nginxdemos/hello:plain-text \
-  --port 80
-
-cat <<EOF | kubectl apply -f -
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: hello
-spec:
-  rules:
-    - host: hello.dustinspecker.com
-      http:
-        paths:
-          - pathType: ImplementationSpecific
-            backend:
-              service:
-                name: hello
-                port:
-                  number: 80
-EOF
-
-#kubectl apply --context kind-eval -f deployments/smoke_test.yaml
