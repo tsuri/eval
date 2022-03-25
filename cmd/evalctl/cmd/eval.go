@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	baseDir    = "/data/eval/C"
+	baseDir    = "/data/eval/certificates"
 	caCert     = "evalCA.crt"
 	clientCert = "evalctl.crt"
 	clientKey  = "evalctl.key"
