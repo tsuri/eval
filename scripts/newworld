@@ -28,7 +28,7 @@ done
 # Furthermore, we don't have much choice as to the filenames as these are
 # what the nginx ingress assumes by default
 for SERVICE in ${CLOUD_SERVICES}; do
-    kubectl -n eval create secret generic grpc-server-certificates      \
+    kubectl -n eval create secret generic cluster-certificates      \
             --from-file=tls.crt=${CERTIFICATE_DIR}/${SERVICE}.crt       \
             --from-file=tls.key=${CERTIFICATE_DIR}/${SERVICE}.key       \
             --from-file=ca.crt=${CERTIFICATE_DIR}/evalCA.crt

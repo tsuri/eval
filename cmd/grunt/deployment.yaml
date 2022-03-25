@@ -19,9 +19,9 @@ spec:
       - name: data
         hostPath:
           path: /data  # matches kind containerPath:
-      - name: grpc-server-certificates
+      - name: cluster-certificates
         secret:
-          secretName: grpc-server-certificates
+          secretName: cluster-certificates
       containers:
       - name: grunt
         image: localhost:5001/main:dev
@@ -41,7 +41,7 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /data
-        - name: grpc-server-certificates
+        - name: cluster-certificates
           mountPath: /app/Certs/
           readOnly: true
 

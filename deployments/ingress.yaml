@@ -6,7 +6,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: "true"
-    nginx.ingress.kubernetes.io/auth-tls-secret: eval/grpc-server-certificates
+    nginx.ingress.kubernetes.io/auth-tls-secret: eval/cluster-certificates
     nginx.ingress.kubernetes.io/auth-tls-verify-client: "on"
     nginx.ingress.kubernetes.io/auth-tls-verify-depth: "1"
     nginx.ingress.kubernetes.io/backend-protocol: "GRPCS"
@@ -28,7 +28,7 @@ spec:
   tls:
     - hosts:
         - engine.eval.net
-      secretName: grpc-server-certificates
+      secretName: cluster-certificates
   # This secret must exist beforehand
   # The cert must also contain the subj-name grpctest.dev.mydomain.com
   # https://github.com/kubernetes/ingress-nginx/blob/master/docs/examples/PREREQUISITES.md#tls-certificates
