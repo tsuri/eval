@@ -58,6 +58,8 @@
     'grunt', grunt adds 1000 and then engine further adds 1. Hence
     eval 1 --> 1002
 
+    Some cleanup. Too tired for anything serious.
+
 * TODO
   - add redis DB
   - rename grunt to grunt-squad
