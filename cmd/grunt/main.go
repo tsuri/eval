@@ -10,8 +10,7 @@ import (
 	"net"
 	"path/filepath"
 
-	// only for testing
-	pb "eval/proto/engine"
+	pb "eval/proto/grunt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

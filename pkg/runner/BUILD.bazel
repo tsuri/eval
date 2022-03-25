@@ -1,14 +1,14 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "runner",
     srcs = ["runner.go"],
     importpath = "eval/pkg/runner",
     visibility = ["//visibility:public"],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "runner_test",
     srcs = ["runner_test.go"],
-    embed = [":go_default_library"],
+    embed = [":runner"],
 )

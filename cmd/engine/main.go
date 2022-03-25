@@ -9,9 +9,10 @@ import (
 	"net"
 	"path/filepath"
 
-	pb "eval/proto/engine"
-
 	"eval/pkg/grpc/client"
+
+	pbeval "eval/proto/engine"
+	pbgrunt "eval/proto/grunt"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -42,9 +43,9 @@ func grunt(n int64) int64 {
 	}
 	defer conn.Close()
 	log.Println("About to create client")
-	client := pb.NewEngineServiceClient(conn)
+	client := pbgrunt.NewEngineServiceClient(conn)
 	log.Println("After create client")
-	response, err := client.Eval(context.Background(), &pb.EvalRequest{Number: n})
+	response, err := client.Eval(context.Background(), &pbgrunt.EvalRequest{Number: n})
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
@@ -68,9 +69,9 @@ func grunt(n int64) int64 {
 	// return response.Number
 }
 
-func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse, error) {
+func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
 	log.Printf("Eval service")
-	return &pb.EvalResponse{Number: grunt(in.Number) + 1}, nil
+	return &pbeval.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 
 func main() {
@@ -101,7 +102,7 @@ func main() {
 	}
 
 	s := grpc.NewServer(opts...)
-	pb.RegisterEngineServiceServer(s, &server{})
+	pbeval.RegisterEngineServiceServer(s, &server{})
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

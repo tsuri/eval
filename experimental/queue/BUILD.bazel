@@ -1,15 +1,15 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "queue_lib",
     srcs = ["queue.go"],
     importpath = "eval/experimental/queue",
     visibility = ["//visibility:private"],
-    deps = ["@com_github_panjf2000_ants_v2//:go_default_library"],
+    deps = ["@com_github_panjf2000_ants_v2//:ants"],
 )
 
 go_binary(
     name = "queue",
-    embed = [":go_default_library"],
+    embed = [":queue_lib"],
     visibility = ["//visibility:public"],
 )

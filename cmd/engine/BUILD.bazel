@@ -8,21 +8,22 @@ load(
 load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
 
 go_library(
-    name = "go_default_library",
+    name = "engine_lib",
     srcs = ["main.go"],
     importpath = "eval/cmd/engine",
     visibility = ["//visibility:private"],
     deps = [
-        "//pkg/grpc/client:go_default_library",
-        "//proto:go_default_library",
+        "//pkg/grpc/client",
+        "//proto/engine",
+        "//proto/grunt",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//credentials:go_default_library",
+        "@org_golang_google_grpc//credentials",
     ],
 )
 
 go_binary(
     name = "engine",
-    embed = [":go_default_library"],
+    embed = [":engine_lib"],
     visibility = ["//visibility:public"],
 )
 
