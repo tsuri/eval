@@ -69,6 +69,8 @@
     Kind of work now with `GIT_SSL_NO_VERIFY=true  git push cluster
     main` and after changing the max body size to 10 MB.
 
+    test git repos (remove this line)
+
 * TODO
   - add redis DB
   - rename grunt to grunt-squad
