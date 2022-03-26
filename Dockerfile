@@ -6,4 +6,5 @@ RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.11.0/bazeli
 RUN mv bazelisk-linux-amd64 /bin/bazel
 RUN chmod +x /bin/bazel
 WORKDIR /eval
+RUN echo $(pwd)
 RUN /bin/bazel build //test
