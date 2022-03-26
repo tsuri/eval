@@ -7,4 +7,5 @@ RUN mv bazelisk-linux-amd64 /bin/bazel
 RUN chmod +x /bin/bazel
 WORKDIR /eval
 RUN echo $(pwd)
+RUN ls
 RUN /bin/bazel build //test
