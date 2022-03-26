@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kaniko
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    env:
+      - name: GIT_TOKEN
+        value: "969c5cb1eaee59d878648cb862bef551cac70d34"
+      - name: GIT_USERNAME
+        value: "mav"
+      - name: GIT_PASSWORD
+        value: "ledcls"
+#    "--no-push"
+    args: [
+    "--insecure",
+    "--skip-tls-verify",
+    "--skip-tls-verify-registry=localhost:5001",
+    "--dockerfile=/data/dockerfile",
+    "--context=dir=///data",
+    "--destination=localhost:5001/test:foo",
+    ]
+    volumeMounts:
+      - name: data
+        mountPath: /data
+
+  restartPolicy: Never
+  volumes:
+    - name: data
+      hostPath:
+        path: /data  # matches kind containerPath:

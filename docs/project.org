@@ -69,7 +69,35 @@
     Kind of work now with `GIT_SSL_NO_VERIFY=true  git push cluster
     main` and after changing the max body size to 10 MB.
 
-    test git repos (remove this line)
+    This works in cluster now:
+    git clone  http://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git
+
+    Really need to solve certificates (for the web dashboard, not
+    critical) and SSH keys (for cluster access, from laptops is
+    complicated due to kind ports and nginx ingress (see
+    https://stackoverflow.com/questions/66367867/how-to-expose-port-22-via-nginx-ingress-controller)
+
+    We can create a build context for kanico very fast, so let's not
+    worry about this at all:
+    #+begin_src sh
+      time git clone --depth 1 --branch main --single-branch  http://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git
+      Cloning into 'eval'...
+      remote: Enumerating objects: 79, done.
+      remote: Counting objects: 100% (79/79), done.
+      remote: Compressing objects: 100% (71/71), done.
+      remote: Total 79 (delta 6), reused 54 (delta 1), pack-reused 0
+      Unpacking objects: 100% (79/79), 71.23 KiB | 3.56 MiB/s, done.
+
+      real	0m0.058s
+      user	0m0.021s
+      sys	0m0.023s
+    #+end_src
+
+    Gitea access w/ token. Name has to be new:
+    #+begin_src sh
+      curl -XPOST -H "Content-Type: application/json"  -k -d '{"name":"test2"}' -u mav https://gitea.eval.net/api/v1/users/mav/tokens
+    #+end_src
+    We can then save the token in a secret to be used by anybody
 
 * TODO
   - add redis DB
@@ -77,6 +105,8 @@
   - add a cache service
   - separate proto bufs
   - document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
+  - gitea certificates for dashboard
+  - gitea SSH keys
 
 * TOCONSIDER
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
