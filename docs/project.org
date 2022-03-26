@@ -60,6 +60,15 @@
 
     Some cleanup. Too tired for anything serious.
 
+    Almost got gitea working in-cluster, using the external /data/eval
+    directory and allowing access through the ingress. Still need to
+    configure it from outside (app.ini) and to get to actually
+    pushing/pulling from both cluster and laptop. Ok, not almost
+    working, but it is Friday night, sue me.
+
+    Kind of work now with `GIT_SSL_NO_VERIFY=true  git push cluster
+    main` and after changing the max body size to 10 MB.
+
 * TODO
   - add redis DB
   - rename grunt to grunt-squad
@@ -96,3 +105,4 @@
   - https://github.com/andy2046/failured
   - https://github.com/go-kratos/kratos
   - https://github.com/sagikazarmark/modern-go-application
+  - https://stackoverflow.com/questions/66367867/how-to-expose-port-22-via-nginx-ingress-controller
