@@ -3,7 +3,20 @@ kind: Pod
 metadata:
   name: kaniko
 spec:
+
+  hostAliases:
+  - ip: "192.168.1.8"
+    hostnames:
+    - "registry"
   containers:
+
+  # - name: cat-hosts
+  #   image: busybox:1.28
+  #   command:
+  #   - cat
+  #   args:
+  #   - "/etc/hosts"
+
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     env:
@@ -13,21 +26,36 @@ spec:
         value: "mav"
       - name: GIT_PASSWORD
         value: "ledcls"
+      - name: GIT_PULL_METHOD
+        value: "http"
 #    "--no-push"
     args: [
-    "--insecure",
-    "--skip-tls-verify",
-    "--skip-tls-verify-registry=localhost:5001",
-    "--dockerfile=/data/dockerfile",
-    "--context=dir=///data",
-    "--destination=localhost:5001/test:foo",
+#    "--insecure",
+#    "--skip-tls-verify",
+    # "--skip-tls-verify-registry=localhost:5001",
+    # "--dockerfile=/data/dockerfile",
+    # "--context=dir=///data",
+#    "--destination=registry:5001/mav/test:foo",
+    "--destination=mvitale/test:foo",
+    "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
+    "--verbosity=trace",
+#    "--no-push"
     ]
     volumeMounts:
       - name: data
         mountPath: /data
-
+      - name: docker-config
+        mountPath: /kaniko/.docker
   restartPolicy: Never
   volumes:
     - name: data
       hostPath:
         path: /data  # matches kind containerPath:
+    - name: docker-config
+      projected:
+        sources:
+          - secret:
+              name: regcred
+              items:
+                - key: .dockerconfigjson
+                  path: config.json
