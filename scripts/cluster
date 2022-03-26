@@ -72,3 +72,4 @@ bazel run :eval.apply
 kubectl apply -f deployments/ingress.yaml
 
 kubectl apply -f deployments/dashboard.yaml
+kubectl apply -f deployments/gitea.yaml
