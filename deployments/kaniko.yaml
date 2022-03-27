@@ -38,6 +38,7 @@ spec:
     "--destination=registry.eval.net/mav/test:foo",
 #    "--destination=mvitale/test:foo",
     "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
+    "--dockerfile=dockerfile",
 #    "--verbosity=trace",
     "--no-push"
     ]
