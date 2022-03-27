@@ -33,9 +33,9 @@ spec:
     "--insecure",
     "--skip-tls-verify",
 
-    "--destination=registry.other.net:5000/mav/test:foo",
+    "--destination=registry.other.net:5000/test:foo",
+#    "--destination=registry.other.net:5000/mav/test:foo",
 
-#    "--destination=mvitale/test:foo",
     "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
     "--dockerfile=dockerfile",
     "--verbosity=trace",
