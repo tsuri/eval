@@ -57,7 +57,7 @@ k8s_object(
     cluster = "kind-eval",
     context = "kind-eval",
     images = {
-        "localhost:5001/main:dev": ":container",
+        "localhost:5000/main:dev": ":container",
     },
     kind = "deployment",
     # A template of a Kubernetes Deployment object yaml.

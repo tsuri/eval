@@ -57,7 +57,6 @@ rules_proto_toolchains()
 
 #### rules docker
 
-
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "85ffff62a4c22a74dbd98d05da6cf40f497344b3dbf1e1ab0a37ab2a1a6ca014",
@@ -123,3 +122,10 @@ k8s_repositories()
 load("@io_bazel_rules_k8s//k8s:k8s_go_deps.bzl", k8s_go_deps = "deps")
 
 k8s_go_deps()
+
+load(
+    "@io_bazel_rules_docker//python:image.bzl",
+    _py_image_repos = "repositories",
+)
+
+_py_image_repos()

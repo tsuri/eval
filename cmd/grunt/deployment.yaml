@@ -24,7 +24,7 @@ spec:
           secretName: cluster-certificates
       containers:
       - name: grunt
-        image: localhost:5001/main:dev
+        image: localhost:5000/main:dev
         ports:
         - containerPort: 50051
           name: grpc
