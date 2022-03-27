@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+spec:
+  # hostAliases:
+  # - ip: "192.168.1.8"
+  #   hostnames:
+  #   - "kind-registry"
+  containers:
+  # - name: cat-hosts
+  #   image: busybox:1.28
+  #   command:
+  #   - cat
+  #   args:
+  #   - "/etc/hosts"
+  - name: test
+    image: localhost:5000/test:foo
+    imagePullPolicy: Always
+  restartPolicy: Never

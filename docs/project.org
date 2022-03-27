@@ -99,6 +99,18 @@
     #+end_src
     We can then save the token in a secret to be used by anybody
 
+HUGE. Worked on Saturday and Sunday (which I promised to myself I
+wouldn't do; this project is strictly
+a on-the-couch-pretending-to-watch-tv evening project), but:
+- I was accumulating delays
+- Wife has been working on grants
+But now we got a working kaniko producing images from within the
+cluster that are then pushed to the external docker registry (running
+as a docker container, but outside of the kind cluster). The same
+image can then be used by the kubelet to instantiate k8s pods.
+Still need to look at actually running bazel inside a kaniko container
+and turn the kaniko one-job pod into an image build service.
+
 * TODO
   - add redis DB
   - rename grunt to grunt-squad

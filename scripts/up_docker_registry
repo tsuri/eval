@@ -1,0 +1,12 @@
+#!/bin/bash
+# ehi emacs, this is -*- shell-script -*-*
+
+# create registry container unless it already exists
+reg_name='kind-registry' # change this in script/down_docker_registry as well
+reg_port='5000'
+if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
+    docker run                                                                  \
+    -v `pwd`/deployments/registry_config.yml:/etc/docker/registry/config.yml    \
+    -d --restart=always -p "0.0.0.0:${reg_port}:5000" --name "${reg_name}"    \
+    registry:2
+fi

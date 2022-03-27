@@ -1,0 +1,5 @@
+#!/bin/bash
+# ehi emacs this is -*- shell-script -*-
+
+reg_name='kind-registry'
+docker stop ${reg_name} || true && docker rm ${reg_name} || true

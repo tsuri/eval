@@ -1,0 +1,4 @@
+#!/bin/bash
+# Ehi Emacs, this is -*- shell-script -*-
+
+kubectl run ksh --rm -i --tty --image debian -- bash
