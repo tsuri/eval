@@ -107,6 +107,7 @@
   - document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
   - gitea certificates for dashboard
   - gitea SSH keys
+  - move registry storage to disk, /data/eval/registry
 
 * TOCONSIDER
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/

@@ -7,7 +7,7 @@ spec:
   hostAliases:
   - ip: "192.168.1.8"
     hostnames:
-    - "registry.eval.net"
+    - "registry.other.net"
   containers:
 
   # - name: cat-hosts
@@ -30,17 +30,16 @@ spec:
         value: "http"
 #    "--no-push"
     args: [
-#    "--insecure",
-#    "--skip-tls-verify",
-    # "--skip-tls-verify-registry=localhost:5001",
-    # "--dockerfile=/data/dockerfile",
-    # "--context=dir=///data",
-    "--destination=registry.eval.net/mav/test:foo",
+    "--insecure",
+    "--skip-tls-verify",
+
+    "--destination=registry.other.net:5000/mav/test:foo",
+
 #    "--destination=mvitale/test:foo",
     "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
     "--dockerfile=dockerfile",
-#    "--verbosity=trace",
-    "--no-push"
+    "--verbosity=trace",
+#    "--no-push"
     ]
     volumeMounts:
       - name: data
