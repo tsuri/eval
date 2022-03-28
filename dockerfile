@@ -7,7 +7,6 @@ RUN chmod +x /usr/bin/bazel
 COPY . .
 WORKDIR /eval
 RUN echo $PWD
-RUN cat /workspace/WORKSPACE
 RUN cat WORKSPACE
 RUN ls
 RUN cd /eval && /usr/bin/bazel build //test
