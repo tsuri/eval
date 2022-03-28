@@ -16,4 +16,6 @@ spec:
   #   - "/etc/hosts"
   - name: test
     image: localhost:5000/test:bar
+    command: ["/bin/ls"]
+    args: ["/eval/bazel-bin/test"] #/test/runner_/runner"]
   restartPolicy: Never
