@@ -15,6 +15,5 @@ spec:
   #   args:
   #   - "/etc/hosts"
   - name: test
-    image: localhost:5000/test:foo
-    imagePullPolicy: Always
+    image: localhost:5000/test:bar
   restartPolicy: Never

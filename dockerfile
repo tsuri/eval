@@ -1,4 +1,4 @@
-FROM debian:buster-slim
+FROM debian:buster-slim AS builder
 
 RUN apt-get update
 RUN apt-get install --yes wget build-essential python3
@@ -9,4 +9,8 @@ WORKDIR /eval
 RUN echo $PWD
 RUN ls
 RUN /usr/bin/bazel build //test
-ENTRYPOINT bazel-bin/test/test
+
+FROM debian:buster-slim
+COPY --from /eval/bazel-bin/test /app
+RUN ls /app
+ENTRYPOINT /app/test
