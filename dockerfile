@@ -8,9 +8,9 @@ COPY . /eval
 WORKDIR /eval
 RUN echo $PWD
 RUN ls
-RUN /usr/bin/bazel build //test
+RUN /usr/bin/bazel build //test:test //test:runner
 
 FROM debian:buster-slim
 COPY --from=builder /eval/bazel-bin/test /app
 RUN ls /app
-ENTRYPOINT /app/test
+ENTRYPOINT /app/runner
