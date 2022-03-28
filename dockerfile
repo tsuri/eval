@@ -6,5 +6,6 @@ RUN wget -q https://releases.bazel.build/5.1.0/release/bazel-5.1.0-linux-x86_64 
 RUN chmod +x /usr/bin/bazel
 WORKDIR /eval
 RUN echo $PWD
+RUN cat WORKSPACE
 RUN ls
 RUN cd /eval && /usr/bin/bazel build //test
