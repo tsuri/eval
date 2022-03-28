@@ -9,3 +9,4 @@ WORKDIR /eval
 RUN echo $PWD
 RUN ls
 RUN /usr/bin/bazel build //test
+ENTRYPOINT bazel-bin/test/test
