@@ -7,4 +7,4 @@ RUN chmod +x /usr/bin/bazel
 COPY . .
 RUN echo $PWD
 RUN ls
-RUN cd /eval && /usr/bin/bazel build //test
+RUN /usr/bin/bazel build //test
