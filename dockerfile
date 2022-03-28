@@ -11,6 +11,6 @@ RUN ls
 RUN /usr/bin/bazel build //test
 
 FROM debian:buster-slim
-COPY --from /eval/bazel-bin/test /app
+COPY --from=builder /eval/bazel-bin/test /app
 RUN ls /app
 ENTRYPOINT /app/test
