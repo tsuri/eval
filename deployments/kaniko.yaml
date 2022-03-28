@@ -38,7 +38,7 @@ spec:
 
     "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
     "--dockerfile=dockerfile",
-    "--verbosity=trace",
+#    "--verbosity=trace",
 #    "--no-push"
     ]
     volumeMounts:
