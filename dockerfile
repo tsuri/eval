@@ -13,5 +13,4 @@ RUN /usr/bin/bazel build //test:test //test:runner
 #FROM debian:buster-slim
 FROM gcr.io/distroless/python3
 COPY --from=builder /eval/bazel-bin/test/ /app/
-RUN ls -lR /app
 ENTRYPOINT /app/runner_/runner
