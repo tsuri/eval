@@ -3,19 +3,10 @@ kind: Pod
 metadata:
   name: test
 spec:
-  # hostAliases:
-  # - ip: "192.168.1.8"
-  #   hostnames:
-  #   - "kind-registry"
   containers:
-  # - name: cat-hosts
-  #   image: busybox:1.28
-  #   command:
-  #   - cat
-  #   args:
-  #   - "/etc/hosts"
   - name: test
     image: localhost:5000/test:bar
-    command: ["/bin/ls"]
-    args: ["/eval/bazel-bin/test"] #/test/runner_/runner"]
+#    command: ["/app/runner_/runner"]
+    command: ["/app/test"]
+    imagePullPolicy: Always
   restartPolicy: Never
