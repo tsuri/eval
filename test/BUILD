@@ -26,3 +26,10 @@ go_binary(
 #    repository = "my-project/my-image",
 #    tag = "dev",
 # )
+
+go_library(
+    name = "test_lib",
+    srcs = ["runner.go"],
+    importpath = "eval/test",
+    visibility = ["//visibility:private"],
+)

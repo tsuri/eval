@@ -61,5 +61,6 @@ k8s_objects(
     objects = [
         "//cmd/engine:dev",
         "//cmd/grunt:dev",
+        "//cmd/builder:dev",
     ],
 )

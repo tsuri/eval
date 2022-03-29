@@ -111,6 +111,16 @@ image can then be used by the kubelet to instantiate k8s pods.
 Still need to look at actually running bazel inside a kaniko container
 and turn the kaniko one-job pod into an image build service.
 
+** Week 3
+*** Monday
+- added a 'builder' service (for now using the grunt protobuf :-) )
+- added RBAC and a role w permission to list pods. Later we'll create
+  and track kaniko pods for creating images.
+- added code for listing pods. Just a demo, but shows how to
+  successfully interact with the kubernetes API server. Works, Aye!
+  [and, btw, we have at the moment 22 pods on our poor kind local
+  cluster]
+
 * TODO
   - add redis DB
   - rename grunt to grunt-squad

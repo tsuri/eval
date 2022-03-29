@@ -1,0 +1,69 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_layer",
+    "container_push",
+)
+load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
+
+go_library(
+    name = "builder_lib",
+    srcs = ["main.go"],
+    importpath = "eval/cmd/builder",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//proto/grunt",
+        "@io_k8s_api//core/v1:core",
+        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "@io_k8s_client_go//kubernetes",
+        "@io_k8s_client_go//rest",
+        "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//credentials",
+    ],
+)
+
+go_binary(
+    name = "builder",
+    embed = [":builder_lib"],
+    visibility = ["//visibility:public"],
+)
+
+container_image(
+    name = "container",
+    base = "@distroless_base_debian10//image",
+    cmd = [
+        "/dist/builder",
+    ],
+    directory = "/dist",
+    files = [
+        ":builder",
+    ],
+    visibility = ["//:__pkg__"],
+    workdir = "/dist",
+)
+
+# container_push(
+#     name = "push",
+#     image = ":container",
+#     visibility = ["//:__pkg__"],
+#     format = "Docker",
+#     registry = "localhost:5001",
+#     repository = "main",
+#     tag = "dev",
+#     )
+
+k8s_object(
+    name = "dev",
+    # cluster as in `kubectl config view --minify -o=jsonpath='{.contexts[0].context.cluster}'`
+    cluster = "kind-eval",
+    context = "kind-eval",
+    images = {
+        "localhost:5000/main:dev": ":container",
+    },
+    kind = "deployment",
+    # A template of a Kubernetes Deployment object yaml.
+    template = ":deployment.yaml",
+    # really should be only //:eval but we a package_group to avoid dependency cycles
+    visibility = ["//visibility:public"],
+)
