@@ -13,6 +13,7 @@ import (
 
 	pb "eval/proto/grunt"
 
+	"github.com/go-redis/redis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	v1 "k8s.io/api/core/v1"
@@ -74,36 +75,25 @@ func main() {
 	}
 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
-	// var kubeconfig *string
-	// // if home := homedir.HomeDir(); home != "" { // check if machine has home directory.
-	// // 	// read kubeconfig flag. if not provided use config file $HOME/.kube/config
-	// // 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	// // } else {
-	// // 	kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	// // }
-	// // flag.Parse()
-	// kubeconfig = ""
+	var (
+		host       = "redis.eval.svc.cluster.local"
+		redis_port = "6379"
+	)
 
-	// // build configuration from the config file.
-	// config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// // create kubernetes clientset. this clientset can be used to create,delete,patch,list etc for the kubernetes resources
-	// clientset, err := kubernetes.NewForConfig(config)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	client := redis.NewClient(&redis.Options{
+		Addr: host + ":" + redis_port,
+		//		Password: password,
+		DB: 0,
+	})
 
-	// // build the pod defination we want to deploy
-	// pod := getPodObject()
-	// // now create the pod in kubernetes cluster using the clientset
-	// pod, err := clientset.CoreV1().Pods(pod.Namespace).Create(pod)
-	// if err != nil {
-	// 	log.Printf("Failed to create POD")
-	// } else {
-	// 	fmt.Println("Pod created successfully...")
-	// }
+	pong, err := client.Ping().Result()
+	if err != nil {
+		log.Println("---------------------")
+		log.Fatal(err)
+	}
+	log.Println("---------------------")
+	log.Println(pong)
+	log.Println("---------------------")
 
 	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, ServerCert),
 		filepath.Join(baseDir, ServerKey))

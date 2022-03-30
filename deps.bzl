@@ -448,6 +448,13 @@ def go_dependencies():
         sum = "h1:lTz6Ys4CmqqCQmZPBlbQENR1/GucA2bzYTE12Pw4tFY=",
         version = "v0.19.5",
     )
+    go_repository(
+        name = "com_github_go_redis_redis",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/go-redis/redis",
+        sum = "h1:K0pv1D7EQUjfyoMql+r/jZqCLizCGKFlFgcHWWmHQjg=",
+        version = "v6.15.9+incompatible",
+    )
 
     go_repository(
         name = "com_github_go_stack_stack",
