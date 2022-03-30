@@ -95,6 +95,16 @@ func main() {
 	log.Println(pong)
 	log.Println("---------------------")
 
+	client.Incr("kcount")
+	client.Incr("kcount")
+
+	val, err := client.Get("kcount").Result()
+	if err != nil {
+		panic(err)
+	}
+	result := string("key count: " + string(val))
+	log.Println(result)
+
 	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, ServerCert),
 		filepath.Join(baseDir, ServerKey))
 	if err != nil {

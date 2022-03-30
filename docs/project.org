@@ -128,7 +128,8 @@ Not much accomplished
   authentication problems, but getting closer
 - working now with no password, will do.
 * TODO
-  - add redis DB
+  - cannot explain why the redis DB persists on pod restart. It is
+    what I want, but not what I expect from the current setup
   - rename grunt to grunt-squad
   - add a cache service
   - separate proto bufs
