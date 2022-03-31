@@ -4,8 +4,13 @@ package engine;
 
 option go_package = "eval/proto/engine";
 
+message Requester {
+  string userName = 1;
+  string hostName = 2;
+}
 message EvalRequest {
-    int64 number = 1;
+  Requester requester = 1;
+  int64 number = 2;
 }
 
 message EvalResponse {

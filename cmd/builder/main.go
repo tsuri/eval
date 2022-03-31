@@ -95,10 +95,10 @@ func main() {
 	log.Println(pong)
 	log.Println("---------------------")
 
-	client.Incr("kcount")
-	client.Incr("kcount")
+	client.Incr("something.kcount")
+	client.Incr("something.nkcount")
 
-	val, err := client.Get("kcount").Result()
+	val, err := client.Get("something.kcount").Result()
 	if err != nil {
 		panic(err)
 	}

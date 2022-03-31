@@ -71,6 +71,7 @@ func grunt(n int64) int64 {
 
 func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
 	log.Printf("Eval service")
+	log.Printf("Request from %s on host %s", in.Requester.UserName, in.Requester.HostName)
 	return &pbeval.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 

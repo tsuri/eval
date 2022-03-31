@@ -126,7 +126,14 @@ Not much accomplished
   the pod, but still cannot be reached from the builder service.
 - problem was service DNS .cluster.local not local.net. Still
   authentication problems, but getting closer
-- working now with no password, will do.
+- working now with no password, this will do for a PoC.
+*** Wednesday
+Even less accomplished than yesterday. Basically passing host and
+username and prevent execution of evalctl as root. Meh.
+
+And the celebA dataset at
+https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg
+
 * TODO
   - cannot explain why the redis DB persists on pod restart. It is
     what I want, but not what I expect from the current setup
@@ -168,3 +175,5 @@ Not much accomplished
   - https://github.com/go-kratos/kratos
   - https://github.com/sagikazarmark/modern-go-application
   - https://stackoverflow.com/questions/66367867/how-to-expose-port-22-via-nginx-ingress-controller
+  - https://github.com/sdboyer/gogl
+  - https://github.com/vardius/go-api-boilerplate
