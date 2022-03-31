@@ -135,6 +135,8 @@ And the celebA dataset at
 https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg
 
 * TODO
+  - create small golang images w/ kaniko
+  - launch kaniko from the buider service
   - cannot explain why the redis DB persists on pod restart. It is
     what I want, but not what I expect from the current setup
   - rename grunt to grunt-squad
@@ -146,6 +148,7 @@ https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=
   - move registry storage to disk, /data/eval/registry
 
 * TOCONSIDER
+  - https://github.com/go-chi/chi (gitea switchig to it)
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
   - k8s golang framework: https://github.com/openfaas/faas
   - kv store: https://github.com/dgraph-io/badger
@@ -177,3 +180,11 @@ https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=
   - https://stackoverflow.com/questions/66367867/how-to-expose-port-22-via-nginx-ingress-controller
   - https://github.com/sdboyer/gogl
   - https://github.com/vardius/go-api-boilerplate
+  - https://pygop.readthedocs.io/en/latest/tutorials/mini-celebA-example.html
+  - https://yanzhaowu.me/GTDLBench/datasets/celeba_dataset/
+  - https://goodboychan.github.io/python/coursera/tensorflow_probability/icl/2021/09/14/03-Variational-AutoEncoder-Celeb-A.html
+  - https://arxiv.org/pdf/2008.05248.pdf
+  - https://www.ics.uci.edu/~cs223/papers/cidr07p15.pdf
+  - https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/
+  - https://medium.com/@dean15198/long-running-tasks-in-microservices-architecture-568c204da75e
+  - https://docs.firstdecode.com/microservices-architecture-style/asynchronous-microservices/

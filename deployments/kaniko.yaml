@@ -22,10 +22,10 @@ spec:
     env:
       - name: GIT_TOKEN
         value: "969c5cb1eaee59d878648cb862bef551cac70d34"
-      - name: GIT_USERNAME
-        value: "mav"
-      - name: GIT_PASSWORD
-        value: "ledcls"
+      # - name: GIT_USERNAME
+      #   value: "mav"
+      # - name: GIT_PASSWORD
+      #   value: "ledcls"
       - name: GIT_PULL_METHOD
         value: "http"
 #    "--no-push"
@@ -38,8 +38,6 @@ spec:
 
     "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
     "--dockerfile=dockerfile",
-#    "--verbosity=trace",
-#    "--no-push"
     ]
     volumeMounts:
       - name: data
