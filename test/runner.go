@@ -24,7 +24,8 @@ func main() {
 		log.Println(err)
 	}
 
-	out, err := exec.Command("app/test").Output()
+	fmt.Println("------------")
+	out, err := exec.Command("/app/test").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
