@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	fmt.Printf("Runner. Listing .:")
+	fmt.Printf("Runner. Listing /app:")
 
-	err := filepath.Walk(".",
+	err := filepath.Walk("/app",
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
