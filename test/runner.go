@@ -25,7 +25,13 @@ func main() {
 	}
 
 	fmt.Println("------------")
-	out, err := exec.Command("./test/test").Output()
+	mydir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(mydir)
+	fmt.Println("------------")
+	out, err := exec.Command("/app/test").Output()
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)

@@ -6,9 +6,9 @@ spec:
   containers:
   - name: test
     image: localhost:5000/test:bar
-#    command: ["/app/test/runner_/runner"]
-    command: ["/bin/ls"]
-    args: ["-R", "/app"]
+    command: ["/app/runner_/runner"]
+    # command: ["/bin/ls"]
+    # args: ["-lR", "/app"]
 #    command: ["/app/test"]
     imagePullPolicy: Always
   restartPolicy: Never
