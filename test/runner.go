@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -22,4 +23,10 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
+
+	out, err := exec.Command("app/test").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("test says %s\n", out)
 }
