@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Runner. Listing /app")
+	fmt.Printf("Runner. Listing /app:")
 
 	err := filepath.Walk("/app",
 		func(path string, info os.FileInfo, err error) error {
