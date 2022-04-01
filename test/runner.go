@@ -31,7 +31,7 @@ func main() {
 	}
 	fmt.Println(mydir)
 	fmt.Println("------------")
-	out, err := exec.Command("/app/test").Output()
+	out, err := exec.Command("/app/sub_/sub").Output()
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)
