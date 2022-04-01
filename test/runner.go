@@ -27,6 +27,7 @@ func main() {
 	fmt.Println("------------")
 	out, err := exec.Command("/app/test").Output()
 	if err != nil {
+		fmt.Println("ERROR")
 		log.Fatal(err)
 	}
 	fmt.Printf("test says %s\n", out)
