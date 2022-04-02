@@ -1,4 +1,4 @@
-FROM localhost:5000/eval/base-build AS builder
+FROM registry.other.net:5000/eval/base-build AS builder
 #FROM debian:buster-slim AS builder
 
 # RUN apt-get update
