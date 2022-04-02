@@ -22,11 +22,14 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fullstorydev/grpcurl v1.8.6 // indirect
 	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
 	github.com/jonboulle/clockwork v0.1.0 // indirect
+	github.com/philip-bui/grpc-zerolog v1.0.1 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
+	github.com/rs/zerolog v1.26.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/soheilhy/cmux v0.1.4 // indirect
@@ -34,6 +37,8 @@ require (
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
+	golang.org/x/text v0.3.7 // indirect
+	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	gopkg.in/resty.v1 v1.12.0 // indirect
 	k8s.io/client-go v0.23.5 // indirect
 )

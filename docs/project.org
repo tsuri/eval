@@ -134,7 +134,17 @@ username and prevent execution of evalctl as root. Meh.
 And the celebA dataset at
 https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg
 
+*** Thusday
+This entire week is not well. Just created images with kaniko that I
+can successfully run in cluster. For now he runner process runs a
+subprocess with both in golang. I tried to  have the second in python,
+which would be more realistic and useful for using some OSS ML
+example, unsuccesfully. I suspect similar problems if I had some
+`data` for the golang processes. Will keep trying.
+
 * TODO
+  - build images and place them in the registry (for istance the
+    buider one with bazel takes a long time in kaniko)
   - create small golang images w/ kaniko
   - launch kaniko from the buider service
   - cannot explain why the redis DB persists on pod restart. It is
@@ -188,3 +198,5 @@ https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=
   - https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/
   - https://medium.com/@dean15198/long-running-tasks-in-microservices-architecture-568c204da75e
   - https://docs.firstdecode.com/microservices-architecture-style/asynchronous-microservices/
+      - https://github.com/go-kit/examples/blob/master/addsvc/cmd/addcli/addcli.go
+      - https://www.youtube.com/watch?v=Z_yD7YPL2oE

@@ -42,7 +42,10 @@ go_binary(
 
 go_library(
     name = "test_lib",
-    srcs = ["runner.go"],
+    srcs = [
+        "runner.go",
+        "sub.go",
+    ],
     importpath = "eval/test",
     visibility = ["//visibility:private"],
 )
