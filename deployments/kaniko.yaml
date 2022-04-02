@@ -26,6 +26,7 @@ spec:
         value: "http"
     args: [
     "--insecure",
+    "--insecure-pull",
     "--skip-tls-verify",
     "--destination=registry.other.net:5000/test:bar",
 #    "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/main#8adc1aa2494ad4debba2dd795725223f251ff98a",
