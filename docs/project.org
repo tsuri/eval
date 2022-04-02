@@ -144,9 +144,11 @@ example, unsuccesfully. I suspect similar problems if I had some
 
 *** Friday
 Some refactoring
-rabbitmq deployment
+rabbitmq deployment, localhost->cluster port pssthrough, confirmed working
+confirmed kaniko works with git conext inclusing branch and commit sha
 
 * TODO
+  - see if a singe instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)
   - create small golang images w/ kaniko

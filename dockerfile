@@ -1,9 +1,11 @@
-FROM debian:buster-slim AS builder
+FROM localhost:5000/eval/base-build AS builder
+#FROM debian:buster-slim AS builder
 
-RUN apt-get update
-RUN apt-get install --yes wget build-essential python3
-RUN wget -q https://releases.bazel.build/5.1.0/release/bazel-5.1.0-linux-x86_64 -O /usr/bin/bazel
-RUN chmod +x /usr/bin/bazel
+# RUN apt-get update
+# RUN apt-get install --yes wget build-essential python3
+# RUN wget -q https://releases.bazel.build/5.1.0/release/bazel-5.1.0-linux-x86_64 -O /usr/bin/bazel
+# RUN chmod +x /usr/bin/bazel
+
 COPY . /eval
 WORKDIR /eval
 RUN echo $PWD
