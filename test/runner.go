@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Runner. Listing .:")
+	fmt.Printf("Runner NEW. Listing .:")
 
 	err := filepath.Walk(".",
 		func(path string, info os.FileInfo, err error) error {

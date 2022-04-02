@@ -18,7 +18,10 @@ import (
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -75,6 +78,22 @@ func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.Eval
 	// s.log.Info().Msg("new logger")
 	// log.Printf("Eval service")
 	// log.Printf("Request from %s on host %s", in.Requester.UserName, in.Requester.HostName)
+
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "Retrieving metadata is failed")
+	}
+	ruser := "unknown"
+	rpass := "unknown"
+	user, ok := md["user"]
+	if ok {
+		ruser = user[0]
+	}
+	pass, ok := md["pass"]
+	if ok {
+		rpass = pass[0]
+	}
+	s.log.Info().Str("user", ruser).Str("pass", rpass).Msg("Metadata")
 	return &pbeval.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 
@@ -86,7 +105,7 @@ func NewServer() *server {
 	}
 }
 
-func main() {
+func grpcCredentials() grpc.ServerOption {
 	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, clientCert),
 		filepath.Join(baseDir, clientKey))
 	if err != nil {
@@ -103,12 +122,17 @@ func main() {
 		log.Fatalf("failed to append certs")
 	}
 
+	return grpc.Creds(
+		credentials.NewTLS(&tls.Config{
+			ClientAuth:   tls.RequireAndVerifyClientCert,
+			Certificates: []tls.Certificate{cert},
+			ClientCAs:    certPool}))
+}
+
+func main() {
+
 	opts := []grpc.ServerOption{
-		grpc.Creds(
-			credentials.NewTLS(&tls.Config{
-				ClientAuth:   tls.RequireAndVerifyClientCert,
-				Certificates: []tls.Certificate{cert},
-				ClientCAs:    certPool})),
+		grpcCredentials(),
 		grpczerolog.UnaryInterceptor(),
 		//		grpczerolog.UnaryInterceptor(),
 	}

@@ -142,6 +142,10 @@ which would be more realistic and useful for using some OSS ML
 example, unsuccesfully. I suspect similar problems if I had some
 `data` for the golang processes. Will keep trying.
 
+*** Friday
+Some refactoring
+rabbitmq deployment
+
 * TODO
   - build images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)
@@ -200,3 +204,5 @@ example, unsuccesfully. I suspect similar problems if I had some
   - https://docs.firstdecode.com/microservices-architecture-style/asynchronous-microservices/
       - https://github.com/go-kit/examples/blob/master/addsvc/cmd/addcli/addcli.go
       - https://www.youtube.com/watch?v=Z_yD7YPL2oE
+      - https://github.com/apssouza22/grpc-production-go/blob/master/server/server.go
+      - https://zipkin.io/

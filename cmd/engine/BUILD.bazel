@@ -19,7 +19,10 @@ go_library(
         "@com_github_philip_bui_grpc_zerolog//:grpc-zerolog",
         "@com_github_rs_zerolog//:zerolog",
         "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//codes",
         "@org_golang_google_grpc//credentials",
+        "@org_golang_google_grpc//metadata",
+        "@org_golang_google_grpc//status",
     ],
 )
 

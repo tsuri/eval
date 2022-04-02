@@ -31,6 +31,10 @@ nodes:
   - containerPort: 443
     hostPort: 443
     protocol: TCP
+  - containerPort: 31672
+    hostPort: 15672
+  - containerPort: 30672
+    hostPort: 5672
   extraMounts:
   - hostPath: /data/eval
     containerPath: /data
@@ -63,9 +67,11 @@ kubectl apply -f deployments/namespaces.yaml
 ./scripts/certificates
 
 bazel run :eval.apply
+
 kubectl apply -f deployments/ingress.yaml
 
 kubectl apply -f deployments/dashboard.yaml
 kubectl apply -f deployments/gitea.yaml
 kubectl apply -f deployments/redis.yaml
 ./scripts/docker_secrets
+kubectl apply -f deployments/rabbitmq.yaml

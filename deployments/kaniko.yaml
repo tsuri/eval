@@ -22,21 +22,13 @@ spec:
     env:
       - name: GIT_TOKEN
         value: "969c5cb1eaee59d878648cb862bef551cac70d34"
-      # - name: GIT_USERNAME
-      #   value: "mav"
-      # - name: GIT_PASSWORD
-      #   value: "ledcls"
       - name: GIT_PULL_METHOD
         value: "http"
-#    "--no-push"
     args: [
     "--insecure",
     "--skip-tls-verify",
-
     "--destination=registry.other.net:5000/test:bar",
-#    "--destination=registry.other.net:5000/mav/test:foo",
-
-    "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
+    "--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/main#8adc1aa2494ad4debba2dd795725223f251ff98a",
     "--dockerfile=dockerfile",
     ]
     volumeMounts:
