@@ -38,7 +38,7 @@ const (
 	varLogLevel = "log.level"
 )
 
-type server struct {
+type serverContext struct {
 	log *zerolog.Logger
 	v   *viper.Viper
 }
@@ -78,7 +78,7 @@ func grunt(n int64) int64 {
 	return response.Number*2 + 1
 }
 
-func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
+func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
 	// s.log.Info().Msg("new logger")
 	// log.Printf("Eval service")
 	// log.Printf("Request from %s on host %s", in.Requester.UserName, in.Requester.HostName)
@@ -101,7 +101,7 @@ func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.Eval
 	return &pbeval.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 
-func NewServer() *server {
+func NewServerContext() *serverContext {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger.Info().Msg("Starting eval engine server")
 
@@ -120,7 +120,7 @@ func NewServer() *server {
 
 	viper.Debug()
 
-	return &server{
+	return &serverContext{
 		log: &logger,
 		v:   viper,
 	}
@@ -155,22 +155,18 @@ func main() {
 	opts := []grpc.ServerOption{
 		grpcCredentials(),
 		grpczerolog.UnaryInterceptor(),
-		//		grpczerolog.UnaryInterceptor(),
 	}
 
-	// s vs server. Need new names, I don't know what to use.
-	// I've seen server->service and s->server, but I'm not convinced yet.
-	// serverContext (as opposed to the request context we pass around)?
-	server := NewServer()
+	serverContext := NewServerContext()
 
-	s := grpc.NewServer(opts...)
-	pbeval.RegisterEngineServiceServer(s, server)
+	server := grpc.NewServer(opts...)
+	pbeval.RegisterEngineServiceServer(server, serverContext)
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	if err := s.Serve(lis); err != nil {
+	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
 }
