@@ -1,0 +1,5 @@
+#!/bin/bash
+# ehi emacs this is -*- shell-script -*-
+
+docker build -t localhost:5000/eval/base-build -f images/dockerfile .
+docker push localhost:5000/eval/base-build
