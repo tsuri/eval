@@ -17,6 +17,7 @@ import (
 
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
+	"github.com/soheilhy/cmux"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -150,7 +151,13 @@ func grpcCredentials() grpc.ServerOption {
 			ClientCAs:    certPool}))
 }
 
-func main() {
+func ServeAndWait(port string) {
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+
+	_ = cmux.New(lis)
 
 	opts := []grpc.ServerOption{
 		grpcCredentials(),
@@ -162,11 +169,11 @@ func main() {
 	server := grpc.NewServer(opts...)
 	pbeval.RegisterEngineServiceServer(server, serverContext)
 
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func main() {
+	ServeAndWait(port)
 }

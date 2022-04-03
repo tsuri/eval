@@ -16,6 +16,7 @@ require (
 
 require (
 	github.com/bketelsen/crypt v0.0.3-0.20200106085610-5cbc8cc4026c // indirect
+	github.com/cockroachdb/cmux v0.0.0-20170110192607-30d10be49292 // indirect
 	github.com/coreos/bbolt v1.3.2 // indirect
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect

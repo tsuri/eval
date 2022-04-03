@@ -220,6 +220,14 @@ def go_dependencies():
         version = "v0.0.0-20211130200136-a8f946100490",
     )
     go_repository(
+        name = "com_github_cockroachdb_cmux",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/cockroachdb/cmux",
+        sum = "h1:dzj1/xcivGjNPwwifh/dWTczkwcuqsXXFHY1X/TZMtw=",
+        version = "v0.0.0-20170110192607-30d10be49292",
+    )
+
+    go_repository(
         name = "com_github_coreos_bbolt",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/coreos/bbolt",
