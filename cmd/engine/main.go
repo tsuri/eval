@@ -17,7 +17,6 @@ import (
 
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
-	"github.com/soheilhy/cmux"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -157,8 +156,10 @@ func ServeAndWait(port string) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	_ = cmux.New(lis)
+	serveGRPC(lis)
+}
 
+func serveGRPC(l net.Listener) {
 	opts := []grpc.ServerOption{
 		grpcCredentials(),
 		grpczerolog.UnaryInterceptor(),
@@ -169,8 +170,9 @@ func ServeAndWait(port string) {
 	server := grpc.NewServer(opts...)
 	pbeval.RegisterEngineServiceServer(server, serverContext)
 
-	if err := server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	if err := server.Serve(l); err != nil {
+		// TODO real logger
+		log.Fatalf("error serving GRPC traffic")
 	}
 }
 
