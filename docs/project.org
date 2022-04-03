@@ -213,6 +213,29 @@ RABTAP_APIURI=http://guest:guest@localhost:15672/api)
       - https://github.com/apssouza22/grpc-production-go/blob/master/server/server.go
       - https://zipkin.io/
       - https://github.com/AleksK1NG/Go-gRPC-RabbitMQ-microservice
+** Backend Services
+- https://github.com/lileio/lile
+- https://github.com/tokopedia/gripmock
+- https://github.com/ThreeDotsLabs/watermill
+- https://github.com/fieldryand/goflow VIP
+- https://github.com/opencord/voltha-lib-go/blob/master/pkg/grpc/server.go
+  VIP lot of separate libraries in voltha-lib
+- https://github.com/digota/digota full production ready service
+  (ecommerce, but stil there should be good stuff)
+- https://github.com/C2FO/vfs
+- https://github.com/parsyl/parquet
+- https://github.com/joomcode/errorx
+*** Framework / Starting kits
+- https://github.com/mikestefanello/pagoda
+- https://github.com/zeromicro/go-zero
+*** Caching
+- https://github.com/eko/gocache
+- https://github.com/dgraph-io/ristretto
+** Frontend / UI
+- https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash
+- https://www.youtube.com/watch?v=hahZGMIhqkY
+- https://bulma.io/documentation/elements/title/
+
 ** Recommended Projects to learn from
 - https://github.com/golang/groupcache
 - https://github.com/mattermost/mattermost-server
