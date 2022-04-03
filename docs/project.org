@@ -146,9 +146,13 @@ example, unsuccesfully. I suspect similar problems if I had some
 Some refactoring
 rabbitmq deployment, localhost->cluster port pssthrough, confirmed working
 confirmed kaniko works with git conext inclusing branch and commit sha
+pre-bake a debian build image (including bazel) to be used by kaniko
+(script/images builds it). A build takes now 1:30 min, tolerable for a demo.
+Installed rabtab (set export
+RABTAP_APIURI=http://guest:guest@localhost:15672/api)
 
 * TODO
-  - see if a singe instance rabbitmq deployment works
+  - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)
   - create small golang images w/ kaniko
@@ -157,7 +161,7 @@ confirmed kaniko works with git conext inclusing branch and commit sha
     what I want, but not what I expect from the current setup
   - rename grunt to grunt-squad
   - add a cache service
-  - separate proto bufs
+  - separate proto bufs for different services
   - document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
   - gitea certificates for dashboard
   - gitea SSH keys
@@ -208,3 +212,8 @@ confirmed kaniko works with git conext inclusing branch and commit sha
       - https://www.youtube.com/watch?v=Z_yD7YPL2oE
       - https://github.com/apssouza22/grpc-production-go/blob/master/server/server.go
       - https://zipkin.io/
+      - https://github.com/AleksK1NG/Go-gRPC-RabbitMQ-microservice
+** Recommended Projects to learn from
+- https://github.com/golang/groupcache
+- https://github.com/mattermost/mattermost-server
+- https://github.com/dgraph-io/dgraph

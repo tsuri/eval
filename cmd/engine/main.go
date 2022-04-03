@@ -17,6 +17,7 @@ import (
 
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -29,14 +30,17 @@ const (
 )
 
 const (
-	baseDir    = "/app/Certs"
-	caCert     = "ca.crt"
-	clientCert = "tls.crt"
-	clientKey  = "tls.key"
+	baseDir     = "/app/Certs"
+	caCert      = "ca.crt"
+	clientCert  = "tls.crt"
+	clientKey   = "tls.key"
+	configFile  = "/app/config/config.yaml"
+	varLogLevel = "log.level"
 )
 
 type server struct {
 	log *zerolog.Logger
+	v   *viper.Viper
 }
 
 func connect(service string) (*grpc.ClientConn, error) {
@@ -100,8 +104,25 @@ func (s *server) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.Eval
 func NewServer() *server {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger.Info().Msg("Starting eval engine server")
+
+	viper := viper.New()
+	// viper.SetDefault(varPathToConfig, configFile)
+	viper.SetDefault(varLogLevel, "info")
+	viper.SetConfigFile("/app/config/config.yaml")
+	//	viper.AddConfigPath("/app/config")
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("failed to read configuration")
+	}
+
+	logger.Info().Str(varLogLevel, viper.GetString(varLogLevel)).Msg("Log level")
+	//	logger.Info().Str("commit", binfo.BuildInfo.GitCommit).Msg("build info")
+
+	viper.Debug()
+
 	return &server{
 		log: &logger,
+		v:   viper,
 	}
 }
 
@@ -137,6 +158,9 @@ func main() {
 		//		grpczerolog.UnaryInterceptor(),
 	}
 
+	// s vs server. Need new names, I don't know what to use.
+	// I've seen server->service and s->server, but I'm not convinced yet.
+	// serverContext (as opposed to the request context we pass around)?
 	server := NewServer()
 
 	s := grpc.NewServer(opts...)

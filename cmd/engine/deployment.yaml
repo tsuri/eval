@@ -22,6 +22,9 @@ spec:
       - name: cluster-certificates
         secret:
           secretName: cluster-certificates
+      - name: config-volume
+        configMap:
+          name: engine-config
       containers:
       - name: engine
         image: localhost:5000/main:dev
@@ -39,6 +42,8 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 30
         volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
         - name: data
           mountPath: /data
         - name: cluster-certificates
@@ -60,3 +65,12 @@ spec:
       port: 50051
       targetPort: 50051
   type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: engine-config
+  namespace: eval
+data:
+  config.yaml: |
+      log.console.level: debug
