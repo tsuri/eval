@@ -150,6 +150,16 @@ pre-bake a debian build image (including bazel) to be used by kaniko
 (script/images builds it). A build takes now 1:30 min, tolerable for a demo.
 Installed rabtab (set export
 RABTAP_APIURI=http://guest:guest@localhost:15672/api)
+** Week 4
+Nothing is a good approximation of what I've accomplished, just too
+tired from work to do anything at night.
+I have just monkeyed around with opentelemetry without getting to
+nything actually working. Totally not necessary for a demo, but
+there's the learning factor, so...
+
+*** Friday
+<2022-04-08 Fri> discovered https://github.com/grailbio/reflow. Rather
+similar to what I have in mind.
 
 * TODO
   - see if a single instance rabbitmq deployment works
@@ -208,11 +218,12 @@ RABTAP_APIURI=http://guest:guest@localhost:15672/api)
   - https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/https://www.linkedin.com/pulse/micro-services-architecture-long-running-processes-nethaji-chapala/
   - https://medium.com/@dean15198/long-running-tasks-in-microservices-architecture-568c204da75e
   - https://docs.firstdecode.com/microservices-architecture-style/asynchronous-microservices/
-      - https://github.com/go-kit/examples/blob/master/addsvc/cmd/addcli/addcli.go
-      - https://www.youtube.com/watch?v=Z_yD7YPL2oE
-      - https://github.com/apssouza22/grpc-production-go/blob/master/server/server.go
-      - https://zipkin.io/
-      - https://github.com/AleksK1NG/Go-gRPC-RabbitMQ-microservice
+    - https://github.com/go-kit/examples/blob/master/addsvc/cmd/addcli/addcli.go
+    - https://www.youtube.com/watch?v=Z_yD7YPL2oE
+    - https://github.com/apssouza22/grpc-production-go/blob/master/server/server.go
+    - https://zipkin.io/
+    - https://github.com/AleksK1NG/Go-gRPC-RabbitMQ-microservice
+    - https://github.com/alenkacz/cert-manager-verifier
 ** Backend Services
 - https://github.com/lileio/lile
 - https://github.com/tokopedia/gripmock

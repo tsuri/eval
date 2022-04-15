@@ -18,7 +18,6 @@ go_library(
         "//proto/grunt",
         "@com_github_philip_bui_grpc_zerolog//:grpc-zerolog",
         "@com_github_rs_zerolog//:zerolog",
-        "@com_github_soheilhy_cmux//:cmux",
         "@com_github_spf13_viper//:viper",
         "@org_golang_google_grpc//:go_default_library",
         "@org_golang_google_grpc//codes",
