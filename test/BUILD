@@ -56,6 +56,7 @@ go_binary(
 go_library(
     name = "test_lib",
     srcs = [
+        "another.go",
         "runner.go",
         "sub.go",
     ],

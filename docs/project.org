@@ -178,6 +178,7 @@ similar to what I have in mind.
   - move registry storage to disk, /data/eval/registry
 
 * TOCONSIDER
+  - https://github.com/h3poteto/kube-job/tree/master/pkg/job (VIP golang k8s jobs)
   - https://github.com/go-chi/chi (gitea switchig to it)
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
   - k8s golang framework: https://github.com/openfaas/faas

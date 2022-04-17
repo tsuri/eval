@@ -72,9 +72,40 @@ func connectToK8s() *kubernetes.Clientset {
 func main() {
 	log.Print("Hello there, this is the builder")
 
-	clientset := connectToK8s()
+	//-----------------------------------------------------------------------------
+	// TODO add an host entry for registry.other.net
+	log.Println("Trying docker")
+	// dockerClient, err := docker.NewClient("http://192.168.1.8:5000")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// imgs, err := dockerClient.ListImages(docker.ListImagesOptions{All: false})
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// for _, img := range imgs {
+	// 	fmt.Println("ID: ", img.ID)
+	// 	fmt.Println("RepoTags: ", img.RepoTags)
+	// 	fmt.Println("Created: ", img.Created)
+	// 	fmt.Println("Size: ", img.Size)
+	// 	fmt.Println("VirtualSize: ", img.VirtualSize)
+	// 	fmt.Println("ParentId: ", img.ParentID)
+	// }
+
+	// url := "https://registry-1.docker.io/"
+	// username := "" // anonymous
+	// password := "" // anonymous
+	// hub, err := registry.New(url, username, password)
+
+	// repositories, err := hub.Repositories()
+	// for r := range repositories {
+	// 	log.Println(r)
+	// }
+	// clientset := connectToK8s()
 
 	//-----------------------------------------------------------------------------
+	log.Println("Kubernetes")
 	batchApi := clientset.BatchV1()
 	jobs := batchApi.Jobs("default")
 
@@ -125,11 +156,32 @@ func main() {
 		},
 	}
 
-	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatalln("Failed to create K8s job. %v", err)
 	}
 	log.Println("Kaniko job created")
+
+	timeout := int64(3600)
+	watchres, err := jobs.Watch(context.Background(), metav1.ListOptions{
+		TimeoutSeconds: &timeout,
+	})
+
+	if err != nil {
+		log.Fatalln("Failed to watch job", err)
+	}
+	defer watchres.Stop()
+
+	eventres := watchres.ResultChan()
+	for we := range eventres {
+		log.Println("----")
+		log.Println(we.Type)
+		job, ok := we.Object.(*batchv1.Job)
+		if !ok {
+			continue
+		}
+		log.Println(job.Status.Conditions)
+	}
 
 	//-----------------------------------------------------------------------------
 	api := clientset.CoreV1()
