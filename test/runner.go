@@ -5,24 +5,23 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 func main() {
-	fmt.Printf("Runner NEW. Listing .:")
+	fmt.Printf("Runner VERY NEW. Listing .:")
 
-	err := filepath.Walk(".",
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			fmt.Println(path, info.Size())
-			return nil
-		})
+	// err := filepath.Walk(".",
+	// 	func(path string, info os.FileInfo, err error) error {
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 		fmt.Println(path, info.Size())
+	// 		return nil
+	// 	})
 
-	if err != nil {
-		log.Println(err)
-	}
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
 	fmt.Println("------------")
 	mydir, err := os.Getwd()
