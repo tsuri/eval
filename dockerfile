@@ -11,7 +11,7 @@ WORKDIR /eval
 RUN echo $PWD
 RUN ls
 #RUN /usr/bin/bazel build //test:runner
-RUN /usr/bin/bazel build //test:test  //test:runner //test:sub
+RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
 
 FROM debian:buster
 #RUN apt-get update && apt-get install --yes python3

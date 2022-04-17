@@ -30,10 +30,19 @@ func main() {
 	}
 	fmt.Println(mydir)
 	fmt.Println("------------")
+
 	out, err := exec.Command("/app/sub_/sub").Output()
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)
 	}
-	fmt.Printf("test says %s\n", out)
+	fmt.Printf("sub says %s\n", out)
+
+	out, err = exec.Command("/app/another_/another").Output()
+	if err != nil {
+		fmt.Println("ERROR")
+		log.Fatal(err)
+	}
+	fmt.Printf("another says %s\n", out)
+
 }

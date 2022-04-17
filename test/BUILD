@@ -31,6 +31,19 @@ go_binary(
     visibility = ["//visibility:public"],
 )
 
+go_library(
+    name = "another_lib",
+    srcs = ["another.go"],
+    importpath = "eval/sub",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "another",
+    embed = [":another_lib"],
+    visibility = ["//visibility:public"],
+)
+
 # container_push(
 #    name = "push_foo",
 #    image = ":foo",
