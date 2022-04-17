@@ -15,7 +15,6 @@ go_library(
     deps = [
         "//proto/grunt",
         "@com_github_go_redis_redis//:redis",
-        "@com_github_heroku_docker_registry_client//registry:go_default_library",
         "@io_k8s_api//batch/v1:batch",
         "@io_k8s_api//core/v1:core",
         "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
