@@ -10,13 +10,6 @@ spec:
     - "registry.other.net"
   containers:
 
-  # - name: cat-hosts
-  #   image: busybox:1.28
-  #   command:
-  #   - cat
-  #   args:
-  #   - "/etc/hosts"
-
   - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     env:
@@ -34,15 +27,15 @@ spec:
     "--dockerfile=dockerfile",
     ]
     volumeMounts:
-      - name: data
-        mountPath: /data
+      # - name: data
+      #   mountPath: /data
       - name: docker-config
         mountPath: /kaniko/.docker
   restartPolicy: Never
   volumes:
-    - name: data
-      hostPath:
-        path: /data  # matches kind containerPath:
+    # - name: data
+    #   hostPath:
+    #     path: /data  # matches kind containerPath:
     - name: docker-config
       projected:
         sources:

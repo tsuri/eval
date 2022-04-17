@@ -16,6 +16,7 @@ import (
 	"github.com/go-redis/redis"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -40,9 +41,7 @@ func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse
 	return &pb.EvalResponse{Number: in.Number + 1000}, nil
 }
 
-func main() {
-	log.Print("Hello there, this is the builder")
-
+func connectToK8s() *kubernetes.Clientset {
 	_, err := os.Stat("/var/run/secrets/kubernetes.io/serviceaccount/token")
 	if err != nil {
 		log.Printf("token not found")
@@ -67,6 +66,70 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	return clientset
+}
+
+func main() {
+	log.Print("Hello there, this is the builder")
+
+	clientset := connectToK8s()
+
+	//-----------------------------------------------------------------------------
+	batchApi := clientset.BatchV1()
+	jobs := batchApi.Jobs("default")
+
+	var backOffLimit int32 = 0
+
+	jobSpec := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "kaniko-",
+			Namespace:    "default",
+		},
+		Spec: batchv1.JobSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					HostAliases: []v1.HostAlias{
+						{
+							IP:        "192.168.1.8",
+							Hostnames: []string{"registry.other.net"},
+						},
+					},
+					Containers: []v1.Container{
+						{
+							Name:  "kaniko",
+							Image: "gcr.io/kaniko-project/executor:debug",
+							Args: []string{"--insecure",
+								"--insecure-pull",
+								"--skip-tls-verify",
+								"--destination=registry.other.net:5000/test:bar",
+								"--context=git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git",
+								"--dockerfile=dockerfile"},
+							Env: []v1.EnvVar{
+								{
+									Name:  "GIT_TOKEN",
+									Value: "969c5cb1eaee59d878648cb862bef551cac70d34",
+								},
+								{
+									Name:  "GIT_PULL_METHOD",
+									Value: "http",
+								},
+							},
+						},
+					},
+					RestartPolicy: v1.RestartPolicyNever,
+				},
+			},
+			BackoffLimit: &backOffLimit,
+		},
+	}
+
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	if err != nil {
+		log.Fatalln("Failed to create K8s job. %v", err)
+	}
+	log.Println("Kaniko job created")
+
+	//-----------------------------------------------------------------------------
 	api := clientset.CoreV1()
 
 	pods, err := api.Pods("").List(context.TODO(), metav1.ListOptions{})
@@ -75,6 +138,7 @@ func main() {
 	}
 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
+	//-----------------------------------------------------------------------------
 	var (
 		host       = "redis.eval.svc.cluster.local"
 		redis_port = "6379"
