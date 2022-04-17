@@ -79,6 +79,7 @@ func main() {
 	jobs := batchApi.Jobs("default")
 
 	var backOffLimit int32 = 0
+	var ttlsecondsafterfinished int32 = 10
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -119,7 +120,8 @@ func main() {
 					RestartPolicy: v1.RestartPolicyNever,
 				},
 			},
-			BackoffLimit: &backOffLimit,
+			BackoffLimit:            &backOffLimit,
+			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 		},
 	}
 
