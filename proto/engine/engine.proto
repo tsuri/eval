@@ -14,9 +14,20 @@ message EvalRequest {
 }
 
 message EvalResponse {
-    int64 number = 1;
+  int64 number = 1;
+}
+
+message BuildRequest {
+  Requester requester = 1;
+  string commitSHA = 2;
+  string branch = 3;
+}
+
+message BuildResponse {
+  string response = 1;
 }
 
 service EngineService {
-    rpc Eval(EvalRequest) returns (EvalResponse) {}
+  rpc Eval(EvalRequest) returns (EvalResponse) {}
+  rpc Build(BuildRequest) returns (BuildResponse) {}
 }

@@ -4,6 +4,7 @@ go_library(
     name = "cmd",
     srcs = [
         "eval.go",
+        "image.go",
         "root.go",
     ],
     importpath = "eval/cmd/evalctl/cmd",

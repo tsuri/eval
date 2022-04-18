@@ -101,6 +101,11 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 	return &pbeval.EvalResponse{Number: grunt(in.Number) + 1}, nil
 }
 
+func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
+	s.log.Info().Msg("Build")
+	return &pbeval.BuildResponse{Response: "done"}, nil
+}
+
 func NewServerContext() *serverContext {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger.Info().Msg("Starting eval engine server")

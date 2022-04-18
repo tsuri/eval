@@ -102,12 +102,12 @@ func main() {
 	// for r := range repositories {
 	// 	log.Println(r)
 	// }
-	// clientset := connectToK8s()
+	clientset := connectToK8s()
 
 	//-----------------------------------------------------------------------------
 	log.Println("Kubernetes")
-	batchApi := clientset.BatchV1()
-	jobs := batchApi.Jobs("default")
+	batchAPI := clientset.BatchV1()
+	jobs := batchAPI.Jobs("default")
 
 	var backOffLimit int32 = 0
 	var ttlSecondsAfterFinished int32 = 10
@@ -156,7 +156,7 @@ func main() {
 		},
 	}
 
-	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatalln("Failed to create K8s job. %v", err)
 	}
@@ -220,6 +220,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	result := string("key count: " + string(val))
 	log.Println(result)
 
