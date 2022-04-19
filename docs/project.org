@@ -161,6 +161,17 @@ there's the learning factor, so...
 <2022-04-08 Fri> discovered https://github.com/grailbio/reflow. Rather
 similar to what I have in mind.
 
+** Week 5
+Nothing is a precise description. Way too tired, not even opened my
+laptop.
+
+** Week 6
+*** Monday
+Refactored server so that we cn have reusable code for multiple
+services. Still works need to be done, but at least we have a place
+where to add functionality (graceful termination, rate limiting,
+metrics, etc)
+
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the

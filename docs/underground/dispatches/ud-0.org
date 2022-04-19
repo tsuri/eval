@@ -1,0 +1,14 @@
+:PROPERTIES:
+:Status:   Active
+:Type:     Informational
+:END:
+#+TITLE: Index of all underground dispatches
+
+* Meta-UDs
+* Other informational UDs
+* Provisional UDs
+* Accepted UDs
+* Open UDs
+* Finished UDs
+* Deferred
+* Abandoned

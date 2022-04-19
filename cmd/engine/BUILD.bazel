@@ -14,6 +14,7 @@ go_library(
     visibility = ["//visibility:private"],
     deps = [
         "//pkg/grpc/client",
+        "//pkg/grpc/server",
         "//proto/engine",
         "//proto/grunt",
         "@com_github_philip_bui_grpc_zerolog//:grpc-zerolog",

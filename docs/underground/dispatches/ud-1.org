@@ -1,0 +1,11 @@
+#+TITLE: Underground Dispatches, purposes and guidelines
+
+* What are Underground Dispatches?
+The vanishing act vanished on April 1st, 2022. Activities became
+underground operations. Dispatches are a way to surface decision and
+keep the resistence informed.
+
+* UD types
+** Architecture Decision Records
+** Informational
+** Process

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"eval/pkg/grpc/client"
+	"eval/pkg/grpc/server"
 
 	pbeval "eval/proto/engine"
 	pbgrunt "eval/proto/grunt"
@@ -181,6 +182,18 @@ func serveGRPC(l net.Listener) {
 	}
 }
 
+func serviceRegister(sv *grpc.Server) {
+	serverContext := NewServerContext()
+	pbeval.RegisterEngineServiceServer(sv, serverContext)
+	//	helloworld.RegisterGreeterServer(sv, &server{})
+}
+
 func main() {
-	ServeAndWait(port)
+	if true {
+		server := server.Build(port)
+		server.RegisterService(serviceRegister)
+		server.Start()
+	} else {
+		ServeAndWait(port)
+	}
 }
