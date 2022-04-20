@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 
@@ -44,18 +47,30 @@ func (s *serverContext) RegisterService(reg func(*grpc.Server)) {
 }
 
 func (s *serverContext) Start() {
-	log.Println("Start new server")
-	// TODO serve in a go routine and support grace termination
+	s.log.Info().Msg("Start new server")
+
+	// graceful stop on Interrupt
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		for sig := range c {
+			s.log.Warn().Str("signal", sig.String()).Msg("GracefulStop triggered")
+			s.server.GracefulStop()
+		}
+	}()
+
 	if err := s.server.Serve(*s.listener); err != nil {
-		// TODO real logger
-		log.Fatalf("error serving GRPC traffic")
+		s.log.Fatal().Msg("error serving GRPC traffic")
 	}
 }
 
 func Build(port string) Server {
+	//	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
 	opts := []grpc.ServerOption{
 		grpcCredentials(),
-		grpczerolog.UnaryInterceptor(),
+		grpczerolog.UnaryInterceptorWithLogger(&logger),
 	}
 	server := grpc.NewServer(opts...)
 
@@ -67,6 +82,7 @@ func Build(port string) Server {
 	return &serverContext{
 		server:   server,
 		listener: &listener,
+		log:      &logger,
 	}
 }
 

@@ -73,4 +73,5 @@ metadata:
   namespace: eval
 data:
   config.yaml: |
+      eval.grpc.port: 50051
       log.console.level: debug

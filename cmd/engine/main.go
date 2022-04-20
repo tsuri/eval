@@ -16,6 +16,7 @@ import (
 	pbeval "eval/proto/engine"
 	pbgrunt "eval/proto/grunt"
 
+	"github.com/fsnotify/fsnotify"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -23,6 +24,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 )
 
@@ -103,12 +105,15 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 }
 
 func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
-	s.log.Info().Msg("Build")
 	return &pbeval.BuildResponse{Response: "done"}, nil
 }
 
 func NewServerContext() *serverContext {
-	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
+	// In production we shouldn't format while logging. Rather
+	// external tools (web or cli) should produce nice logs from
+	// structured data
+	logger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+
 	logger.Info().Msg("Starting eval engine server")
 
 	viper := viper.New()
@@ -124,7 +129,14 @@ func NewServerContext() *serverContext {
 	logger.Info().Str(varLogLevel, viper.GetString(varLogLevel)).Msg("Log level")
 	//	logger.Info().Str("commit", binfo.BuildInfo.GitCommit).Msg("build info")
 
-	viper.Debug()
+	//	viper.Debug()
+
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		logger.Info().Msg("Config changed")
+		//	logrus.WithField("file", e.Name).Warn("Config file changed")
+		//	setLogLevel(c.GetLogLevel())
+	})
 
 	return &serverContext{
 		log: &logger,
@@ -182,10 +194,10 @@ func serveGRPC(l net.Listener) {
 	}
 }
 
-func serviceRegister(sv *grpc.Server) {
+func serviceRegister(s *grpc.Server) {
 	serverContext := NewServerContext()
-	pbeval.RegisterEngineServiceServer(sv, serverContext)
-	//	helloworld.RegisterGreeterServer(sv, &server{})
+	pbeval.RegisterEngineServiceServer(s, serverContext)
+	reflection.Register(s)
 }
 
 func main() {

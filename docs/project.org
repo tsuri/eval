@@ -171,6 +171,10 @@ Refactored server so that we cn have reusable code for multiple
 services. Still works need to be done, but at least we have a place
 where to add functionality (graceful termination, rate limiting,
 metrics, etc)
+*** Tuesday
+A bit of cleanup of logging.
+Added hot reloading of config (required new version of viper because
+of fsnotify import change).
 
 * TODO
   - see if a single instance rabbitmq deployment works
