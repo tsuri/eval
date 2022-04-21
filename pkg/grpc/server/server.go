@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/fsnotify/fsnotify"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 
 	"github.com/rs/zerolog"
@@ -40,10 +41,20 @@ type serverContext struct {
 type Server interface {
 	RegisterService(reg func(*grpc.Server))
 	Start()
+	Logger() *zerolog.Logger
+	Config() *viper.Viper
 }
 
 func (s *serverContext) RegisterService(reg func(*grpc.Server)) {
 	reg(s.server)
+}
+
+func (s *serverContext) Logger() *zerolog.Logger {
+	return s.log
+}
+
+func (s *serverContext) Config() *viper.Viper {
+	return s.v
 }
 
 func (s *serverContext) Start() {
@@ -79,10 +90,33 @@ func Build(port string) Server {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	viper := viper.New()
+	// viper.SetDefault(varPathToConfig, configFile)
+	viper.SetDefault(varLogLevel, "info")
+	viper.SetConfigFile("/app/config/config.yaml")
+	//	viper.AddConfigPath("/app/config")
+	err = viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("failed to read configuration")
+	}
+
+	logger.Info().Str(varLogLevel, viper.GetString(varLogLevel)).Msg("Log level")
+	//	logger.Info().Str("commit", binfo.BuildInfo.GitCommit).Msg("build info")
+
+	//	viper.Debug()
+
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		logger.Info().Msg("Config changed")
+		//	logrus.WithField("file", e.Name).Warn("Config file changed")
+		//	setLogLevel(c.GetLogLevel())
+	})
+
 	return &serverContext{
 		server:   server,
 		listener: &listener,
 		log:      &logger,
+		v:        viper,
 	}
 }
 

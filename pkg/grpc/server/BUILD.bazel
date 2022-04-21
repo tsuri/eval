@@ -6,6 +6,7 @@ go_library(
     importpath = "eval/pkg/grpc/server",
     visibility = ["//visibility:public"],
     deps = [
+        "@com_github_fsnotify_fsnotify//:fsnotify",
         "@com_github_philip_bui_grpc_zerolog//:grpc-zerolog",
         "@com_github_rs_zerolog//:zerolog",
         "@com_github_spf13_viper//:viper",

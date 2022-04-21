@@ -179,6 +179,10 @@ of fsnotify import change).
 Started using go-git to get status of wortree extract branch name and
 commit sha to be passed to 'image build'
 
+More substantial refactoring. Now logging and config is set up by the
+framework. Still need to figure out how to tell the app that config
+has changed. Close to be willing to setup a real build service :happy:
+
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
