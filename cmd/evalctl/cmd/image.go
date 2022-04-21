@@ -90,8 +90,8 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	}
 	response, err := client.Build(context.Background(), &pbEngine.BuildRequest{
 		Requester: &requester,
-		CommitSHA: "something",
-		Branch:    "branch",
+		CommitSHA: ref.Hash().String(),
+		Branch:    ref.Name().String(),
 	})
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)

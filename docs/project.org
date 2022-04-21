@@ -175,6 +175,9 @@ metrics, etc)
 A bit of cleanup of logging.
 Added hot reloading of config (required new version of viper because
 of fsnotify import change).
+*** Wednesday
+Started using go-git to get status of wortree extract branch name and
+commit sha to be passed to 'image build'
 
 * TODO
   - see if a single instance rabbitmq deployment works

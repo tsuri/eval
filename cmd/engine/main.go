@@ -2,11 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"path/filepath"
 
@@ -17,12 +13,10 @@ import (
 	pbgrunt "eval/proto/grunt"
 
 	"github.com/fsnotify/fsnotify"
-	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -82,10 +76,6 @@ func grunt(n int64) int64 {
 }
 
 func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
-	// s.log.Info().Msg("new logger")
-	// log.Printf("Eval service")
-	// log.Printf("Request from %s on host %s", in.Requester.UserName, in.Requester.HostName)
-
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.InvalidArgument, "Retrieving metadata is failed")
@@ -144,68 +134,71 @@ func NewServerContext() *serverContext {
 	}
 }
 
-func grpcCredentials() grpc.ServerOption {
-	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, clientCert),
-		filepath.Join(baseDir, clientKey))
-	if err != nil {
-		log.Fatalf("Failed to get certificate")
+// func grpcCredentials() grpc.ServerOption {
+// 	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, clientCert),
+// 		filepath.Join(baseDir, clientKey))
+// 	if err != nil {
+// 		log.Fatalf("Failed to get certificate")
+// 	}
+
+// 	certPool := x509.NewCertPool()
+// 	bs, err := ioutil.ReadFile(filepath.Join(baseDir, caCert))
+// 	if err != nil {
+// 		log.Fatalf("failed to read certificates chain: %s", err)
+// 	}
+// 	ok := certPool.AppendCertsFromPEM(bs)
+// 	if !ok {
+// 		log.Fatalf("failed to append certs")
+// 	}
+
+// 	return grpc.Creds(
+// 		credentials.NewTLS(&tls.Config{
+// 			ClientAuth:   tls.RequireAndVerifyClientCert,
+// 			Certificates: []tls.Certificate{cert},
+// 			ClientCAs:    certPool}))
+// }
+
+// func ServeAndWait(port string) {
+// 	lis, err := net.Listen("tcp", port)
+// 	if err != nil {
+// 		log.Fatalf("failed to listen: %v", err)
+// 	}
+
+// 	serveGRPC(lis)
+// }
+
+// func serveGRPC(l net.Listener) {
+// 	opts := []grpc.ServerOption{
+// 		grpcCredentials(),
+// 		grpczerolog.UnaryInterceptor(),
+// 	}
+
+// 	serverContext := NewServerContext()
+
+// 	server := grpc.NewServer(opts...)
+// 	pbeval.RegisterEngineServiceServer(server, serverContext)
+
+// 	if err := server.Serve(l); err != nil {
+// 		// TODO real logger
+// 		log.Fatalf("error serving GRPC traffic")
+// 	}
+// }
+
+func serviceRegister(server server.Server) func(*grpc.Server) {
+	return func(s *grpc.Server) {
+		// later we'll lift stuff like the logger and configuration
+		serverContext := NewServerContext()
+		pbeval.RegisterEngineServiceServer(s, serverContext)
+		reflection.Register(s)
 	}
-
-	certPool := x509.NewCertPool()
-	bs, err := ioutil.ReadFile(filepath.Join(baseDir, caCert))
-	if err != nil {
-		log.Fatalf("failed to read certificates chain: %s", err)
-	}
-	ok := certPool.AppendCertsFromPEM(bs)
-	if !ok {
-		log.Fatalf("failed to append certs")
-	}
-
-	return grpc.Creds(
-		credentials.NewTLS(&tls.Config{
-			ClientAuth:   tls.RequireAndVerifyClientCert,
-			Certificates: []tls.Certificate{cert},
-			ClientCAs:    certPool}))
-}
-
-func ServeAndWait(port string) {
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	serveGRPC(lis)
-}
-
-func serveGRPC(l net.Listener) {
-	opts := []grpc.ServerOption{
-		grpcCredentials(),
-		grpczerolog.UnaryInterceptor(),
-	}
-
-	serverContext := NewServerContext()
-
-	server := grpc.NewServer(opts...)
-	pbeval.RegisterEngineServiceServer(server, serverContext)
-
-	if err := server.Serve(l); err != nil {
-		// TODO real logger
-		log.Fatalf("error serving GRPC traffic")
-	}
-}
-
-func serviceRegister(s *grpc.Server) {
-	serverContext := NewServerContext()
-	pbeval.RegisterEngineServiceServer(s, serverContext)
-	reflection.Register(s)
 }
 
 func main() {
-	if true {
-		server := server.Build(port)
-		server.RegisterService(serviceRegister)
-		server.Start()
-	} else {
-		ServeAndWait(port)
-	}
+	//	if true {
+	server := server.Build(port)
+	server.RegisterService(serviceRegister(server))
+	server.Start()
+	// } else {
+	// 	ServeAndWait(port)
+	// }
 }
