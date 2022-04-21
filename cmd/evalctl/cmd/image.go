@@ -9,6 +9,7 @@ import (
 	"os/user"
 	"path/filepath"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -55,6 +56,27 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("cannot get username: %s", err)
 	}
+
+	repo, err := git.PlainOpen("/home/mav/eval")
+	if err != nil {
+		log.Fatalf("Not in  git workspace")
+	}
+	ref, err := repo.Head()
+	if err != nil {
+		log.Fatalf("Cannot get HEAD")
+	}
+	log.Printf("REF: %v\n", ref)
+	log.Println("REF hash: ", ref.Hash)
+	w, err := repo.Worktree()
+	if err != nil {
+		log.Fatalf("Cnnot get worktree")
+	}
+	status, err := w.Status()
+	if err != nil {
+		log.Fatalf("Cannot get status")
+	}
+	log.Printf("STATUS: %v\n", status)
+
 	requester := pbEngine.Requester{
 		UserName: user.Username,
 		HostName: hostname,
