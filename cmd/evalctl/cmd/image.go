@@ -66,7 +66,9 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Cannot get HEAD")
 	}
 	log.Printf("REF: %v\n", ref)
-	log.Println("REF hash: ", ref.Hash)
+	log.Println("REF hash: ", ref.Hash())
+	log.Println("REF name: ", ref.Name())
+	log.Println("REF target: ", ref.Target())
 	w, err := repo.Worktree()
 	if err != nil {
 		log.Fatalf("Cnnot get worktree")
@@ -76,6 +78,11 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Cannot get status")
 	}
 	log.Printf("STATUS: %v\n", status)
+	if status.IsClean() {
+		log.Println("Clean workspace")
+	} else {
+		log.Println("Dirty workspace")
+	}
 
 	requester := pbEngine.Requester{
 		UserName: user.Username,
