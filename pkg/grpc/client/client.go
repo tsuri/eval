@@ -6,12 +6,34 @@ import (
 	"crypto/x509"
 	"errors"
 	"io/ioutil"
+	"log"
 	"net"
+	"path/filepath"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 )
+
+const (
+	baseDir    = "/app/Certs"
+	caCert     = "ca.crt"
+	clientCert = "tls.crt"
+	clientKey  = "tls.key"
+)
+
+func Connect(service string) (*grpc.ClientConn, error) {
+	var conn *grpc.ClientConn
+	conn, err := NewConnection(service,
+		filepath.Join(baseDir, caCert),
+		filepath.Join(baseDir, clientCert),
+		filepath.Join(baseDir, clientKey))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	return conn, nil
+}
 
 func NewConnection(endpoint string,
 	certFile string,
@@ -46,10 +68,6 @@ func NewConnection(endpoint string,
 	})
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	conn, err := grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
-	if err != nil {
-		return nil, err
-	}
-	return conn, err
-
+	ctx = metadata.AppendToOutgoingContext(ctx, "user", "USER", "pass", "PASS", "k2", "v3")
+	return grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
 }

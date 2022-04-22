@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"path/filepath"
 
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
@@ -24,34 +23,13 @@ const (
 	port = "0.0.0.0:50051"
 )
 
-const (
-	baseDir     = "/app/Certs"
-	caCert      = "ca.crt"
-	clientCert  = "tls.crt"
-	clientKey   = "tls.key"
-	configFile  = "/app/config/config.yaml"
-	varLogLevel = "log.level"
-)
-
 type serverContext struct {
 	log *zerolog.Logger
 	v   *viper.Viper
 }
 
-func connect(service string) (*grpc.ClientConn, error) {
-	var conn *grpc.ClientConn
-	conn, err := client.NewConnection("eval-grunt.eval.svc.cluster.local:50051",
-		filepath.Join(baseDir, caCert),
-		filepath.Join(baseDir, clientCert),
-		filepath.Join(baseDir, clientKey))
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	return conn, nil
-}
-
-func build_image() {
-	conn, err := connect("eval-build.eval.svc.cluster.local:50051")
+func buildImage() {
+	conn, err := client.Connect("eval-build.eval.svc.cluster.local:50051")
 	if err != nil {
 		log.Fatalf("did not connect")
 	}
@@ -60,7 +38,7 @@ func build_image() {
 }
 
 func grunt(n int64) int64 {
-	conn, err := connect("eval-grunt.eval.svc.cluster.local:50051")
+	conn, err := client.Connect("eval-grunt.eval.svc.cluster.local:50051")
 	defer conn.Close()
 
 	client := pbgrunt.NewEngineServiceClient(conn)
