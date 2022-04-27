@@ -47,7 +47,8 @@ spec:
           name: config
       volumes:
         - name: data
-          emptyDir: {}
+          hostPath:
+            path: /data/eval/redis
         - name: config
           configMap:
             name: test-redis-config

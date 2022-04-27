@@ -15,6 +15,7 @@ go_library(
     deps = [
         "//pkg/grpc/client",
         "//pkg/grpc/server",
+        "//proto/builder",
         "//proto/engine",
         "//proto/grunt",
         "@com_github_rs_zerolog//:zerolog",

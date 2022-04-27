@@ -42,7 +42,7 @@ spec:
         - name: data
           mountPath: /data
         - name: cluster-certificates
-          mountPath: /app/Certs/
+          mountPath: /data/eval/certificates
           readOnly: true
 
 ---

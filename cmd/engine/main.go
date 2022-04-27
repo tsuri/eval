@@ -7,6 +7,7 @@ import (
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
 
+	pbbuilder "eval/proto/builder"
 	pbeval "eval/proto/engine"
 	pbgrunt "eval/proto/grunt"
 
@@ -28,13 +29,31 @@ type serverContext struct {
 	v   *viper.Viper
 }
 
-func buildImage() {
-	conn, err := client.Connect("eval-build.eval.svc.cluster.local:50051")
+func buildImage(in *pbeval.BuildRequest) {
+	// ok, a filure to connect here doesn' return error
+	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
 		log.Fatalf("did not connect")
 	}
 	defer conn.Close()
 
+	client := pbbuilder.NewBuilderServiceClient(conn)
+
+	requester := pbbuilder.Requester{
+		UserName: "USER",
+		HostName: "HOSTNAME",
+	}
+
+	response, err := client.Build(context.Background(), &pbbuilder.BuildRequest{
+		Requester: &requester,
+		CommitSHA: in.CommitSHA,
+		Branch:    in.Branch,
+	})
+	if err != nil {
+		log.Printf("bad answer from builder")
+	} else {
+		log.Printf("response %v", response.Response)
+	}
 }
 
 func grunt(n int64) int64 {
@@ -72,6 +91,7 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 
 func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
 	s.log.Info().Msg("Let's see this one")
+	buildImage(in)
 	return &pbeval.BuildResponse{Response: "done"}, nil
 }
 

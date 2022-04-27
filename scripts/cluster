@@ -75,3 +75,4 @@ kubectl apply -f deployments/gitea.yaml
 kubectl apply -f deployments/redis.yaml
 ./scripts/docker_secrets
 kubectl apply -f deployments/rabbitmq.yaml
+kubectl apply -f deployments/asynqmon.yaml

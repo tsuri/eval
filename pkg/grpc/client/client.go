@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	baseDir    = "/app/Certs"
+	baseDir    = "/data/eval/certificates"
 	caCert     = "ca.crt"
 	clientCert = "tls.crt"
 	clientKey  = "tls.key"
@@ -29,6 +29,7 @@ func Connect(service string) (*grpc.ClientConn, error) {
 		filepath.Join(baseDir, caCert),
 		filepath.Join(baseDir, clientCert),
 		filepath.Join(baseDir, clientKey))
+	// error not propagated
 	if err != nil {
 		log.Fatalf("did not connect: %s", err)
 	}
@@ -68,6 +69,6 @@ func NewConnection(endpoint string,
 	})
 
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-	ctx = metadata.AppendToOutgoingContext(ctx, "user", "USER", "pass", "PASS", "k2", "v3")
+	ctx = metadata.AppendToOutgoingContext(ctx, "user", "USER", "pass", "PASS")
 	return grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
 }

@@ -13,15 +13,15 @@ go_library(
     importpath = "eval/cmd/builder",
     visibility = ["//visibility:private"],
     deps = [
-        "//proto/grunt",
-        "@com_github_go_redis_redis//:redis",
-        "@io_k8s_api//batch/v1:batch",
-        "@io_k8s_api//core/v1:core",
-        "@io_k8s_apimachinery//pkg/apis/meta/v1:meta",
+        "//pkg/grpc/server",
+        "//proto/builder",
+        "@com_github_hibiken_asynq//:asynq",
+        "@com_github_rs_zerolog//:zerolog",
+        "@com_github_spf13_viper//:viper",
         "@io_k8s_client_go//kubernetes",
         "@io_k8s_client_go//rest",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//credentials",
+        "@org_golang_google_grpc//reflection",
     ],
 )
 

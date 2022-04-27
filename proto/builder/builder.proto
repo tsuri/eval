@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package builder;
+
+option go_package = "eval/proto/builder";
+
+message Requester {
+  string userName = 1;
+  string hostName = 2;
+}
+
+message BuildRequest {
+  Requester requester = 1;
+  string commitSHA = 2;
+  string branch = 3;
+}
+
+message BuildResponse {
+  string response = 1;
+}
+
+service BuilderService {
+  rpc Build(BuildRequest) returns (BuildResponse) {}
+}

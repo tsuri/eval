@@ -28,6 +28,9 @@ spec:
       containers:
       - name: engine
         image: localhost:5000/main:dev
+        env:
+          - name: GRPC_TRACE
+            value: all
         ports:
         - containerPort: 50051
           name: grpc
@@ -47,7 +50,7 @@ spec:
         - name: data
           mountPath: /data
         - name: cluster-certificates
-          mountPath: /app/Certs/
+          mountPath: /data/eval/certificates
           readOnly: true
 ---
 apiVersion: v1

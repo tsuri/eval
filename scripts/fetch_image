@@ -1,0 +1,11 @@
+#!/bin/bash
+# ehi emacs, this is -*- shell-script -*-
+
+remote_image=$1
+local_image="localhost:5000/$(basename ${remote_image})"
+
+docker pull ${remote_image}
+docker tag ${remote_image} ${local_image}
+docker push ${local_image}
+
+echo "Image ${remote_image} available as ${local_image}"

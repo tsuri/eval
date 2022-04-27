@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asynqmon
+  namespace: eval
+  labels:
+    app: asynqmon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asynqmon
+  template:
+    metadata:
+      labels:
+        app: asynqmon
+    spec:
+      containers:
+      - name: asynqmon
+        image: docker.io/hibiken/asynqmon
+#        command: ["printenv"]
+        args: ["--redis-addr", "redis.eval.svc.cluster.local:6379", "--enable-metrics-exporter"]
+        ports:
+        - containerPort: 8080
+          name: http
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: asynqmon-service
+  namespace: eval
+spec:
+  selector:
+    app: asynqmon
+  ports:
+  - name: asynqmon-http
+    port: 8080
+    targetPort: 8080
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: asynqmon-tls
+  namespace: eval
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
+    nginx.ingress.kubernetes.io/proxy-body-size: 10M
+spec:
+  tls:
+    - hosts:
+        - asynqmon.eval.net
+      secretName: cluster-certificates
+  rules:
+  - host: asynqmon.eval.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: asynqmon-service
+            port:
+              number: 8080

@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	baseDir    = "/app/Certs"
+	baseDir    = "/data/eval/certificates"
 	CaCert     = "ca.crt"
 	ServerCert = "tls.crt"
 	ServerKey  = "tls.key"

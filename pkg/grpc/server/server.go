@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	baseDir     = "/app/Certs"
+	baseDir     = "/data/eval/certificates"
 	caCert      = "ca.crt"
 	clientCert  = "tls.crt"
 	clientKey   = "tls.key"
@@ -69,7 +69,6 @@ func (s *serverContext) Start() {
 			s.server.GracefulStop()
 		}
 	}()
-
 	if err := s.server.Serve(*s.listener); err != nil {
 		s.log.Fatal().Msg("error serving GRPC traffic")
 	}

@@ -22,6 +22,9 @@ spec:
       - name: cluster-certificates
         secret:
           secretName: cluster-certificates
+      - name: config-volume
+        configMap:
+          name: engine-config
       serviceAccountName: builder-sa
       containers:
       - name: builder
@@ -40,10 +43,12 @@ spec:
           initialDelaySeconds: 15
           periodSeconds: 30
         volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
         - name: data
           mountPath: /data
         - name: cluster-certificates
-          mountPath: /app/Certs/
+          mountPath: /data/eval/certificates
           readOnly: true
 
 ---
@@ -102,3 +107,13 @@ spec:
       port: 50051
       targetPort: 50051
   type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: builder-config
+  namespace: eval
+data:
+  config.yaml: |
+      eval.grpc.port: 50051
+      log.console.level: debug

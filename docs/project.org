@@ -183,6 +183,22 @@ More substantial refactoring. Now logging and config is set up by the
 framework. Still need to figure out how to tell the app that config
 has changed. Close to be willing to setup a real build service :happy:
 
+*** Thusday
+Added a builder proto, added a builder service implementation.
+For some reason my client library doesn't return error properly when
+the builder endpoint was not found ('eval-build' instead of
+'eval-builder', should have been a DNS error). Left comments in the
+code. This made me chase ghosts for the entire evening. Rats!
+
+*** Friday
+Not much. Looked around for a decent task queue in golang, backed up
+by redis. Or maybe we end up using rabbitmq.
+
+Played with a couple asynq ended up working, I can create and handle
+tasks. I've also configured a dashboard at asynqmon.eval.net, the
+nginx ingres is magic. Very cool. Took no time. It was on Saturday,
+      but I was otherwise busy with gardeners woring in my backyard.
+
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
@@ -200,6 +216,7 @@ has changed. Close to be willing to setup a real build service :happy:
   - move registry storage to disk, /data/eval/registry
 
 * TOCONSIDER
+  - https://github.com/sourcegraph/starlight
   - https://github.com/h3poteto/kube-job/tree/master/pkg/job (VIP golang k8s jobs)
   - https://github.com/go-chi/chi (gitea switchig to it)
   - grafana: https://grafana.com/grafana/plugins/grafana-kubernetes-app/
