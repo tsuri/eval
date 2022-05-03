@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Ehi Emacs this is -*- shell-script -*-
+
+exec bazel run -- @io_bazel_rules_go//go/tools/gopackagesdriver "${@}"
