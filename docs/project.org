@@ -199,6 +199,9 @@ tasks. I've also configured a dashboard at asynqmon.eval.net, the
 nginx ingres is magic. Very cool. Took no time. It was on Saturday,
       but I was otherwise busy with gardeners woring in my backyard.
 
+** Week 7
+Another bummer week of nothingness. 
+
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
@@ -286,7 +289,12 @@ nginx ingres is magic. Very cool. Took no time. It was on Saturday,
 - https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash
 - https://www.youtube.com/watch?v=hahZGMIhqkY
 - https://bulma.io/documentation/elements/title/
-
+** Machine Learning
+- https://www.youtube.com/watch?v=Z53KkGThFNo
+** Type Checking and Compiler Optimizations
+- https://www.cs.cmu.edu/afs/cs/project/cmcl/archive/Compiler90.pdf
+- https://arxiv.org/pdf/1610.07978.pdf
+- https://pdf.sciencedirectassets.com/271600/1-s2.0-S0167642300X00020/1-s2.0-0167642395000216/main.pdf?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEHIaCXVzLWVhc3QtMSJHMEUCIAjyQJboYF6DnVmYEXUTzsn9x8V36toZWaRvLBV0OSVdAiEAxzj35plrU5tBAEuHqCHytP3%2FCSN5bLkVLs9rmLZrtX4q0gQIOxAEGgwwNTkwMDM1NDY4NjUiDPBgiinBFOh6ersTjSqvBIl5zITiPAkX26s6E0Ir5SJeNfDkyvkYNLhwsOdJMVtJds6vBUS5BdP2wCpwso4eV0NFolM9d1PCjGhAppY87ITFNUHg18bE6uMhxGGjeF3LffcD9yZOYsvjXkqknhb15XxP7RB0rkC%2B4jYxONMtLozKLc4kmyVbp9rg91%2BE7WJTzCv3RMjygvcwD4augdtFgv%2BqKr3y6UdhywBXhk9cE9xSi%2BGtpPotyGgRRxJrsSNAvULyJeaz8rMgJg7L7eBUUSYYJQBE7cFArOJCuf%2FaGpVi%2FytUC9kiq5yID6gzo35xSmsEucGPsEWnSSJzs03dr5W%2BLnAUdoAPi5Ptf3k%2Fby2Im95KcEpOkvCxpHiUN%2B6JNTBTFLXw3GvcaM43zINbvHhmI%2BYnC40iac33%2BiwJSIrRresb%2FhRZv0Mp2LXILfzrKrR3uXVQPtd84lz7Aq0uMEMK3zmlINZJF4g0L2BIDU6trZRo7l9LHcqJl%2F%2FsrWTd5vtol%2FzX1zqOoQ%2FrHn7ErblIKmaWRcidIB3BboZUtUf08r%2BtO3qMGyRisM8nvOTQwJVtMFNy%2FPFo1ZogWKfzNo%2B2l135H%2FvDg24zBj%2BCOxfohMfj60DApt4ctEREdUj76fvbmJEPHEDgRCLKNIQMXCoJ96Lb60LFkKZfOX2GTqTx6Rh2mR1i%2Fow2Fnzn1s3hG%2BhsdnhMkE604g4eAkK0RU%2FMhM3X3qobztzl4TMxafy1ATVx9gxdmJctWbdTMX0wqvO8kwY6qQG20xe8JF3qmrHSvlWiUcBczhLe2MU7MP6U%2FZfF1u2RR0NQDIA5D9lkiOttxs15KJJAnLowLCuh1GGvOPMYrZ%2BYIzV6KNYEYqV3HjQoY8lsj0v3Rl288UO4yhBYUD2WkgpKjua%2BqGxZ%2FFx%2FKu7sCaZ7GSjBlWBOO7lDBt5BiAwN%2Fr9BfTKGoyHZwm2Ejr%2F8CGkpRfStHrag2BfD1aScy83zoqyQECUNrXAh&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20220502T022644Z&X-Amz-SignedHeaders=host&X-Amz-Expires=300&X-Amz-Credential=ASIAQ3PHCVTYSXQ7AC44%2F20220502%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Signature=4e74311e328367bf301e3537c75d8a95ecea5b8e1c6420839d7db863132d7163&hash=8fd336f3e1ab1543c862e3603927f52b5278db3c7fe5dc2a75a96c34801ae318&host=68042c943591013ac2b2430a89b270f6af2c76d8dfd086a07176afe7c76c2c61&pii=0167642395000216&tid=spdf-b0523c19-7a42-410b-ae45-4de410af654e&sid=03c69ad97e3f3449d48b8181e52fb1763b2dgxrqa&type=client&ua=4d55530152575409010352&rr=704d504ffb6657f4
 ** Recommended Projects to learn from
 - https://github.com/golang/groupcache
 - https://github.com/mattermost/mattermost-server

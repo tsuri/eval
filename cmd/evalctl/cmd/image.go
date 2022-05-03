@@ -24,11 +24,23 @@ var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build a docker image",
 	Long:  "Build",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.ExactArgs(0),
 	Run:   buildCmdImpl,
 }
 
 func init() {
+	repo, err := git.PlainOpen("/home/mav/eval")
+	if err != nil {
+		log.Fatalf("Not in  git workspace")
+	}
+	ref, err := repo.Head()
+	if err != nil {
+		log.Fatalf("Cannot get HEAD")
+	}
+
+	buildCmd.PersistentFlags().StringP("commit", "c", ref.Hash().String(), "Commit SHA used for building targets")
+	buildCmd.PersistentFlags().StringP("branch", "b", ref.Name().String(), "Branch used for building targets")
+	buildCmd.PersistentFlags().StringArrayP("target", "t", []string{}, "Bazel targets to be included in the image")
 	imageCmd.AddCommand(buildCmd)
 	rootCmd.AddCommand(imageCmd)
 }
@@ -45,6 +57,24 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	defer conn.Close()
 	client := pbEngine.NewEngineServiceClient(conn)
 
+	targets, err := cmd.Flags().GetStringArray("target")
+	if err != nil {
+		log.Fatalf("Bad argument, target %v", err)
+	}
+	log.Printf("TARGETS: %v\n", targets)
+
+	branch, err := cmd.Flags().GetString("branch")
+	if err != nil {
+		log.Fatalf("Bad argument, branch")
+	}
+	log.Printf("BRANCH: %v\n", branch)
+
+	commit, err := cmd.Flags().GetString("commit")
+	if err != nil {
+		log.Fatalf("Bad argument, commit")
+	}
+	log.Printf("COMMIT: %v\n", commit)
+
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Fatalf("cannot get hostname: %s", err)
@@ -58,17 +88,17 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	}
 
 	repo, err := git.PlainOpen("/home/mav/eval")
-	if err != nil {
-		log.Fatalf("Not in  git workspace")
-	}
-	ref, err := repo.Head()
-	if err != nil {
-		log.Fatalf("Cannot get HEAD")
-	}
-	log.Printf("REF: %v\n", ref)
-	log.Println("REF hash: ", ref.Hash())
-	log.Println("REF name: ", ref.Name())
-	log.Println("REF target: ", ref.Target())
+	// if err != nil {
+	// 	log.Fatalf("Not in  git workspace")
+	// }
+	// ref, err := repo.Head()
+	// if err != nil {
+	// 	log.Fatalf("Cannot get HEAD")
+	// }
+	// log.Printf("REF: %v\n", ref)
+	// log.Println("REF hash: ", ref.Hash())
+	// log.Println("REF name: ", ref.Name())
+	// log.Println("REF target: ", ref.Target())
 	w, err := repo.Worktree()
 	if err != nil {
 		log.Fatalf("Cnnot get worktree")
@@ -90,8 +120,9 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	}
 	response, err := client.Build(context.Background(), &pbEngine.BuildRequest{
 		Requester: &requester,
-		CommitSHA: ref.Hash().String(),
-		Branch:    ref.Name().String(),
+		CommitSHA: commit,
+		Branch:    branch,
+		Target:    targets,
 	})
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)

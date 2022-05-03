@@ -21,6 +21,7 @@ message BuildRequest {
   Requester requester = 1;
   string commitSHA = 2;
   string branch = 3;
+  repeated string target = 4;
 }
 
 message BuildResponse {

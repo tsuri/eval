@@ -17,7 +17,10 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"k8s.io/client-go/kubernetes"
+	batchv1 "k8s.io/api/batch/v1"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	kubernetes "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
@@ -46,9 +49,10 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 	c := asynq.NewClient(r)
 
 	log.Printf("Enqueuing task")
-	branch := fmt.Sprintf("branch-%d", 0)
-	commit := fmt.Sprintf("commit-%d", 0)
-	t := NewBuildTask(branch, commit)
+	branch := in.Branch
+	commit := in.CommitSHA
+	target := in.Target
+	t := NewBuildTask(branch, commit, target)
 	ti, err := c.Enqueue(t)
 	if err != nil {
 		log.Fatal("could not enqueue task: %v", err)
@@ -104,15 +108,99 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 type BuildPayload struct {
 	Branch    string
 	CommitSHA string
+	Target    []string
 }
 
 //  return errorin addition to task
-func NewBuildTask(branch string, commitSHA string) *asynq.Task {
-	payload, err := json.Marshal(BuildPayload{Branch: branch, CommitSHA: commitSHA})
+func NewBuildTask(branch string, commitSHA string, target []string) *asynq.Task {
+	payload, err := json.Marshal(BuildPayload{Branch: branch, CommitSHA: commitSHA, Target: target})
 	if err != nil {
 		return nil
 	}
 	return asynq.NewTask("image:build", payload)
+}
+
+func build(branch string, commitSHA string, targets []string) {
+	clientset := connectToK8s()
+	batchAPI := clientset.BatchV1()
+	jobs := batchAPI.Jobs("default")
+
+	var backOffLimit int32 = 0
+	var ttlSecondsAfterFinished int32 = 10
+
+	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
+
+	jobSpec := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "kaniko-",
+			Namespace:    "default",
+		},
+		Spec: batchv1.JobSpec{
+			Template: v1.PodTemplateSpec{
+				Spec: v1.PodSpec{
+					HostAliases: []v1.HostAlias{
+						{
+							IP:        "192.168.1.8",
+							Hostnames: []string{"registry.other.net"},
+						},
+					},
+					Containers: []v1.Container{
+						{
+							Name:  "kaniko",
+							Image: "gcr.io/kaniko-project/executor:debug",
+							Args: []string{"--insecure",
+								"--insecure-pull",
+								"--skip-tls-verify",
+								"--destination=registry.other.net:5000/test:bar",
+								"--context", gitContext,
+								"--dockerfile=dockerfile"},
+							Env: []v1.EnvVar{
+								{
+									Name:  "GIT_TOKEN",
+									Value: "969c5cb1eaee59d878648cb862bef551cac70d34",
+								},
+								{
+									Name:  "GIT_PULL_METHOD",
+									Value: "http",
+								},
+							},
+						},
+					},
+					RestartPolicy: v1.RestartPolicyNever,
+				},
+			},
+			BackoffLimit:            &backOffLimit,
+			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
+		},
+	}
+
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	if err != nil {
+		log.Fatalln("Failed to create K8s job. %v", err)
+	}
+	log.Println("Kaniko job created")
+
+	timeout := int64(3600)
+	watchres, err := jobs.Watch(context.Background(), metav1.ListOptions{
+		TimeoutSeconds: &timeout,
+	})
+
+	if err != nil {
+		log.Fatalln("Failed to watch job", err)
+	}
+	defer watchres.Stop()
+
+	eventres := watchres.ResultChan()
+	for we := range eventres {
+		log.Println("----")
+		log.Println(we.Type)
+		job, ok := we.Object.(*batchv1.Job)
+		if !ok {
+			continue
+		}
+		log.Println(job.Status.Conditions)
+	}
+
 }
 
 func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
@@ -120,7 +208,8 @@ func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	log.Printf("Building branch=%s, commitSHA=%s", p.Branch, p.CommitSHA)
+	log.Printf("Building targets=%s @ branch=%s, commitSHA=%s", p.Target, p.Branch, p.CommitSHA)
+	build(p.Branch, p.CommitSHA, p.Target)
 	time.Sleep(20 * time.Second)
 	log.Printf("Done building branch=%s, commitSHA=%s", p.Branch, p.CommitSHA)
 	return nil

@@ -36,7 +36,6 @@ func buildImage(in *pbeval.BuildRequest) {
 		log.Fatalf("did not connect")
 	}
 	defer conn.Close()
-
 	client := pbbuilder.NewBuilderServiceClient(conn)
 
 	requester := pbbuilder.Requester{
@@ -48,6 +47,7 @@ func buildImage(in *pbeval.BuildRequest) {
 		Requester: &requester,
 		CommitSHA: in.CommitSHA,
 		Branch:    in.Branch,
+		Target:    in.Target,
 	})
 	if err != nil {
 		log.Printf("bad answer from builder")
