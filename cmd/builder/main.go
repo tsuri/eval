@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"time"
 
 	"eval/pkg/grpc/server"
 	pb "eval/proto/builder"
@@ -194,12 +193,18 @@ func build(branch string, commitSHA string, targets []string) {
 	eventres := watchres.ResultChan()
 	for we := range eventres {
 		log.Println("----")
-		log.Println(we.Type)
+		log.Printf("TYPE: %T (%v) %v\n", we.Type, we.Type, we.Type == "DELETED")
+		if we.Type == "DELETED" {
+			break
+		}
 		job, ok := we.Object.(*batchv1.Job)
 		if !ok {
 			continue
 		}
+		log.Println("-")
 		log.Println(job.Status.Conditions)
+		log.Println(job.Status.Active > 0)
+		log.Println(job.Status.Succeeded > 0)
 	}
 
 }
@@ -211,7 +216,6 @@ func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
 	}
 	log.Printf("Building targets=%s @ branch=%s, commitSHA=%s", p.Target, p.Branch, p.CommitSHA)
 	build(p.Branch, p.CommitSHA, p.Target)
-	time.Sleep(20 * time.Second)
 	log.Printf("Done building branch=%s, commitSHA=%s", p.Branch, p.CommitSHA)
 	return nil
 }
@@ -223,8 +227,9 @@ type Asynq struct {
 func NewAsynq() *Asynq {
 	r := asynq.RedisClientOpt{Addr: "redis.eval.svc.cluster.local:6379"}
 	server := asynq.NewServer(r, asynq.Config{
-		// Specify how many concurrent workers to use
-		Concurrency: 1,
+		// Specify how many concurrent workers to use. Up to 4 is ok, but we
+		// stay lower to allow for other things to happen during a demo.
+		Concurrency: 2,
 		// Optionally specify multiple queues with different priority.
 		Queues: map[string]int{
 			"critical": 6,

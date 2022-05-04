@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Runner VERY NEW. Listing .:")
+	fmt.Printf("Runner VERY NEW MORE THAN THAT. Listing .:")
 
 	// err := filepath.Walk(".",
 	// 	func(path string, info os.FileInfo, err error) error {
