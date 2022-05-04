@@ -124,11 +124,49 @@ func build(branch string, commitSHA string, targets []string) {
 	batchAPI := clientset.BatchV1()
 	jobs := batchAPI.Jobs("default")
 
+	cm := v1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "my-config-map",
+			Namespace: "default",
+		},
+		Data: map[string]string{"dockerfile": `
+FROM registry.other.net:5000/eval/base-build AS builder
+#FROM debian:buster-slim AS builder
+
+# RUN apt-get update
+# RUN apt-get install --yes wget build-essential python3
+# RUN wget -q https://releases.bazel.build/5.1.0/release/bazel-5.1.0-linux-x86_64 -O /usr/bin/bazel
+# RUN chmod +x /usr/bin/bazel
+
+COPY . /eval
+WORKDIR /eval
+RUN echo $PWD
+RUN ls
+#RUN /usr/bin/bazel build //test:runner
+RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
+
+FROM debian:buster
+#RUN apt-get update && apt-get install --yes python3
+#FROM gcr.io/distroless/python3
+COPY --from=builder /eval/bazel-bin/test     /app
+ENTRYPOINT /app/runner_/runner
+`,
+		},
+	}
+
+	_, err := clientset.CoreV1().ConfigMaps("default").Create(context.TODO(), &cm, metav1.CreateOptions{})
+	if err != nil {
+		log.Printf("Error creating config map: %v", err)
+	}
+
 	var backOffLimit int32 = 0
 	var ttlSecondsAfterFinished int32 = 10
 
 	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
-	// gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -174,7 +212,7 @@ func build(branch string, commitSHA string, targets []string) {
 		},
 	}
 
-	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
 	if err != nil {
 		log.Fatalln("Failed to create K8s job. %v", err)
 	}

@@ -202,6 +202,21 @@ nginx ingres is magic. Very cool. Took no time. It was on Saturday,
 ** Week 7
 Another bummer week of nothingness. 
 
+** Week 8
+*** Monday
+Nothing that I remember the day after, probably some small refactoring
+*** Tuesday
+evalctl image build sends  request to 'engine' (will become a generic
+gateway over time); 'engine' forwards it to 'builder' that enqueue and
+services build tasks in asynq.
+Things to do:
+- mount a dockerfile so that we can obey the bazel targets that are
+  lready passed.
+- handle errors
+- stream status updates
+- specify image name and tag (tied to the dockerfile point above)
+- return info about the image (probably part of actually implement the
+  caching portion)
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
