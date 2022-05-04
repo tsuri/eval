@@ -128,7 +128,8 @@ func build(branch string, commitSHA string, targets []string) {
 	var backOffLimit int32 = 0
 	var ttlSecondsAfterFinished int32 = 10
 
-	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
+	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
+	// gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
