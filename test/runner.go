@@ -31,14 +31,14 @@ func main() {
 	fmt.Println(mydir)
 	fmt.Println("------------")
 
-	out, err := exec.Command("/app/sub_/sub").Output()
+	out, err := exec.Command("/app/test/sub_/sub").Output()
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)
 	}
 	fmt.Printf("sub says %s\n", out)
 
-	out, err = exec.Command("/app/another_/another").Output()
+	out, err = exec.Command("/app/test/another_/another").Output()
 	if err != nil {
 		fmt.Println("ERROR")
 		log.Fatal(err)
