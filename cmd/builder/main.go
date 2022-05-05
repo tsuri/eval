@@ -190,7 +190,7 @@ func build(branch string, commitSHA string, targets []string) {
 							Args: []string{"--insecure",
 								"--insecure-pull",
 								"--skip-tls-verify",
-								"--build-arg", "TARGETS='" + strings.Join(targets, " ") + "'",
+								"--build-arg", "TARGETS=" + strings.Join(targets, " "),
 								"--destination=registry.other.net:5000/test:bar",
 								"--context", gitContext,
 								"--dockerfile=dockerfile"},
