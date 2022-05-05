@@ -13,10 +13,13 @@ RUN echo ${TARGETS}
 
 #RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
 RUN /usr/bin/bazel build ${TARGETS}
+RUN tar -chf bazel-out.tar -C bazel-bin .
 
 FROM debian:buster
-#RUN apt-get update && apt-get install --yes python3
-#FROM gcr.io/distroless/python3
-COPY --from=builder /eval/bazel-bin/     /app/
+
+COPY --from=builder bazel-out.tar .
+RUN tar -tf bazel-out.tar
+
+#COPY --from=builder /eval/bazel-bin/     /app/
 RUN ls -lRL /app
 ENTRYPOINT /app/test/runner_/runner
