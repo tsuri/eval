@@ -18,4 +18,5 @@ FROM debian:buster
 #RUN apt-get update && apt-get install --yes python3
 #FROM gcr.io/distroless/python3
 COPY --from=builder /eval/bazel-bin/     /app/
+RUN ls -lRL /app
 ENTRYPOINT /app/test/runner_/runner
