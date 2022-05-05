@@ -193,6 +193,7 @@ func build(branch string, commitSHA string, targets []string) {
 								"--build-arg", "TARGETS=" + strings.Join(targets, " "),
 								"--destination=registry.other.net:5000/test:bar",
 								"--context", gitContext,
+								"--digest-file=/dev/termination-log",
 								"--dockerfile=dockerfile"},
 							Env: []v1.EnvVar{
 								{

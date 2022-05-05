@@ -217,6 +217,19 @@ Things to do:
 - specify image name and tag (tied to the dockerfile point above)
 - return info about the image (probably part of actually implement the
   caching portion)
+*** Wednesday
+TIL:
+For example, setting the flag to
+--digest-file=/dev/termination-log will write the digest to that file,
+which is picked up by Kubernetes automatically as the
+{{.state.terminated.message}} of the container.
+[in the context of kaniko, but should be a general thing]
+
+Good progress w/ the builder. We're now passing and using the bazel
+targets. We now need to pass the tag we want to use and we should be
+ok.
+
+
 * TODO
   - see if a single instance rabbitmq deployment works
   - build images and place them in the registry (for istance the
