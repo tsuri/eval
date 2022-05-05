@@ -19,7 +19,7 @@ FROM debian:buster
 
 COPY --from=builder /eval/bazel-out.tar .
 RUN mkdir /app
-RUN tar -tf bazel-out.tar
+RUN tar -xf bazel-out.tar -C /app
 
 #COPY --from=builder /eval/bazel-bin/     /app/
 RUN ls -lRL /app
