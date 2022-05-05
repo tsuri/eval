@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"eval/pkg/grpc/server"
 	pb "eval/proto/builder"
@@ -189,7 +190,7 @@ func build(branch string, commitSHA string, targets []string) {
 							Args: []string{"--insecure",
 								"--insecure-pull",
 								"--skip-tls-verify",
-								"--build-arg", "TARGETS='something and more'",
+								"--build-arg", "TARGETS='" + strings.Join(targets, " ") + "'",
 								"--destination=registry.other.net:5000/test:bar",
 								"--context", gitContext,
 								"--dockerfile=dockerfile"},
