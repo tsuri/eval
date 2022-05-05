@@ -18,6 +18,7 @@ RUN tar -chf /eval/bazel-out.tar -C /eval/bazel-bin .
 FROM debian:buster
 
 COPY --from=builder /eval/bazel-out.tar .
+RUN mkdir /app
 RUN tar -tf bazel-out.tar
 
 #COPY --from=builder /eval/bazel-bin/     /app/
