@@ -9,7 +9,7 @@ FROM registry.other.net:5000/eval/base-build AS builder
 COPY . /eval
 WORKDIR /eval
 RUN echo $PWD
-RUN ls
+RUN echo $TARGETS
 #RUN /usr/bin/bazel build //test:runner
 RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
 
