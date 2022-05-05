@@ -13,11 +13,11 @@ RUN echo ${TARGETS}
 
 #RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
 RUN /usr/bin/bazel build ${TARGETS}
-RUN tar -chf bazel-out.tar -C bazel-bin .
+RUN tar -chf /eval/bazel-out.tar -C /eval/bazel-bin .
 
 FROM debian:buster
 
-COPY --from=builder bazel-out.tar .
+COPY --from=builder /eval/bazel-out.tar .
 RUN tar -tf bazel-out.tar
 
 #COPY --from=builder /eval/bazel-bin/     /app/
