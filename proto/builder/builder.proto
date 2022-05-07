@@ -18,6 +18,8 @@ message BuildRequest {
 
 message BuildResponse {
   string response = 1;
+  string imageName = 2;
+  string imageTag = 3;
 }
 
 service BuilderService {

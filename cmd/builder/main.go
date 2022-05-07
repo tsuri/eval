@@ -12,11 +12,15 @@ import (
 	"eval/pkg/grpc/server"
 	pb "eval/proto/builder"
 
+	"github.com/google/uuid"
+	"github.com/heroku/docker-registry-client/registry"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,18 +32,21 @@ const (
 	port = ":50051"
 )
 
-const (
-	baseDir    = "/data/eval/certificates"
-	CaCert     = "ca.crt"
-	ServerCert = "tls.crt"
-	ServerKey  = "tls.key"
-)
+type BuildInfo struct {
+	gorm.Model
+	Branch    string
+	CommitSHA string
+	Targets   string
+	ImageName string
+	ImageTag  string
+}
 
 type serverContext struct {
 	log       *zerolog.Logger
 	v         *viper.Viper
 	clientSet *kubernetes.Clientset
 	asynq     *Asynq
+	db        *gorm.DB
 }
 
 func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.BuildResponse, error) {
@@ -52,16 +59,41 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 	branch := in.Branch
 	commit := in.CommitSHA
 	target := in.Target
-	t := NewBuildTask(branch, commit, target)
+
+	imageTag, err := uuid.NewRandom()
+	if err != nil {
+		log.Printf("Cannot generate UUID: %v", err)
+	}
+
+	var builds []BuildInfo
+	s.db.Where("commit_sha = ?", commit).Find(&builds)
+	for _, build := range builds {
+		log.Printf("*** BUILD %v", build.ImageTag)
+		if len(build.ImageTag) > 0 {
+			s.log.Info().Msg("Returning available image")
+			return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
+		}
+	}
+
+	s.log.Info().Msg("Building image")
+	targetJSON, _ := json.Marshal(target)
+	s.db.Create(&BuildInfo{
+		Branch:    branch,
+		CommitSHA: commit,
+		Targets:   string(targetJSON),
+		ImageName: "eval",
+		ImageTag:  imageTag.String(),
+	})
+
+	t := NewBuildTask(branch, commit, target, imageTag.String())
 	ti, err := c.Enqueue(t)
 	if err != nil {
 		log.Fatal("could not enqueue task: %v", err)
 	}
 	log.Printf("INFO: %v", ti)
 
-	//	job := buildJobSpec(in.Branch, in.CommitSHA)
-	//	log.Printf("%v\n", job)
-	return &pb.BuildResponse{Response: "something built"}, nil
+	// imageName should be passed to newBuildTask
+	return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: imageTag.String()}, nil
 }
 
 func connectToK8s() *kubernetes.Clientset {
@@ -92,6 +124,17 @@ func connectToK8s() *kubernetes.Clientset {
 	return clientset
 }
 
+func NewDB() *gorm.DB {
+	db, err := gorm.Open(sqlite.Open("/data/sqlite/builder.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	// Migrate the schema
+	db.AutoMigrate(&BuildInfo{})
+	return db
+}
+
 func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 	return func(s *grpc.Server) {
 		context := serverContext{}
@@ -99,6 +142,7 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 		context.v = server.Config()
 		context.clientSet = connectToK8s()
 		context.asynq = asynq
+		context.db = NewDB()
 		context.log.Info().Msg("Registering service")
 		pb.RegisterBuilderServiceServer(s, &context)
 		reflection.Register(s)
@@ -109,63 +153,21 @@ type BuildPayload struct {
 	Branch    string
 	CommitSHA string
 	Target    []string
+	ImageTag  string
 }
 
 //  return errorin addition to task
-func NewBuildTask(branch string, commitSHA string, target []string) *asynq.Task {
-	payload, err := json.Marshal(BuildPayload{Branch: branch, CommitSHA: commitSHA, Target: target})
+func NewBuildTask(branch string, commitSHA string, target []string, imageTag string) *asynq.Task {
+	payload, err := json.Marshal(BuildPayload{Branch: branch, CommitSHA: commitSHA, Target: target, ImageTag: imageTag})
 	if err != nil {
 		return nil
 	}
-	return asynq.NewTask("image:build", payload)
+	return asynq.NewTask("image:build", payload, asynq.Queue("critical"))
 }
 
-func build(branch string, commitSHA string, targets []string) {
-	clientset := connectToK8s()
-	batchAPI := clientset.BatchV1()
-	jobs := batchAPI.Jobs("default")
-
-	// 	cm := v1.ConfigMap{
-	// 		TypeMeta: metav1.TypeMeta{
-	// 			Kind:       "ConfigMap",
-	// 			APIVersion: "v1",
-	// 		},
-	// 		ObjectMeta: metav1.ObjectMeta{
-	// 			Name:      "my-config-map",
-	// 			Namespace: "default",
-	// 		},
-	// 		Data: map[string]string{"dockerfile": `
-	// FROM registry.other.net:5000/eval/base-build AS builder
-	// #FROM debian:buster-slim AS builder
-
-	// # RUN apt-get update
-	// # RUN apt-get install --yes wget build-essential python3
-	// # RUN wget -q https://releases.bazel.build/5.1.0/release/bazel-5.1.0-linux-x86_64 -O /usr/bin/bazel
-	// # RUN chmod +x /usr/bin/bazel
-
-	// COPY . /eval
-	// WORKDIR /eval
-	// RUN echo $PWD
-	// RUN ls
-	// #RUN /usr/bin/bazel build //test:runner
-	// RUN /usr/bin/bazel build //test:test  //test:runner //test:sub //test:another
-
-	// FROM debian:buster
-	// #RUN apt-get update && apt-get install --yes python3
-	// #FROM gcr.io/distroless/python3
-	// COPY --from=builder /eval/bazel-bin/test     /app
-	// ENTRYPOINT /app/runner_/runner
-	// `,
-	// 		},
-	// 	}
-
-	// 	_, err := clientset.CoreV1().ConfigMaps("default").Create(context.TODO(), &cm, metav1.CreateOptions{})
-	// 	if err != nil {
-	// 		log.Printf("Error creating config map: %v", err)
-	// 	}
-
+func buildJobSpec(branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
 	var backOffLimit int32 = 0
-	var ttlSecondsAfterFinished int32 = 10
+	var ttlSecondsAfterFinished int32 = 0
 
 	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
 
@@ -185,15 +187,23 @@ func build(branch string, commitSHA string, targets []string) {
 					},
 					Containers: []v1.Container{
 						{
+							//we should use:
+							// -git
+							// Branch to clone if build context is a git repository
+							// (default branch=,single-branch=false,recurse-submodules=false)
 							Name:  "kaniko",
 							Image: "gcr.io/kaniko-project/executor:debug",
 							Args: []string{"--insecure",
 								"--insecure-pull",
 								"--skip-tls-verify",
 								"--build-arg", "TARGETS=" + strings.Join(targets, " "),
-								"--destination=registry.other.net:5000/test:bar",
+								"--destination=registry.other.net:5000/eval:" + imageTag,
 								"--context", gitContext,
 								"--digest-file=/dev/termination-log",
+								//								"--log-format=json",
+								"--log-format=color",
+								"--log-timestamp=true",
+								"--use-new-run",
 								"--dockerfile=dockerfile"},
 							Env: []v1.EnvVar{
 								{
@@ -214,12 +224,21 @@ func build(branch string, commitSHA string, targets []string) {
 			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 		},
 	}
+	return jobSpec
+}
 
-	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+func build(branch string, commitSHA string, targets []string, imageTag string) {
+	clientset := connectToK8s()
+	batchAPI := clientset.BatchV1()
+	jobs := batchAPI.Jobs("default")
+
+	playWithDocker()
+
+	job, err := jobs.Create(context.TODO(), buildJobSpec(branch, commitSHA, targets, imageTag), metav1.CreateOptions{})
 	if err != nil {
 		log.Fatalln("Failed to create K8s job. %v", err)
 	}
-	log.Println("Kaniko job created")
+	log.Printf("Kaniko job created: %T %v", job, job)
 
 	timeout := int64(3600)
 	watchres, err := jobs.Watch(context.Background(), metav1.ListOptions{
@@ -247,6 +266,33 @@ func build(branch string, commitSHA string, targets []string) {
 		log.Println(job.Status.Active > 0)
 		log.Println(job.Status.Succeeded > 0)
 	}
+}
+
+func playWithDocker() {
+	//	url := "http://registry.other.net:5000/"
+	url := "http://192.168.1.8:5000/"
+	username := "" // anonymous
+	password := "" // anonymous
+	hub, err := registry.NewInsecure(url, username, password)
+	if err != nil {
+		log.Printf("Cannot connect to docker registry")
+	}
+
+	repositories, err := hub.Repositories()
+	if err != nil {
+		log.Printf("Cannot get list of repositories")
+	}
+	for r := range repositories {
+		log.Printf("Repo: %T %v\n", r, r)
+		// tags, err := hub.Tags(r)
+		// if err != nil {
+		// 	log.Printf("Cannot get list of tags")
+		// }
+		// for t := range tags {
+		// 	log.Printf("Tag: %v\n", t)
+		// }
+
+	}
 
 }
 
@@ -255,8 +301,8 @@ func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
 	if err := json.Unmarshal(t.Payload(), &p); err != nil {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
-	log.Printf("Building targets=%s @ branch=%s, commitSHA=%s", p.Target, p.Branch, p.CommitSHA)
-	build(p.Branch, p.CommitSHA, p.Target)
+	log.Printf("Building targets=%s @ branch=%s, commitSHA=%s -> imageTag: %s", p.Target, p.Branch, p.CommitSHA, p.ImageTag)
+	build(p.Branch, p.CommitSHA, p.Target, p.ImageTag)
 	log.Printf("Done building branch=%s, commitSHA=%s", p.Branch, p.CommitSHA)
 	return nil
 }

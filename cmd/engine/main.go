@@ -11,6 +11,7 @@ import (
 	pbeval "eval/proto/engine"
 	pbgrunt "eval/proto/grunt"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -18,6 +19,9 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 const (
@@ -29,7 +33,7 @@ type serverContext struct {
 	v   *viper.Viper
 }
 
-func buildImage(in *pbeval.BuildRequest) {
+func buildImage(in *pbeval.BuildRequest) *pbeval.BuildResponse {
 	// ok, a filure to connect here doesn' return error
 	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
@@ -52,7 +56,12 @@ func buildImage(in *pbeval.BuildRequest) {
 	if err != nil {
 		log.Printf("bad answer from builder")
 	} else {
-		log.Printf("response %v", response.Response)
+		log.Printf("response %v", response)
+	}
+	return &pbeval.BuildResponse{
+		ImageName: response.ImageName,
+		ImageTag:  response.ImageTag,
+		Response:  response.Response,
 	}
 }
 
@@ -91,8 +100,10 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 
 func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
 	s.log.Info().Msg("Let's see this one")
-	buildImage(in)
-	return &pbeval.BuildResponse{Response: "done"}, nil
+	response := buildImage(in)
+	s.log.Info().Str("tag", response.ImageTag).Msg("response")
+	return response, nil
+	//	return &pbeval.BuildResponse{Response: "done"}, nil
 }
 
 func serviceRegister(server server.Server) func(*grpc.Server) {
@@ -107,7 +118,138 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 }
 
 func main() {
+	playSQL()
 	server := server.Build(port)
 	server.RegisterService(serviceRegister(server))
 	server.Start()
+}
+
+type Product struct {
+	gorm.Model
+	Code  string
+	Price uint
+}
+
+func playSQL() {
+
+	db, err := gorm.Open(sqlite.Open("/data/sqlite/engine.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	// Migrate the schema
+	db.AutoMigrate(&Product{})
+
+	// Create
+	db.Create(&Product{Code: "D42", Price: 100})
+
+	// Read
+	var product Product
+	db.First(&product, 1)                 // find product with integer primary key
+	db.First(&product, "code = ?", "D42") // find product with code D42
+	log.Printf("product %v", product)
+
+	// Update - update product's price to 200
+	db.Model(&product).Update("Price", 200)
+	// Update - update multiple fields
+	db.Model(&product).Updates(Product{Price: 200, Code: "F42"}) // non-zero fields
+	db.Model(&product).Updates(map[string]interface{}{"Price": 200, "Code": "F42"})
+
+	// Delete - delete product
+	db.Delete(&product, 1)
+
+	// os.Remove("/data/sqlite/engine.db")
+
+	// db, err := sql.Open("sqlite3", "/data/sqlite/engine.db")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer db.Close()
+
+	// sqlStmt := `
+	// create table foo (id integer not null primary key, name text);
+	// delete from foo;
+	// `
+	// _, err = db.Exec(sqlStmt)
+	// if err != nil {
+	// 	log.Printf("%q: %s\n", err, sqlStmt)
+	// 	return
+	// }
+
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// stmt, err := tx.Prepare("insert into foo(id, name) values(?, ?)")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer stmt.Close()
+	// for i := 0; i < 100; i++ {
+	// 	_, err = stmt.Exec(i, fmt.Sprintf("こんにちわ世界%03d", i))
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }
+	// tx.Commit()
+
+	// rows, err := db.Query("select id, name from foo")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	var id int
+	// 	var name string
+	// 	err = rows.Scan(&id, &name)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	fmt.Println(id, name)
+	// }
+	// err = rows.Err()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// stmt, err = db.Prepare("select name from foo where id = ?")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer stmt.Close()
+	// var name string
+	// err = stmt.QueryRow("3").Scan(&name)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println(name)
+
+	// _, err = db.Exec("delete from foo")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// _, err = db.Exec("insert into foo(id, name) values(1, 'foo'), (2, 'bar'), (3, 'baz')")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// rows, err = db.Query("select id, name from foo")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	var id int
+	// 	var name string
+	// 	err = rows.Scan(&id, &name)
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	fmt.Println(id, name)
+	// }
+	// err = rows.Err()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }

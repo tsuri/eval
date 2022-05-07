@@ -101,7 +101,7 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	// log.Println("REF target: ", ref.Target())
 	w, err := repo.Worktree()
 	if err != nil {
-		log.Fatalf("Cnnot get worktree")
+		log.Fatalf("Cannot get worktree")
 	}
 	status, err := w.Status()
 	if err != nil {
@@ -128,5 +128,5 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
 	log.Printf("Response from server: %s", response.Response)
-
+	log.Printf("Built image %s:%s", response.ImageName, response.ImageTag)
 }
