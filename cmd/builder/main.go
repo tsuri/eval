@@ -65,10 +65,15 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 		log.Printf("Cannot generate UUID: %v", err)
 	}
 
+	// caching should really be in the caching service when we have it
+	// and the builder sshould  just build
 	var builds []BuildInfo
 	s.db.Where("commit_sha = ?", commit).Find(&builds)
 	for _, build := range builds {
 		log.Printf("*** BUILD %v", build.ImageTag)
+		// we will be able to count on the field tobe there
+		// here we should check tags are compatible and if there're multiple matches
+		// keep he image that has more tags as it is the most useful to keep around.
 		if len(build.ImageTag) > 0 {
 			s.log.Info().Msg("Returning available image")
 			return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
@@ -266,6 +271,28 @@ func build(branch string, commitSHA string, targets []string, imageTag string) {
 		log.Println(job.Status.Active > 0)
 		log.Println(job.Status.Succeeded > 0)
 	}
+
+	// We should get to the pod for the job, which doesn't seem
+	// directly doable a way is to assign a label to the pod, say the
+	// build ID and then search for that. This would allow ud to get
+	// to the status message, which is where we ask kaniko to put the
+	// image SHA
+
+	//	 create a pod with label, and then I get it through LabelSelector. Like it :
+	// config, err := clientcmd.BuildConfigFromFlags("", "~/.kube/config")
+	// if err != nil {
+	//     println("config build error")
+	// }
+
+	// client, err := kubernetes.NewForConfig(config)
+
+	// pods, err := client.CoreV1().Pods("test").List(context.TODO(),
+	//     v1.ListOptions{LabelSelector: "name=label_name"})
+
+	// for _, v := range pods.Items {
+	//     log := client.CoreV1().Pods("test").GetLogs(v.Name, &v12.PodLogOptions{})
+	// }
+
 }
 
 func playWithDocker() {

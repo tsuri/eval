@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
@@ -33,7 +35,7 @@ type serverContext struct {
 	v   *viper.Viper
 }
 
-func buildImage(in *pbeval.BuildRequest) *pbeval.BuildResponse {
+func buildImage(ctx context.Context, in *pbeval.BuildRequest) *pbeval.BuildResponse {
 	// ok, a filure to connect here doesn' return error
 	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
@@ -47,7 +49,12 @@ func buildImage(in *pbeval.BuildRequest) *pbeval.BuildResponse {
 		HostName: "HOSTNAME",
 	}
 
-	response, err := client.Build(context.Background(), &pbbuilder.BuildRequest{
+	md, _ := metadata.FromIncomingContext(ctx)
+	log.Printf("BUILD METADATA: %v", md["user"][0])
+
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
 		Requester: &requester,
 		CommitSHA: in.CommitSHA,
 		Branch:    in.Branch,
@@ -100,7 +107,9 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 
 func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
 	s.log.Info().Msg("Let's see this one")
-	response := buildImage(in)
+	md, _ := metadata.FromIncomingContext(ctx)
+	s.log.Info().Str("user", md["user"][0]).Msg("Metadata")
+	response := buildImage(ctx, in)
 	s.log.Info().Str("tag", response.ImageTag).Msg("response")
 	return response, nil
 	//	return &pbeval.BuildResponse{Response: "done"}, nil
@@ -117,8 +126,33 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 	}
 }
 
+func echoString(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hello")
+}
+
 func main() {
 	playSQL()
+
+	go func() {
+		http.HandleFunc("/", echoString)
+
+		http.HandleFunc("/hi", func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "Hi")
+		})
+
+		// baseDir := "/data/eval/certificates"
+		// //		caCert      = "ca.crt"
+		// clientCert := "tls.crt"
+		// clientKey := "tls.key"
+
+		log.Fatal(http.ListenAndServe(":8081", nil))
+
+		// log.Fatal(http.ListenAndServeTLS(":8081",
+		// 	baseDir+"/"+clientCert,
+		// 	baseDir+"/"+clientKey,
+		// 	nil))
+	}()
+
 	server := server.Build(port)
 	server.RegisterService(serviceRegister(server))
 	server.Start()

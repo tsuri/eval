@@ -12,6 +12,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 var imageCmd = &cobra.Command{
@@ -118,7 +119,11 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		UserName: user.Username,
 		HostName: hostname,
 	}
-	response, err := client.Build(context.Background(), &pbEngine.BuildRequest{
+
+	md := metadata.Pairs("user", user.Username, "hostname", hostname)
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	response, err := client.Build(ctx, &pbEngine.BuildRequest{
 		Requester: &requester,
 		CommitSHA: commit,
 		Branch:    branch,

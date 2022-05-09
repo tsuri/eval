@@ -16,5 +16,6 @@ go_library(
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_viper//:viper",
         "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_grpc//metadata",
     ],
 )

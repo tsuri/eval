@@ -230,15 +230,18 @@ targets. We now need to pass the tag we want to use and we should be
 ok.
 
 #+begin_src ditaa :file ditaa-simpleboxes.png
-+---------+
-|         |
-| Foo     |
-|         |
-+----+----+---+
-|Bar |Baz     |
-|    |        |
-+----+--------+
+  +---------+
+  |         |
+  | Foo     |
+  |         |
+  +----+----+---+
+  |Bar |Baz     |
+  |    |        |
+  +----+--------+
 #+end_src
+
+#+RESULTS:
+[[file:ditaa-simpleboxes.png]]
 
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
@@ -250,6 +253,8 @@ ok.
     what I want, but not what I expect from the current setup
 ** TODO document 'go get github.com/hidetatz/kubecolor/cmd/kubecolor'
 ** TODO separate asynq queue for builder and other services
+
+
 
 * TOCONSIDER
   - https://github.com/sourcegraph/starlight
@@ -344,3 +349,7 @@ ok.
 ** gRPC
 - https://dev.bitolog.com/grpc-long-lived-streaming/
 - https://blog.tech-fellow.net/2021/04/10/implementing-grpc-auto-reconnect-on-timeout/
+** Javascript
+- https://js.cytoscape.org/
+** golang/cli
+- https://golangexample.com/like-grpcurl-and-cobra-had-a-baby/

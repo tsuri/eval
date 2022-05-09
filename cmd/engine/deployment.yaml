@@ -64,6 +64,9 @@ spec:
   selector:
     app: eval-engine
   ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
     - name: grpc
       port: 50051
       targetPort: 50051
@@ -78,3 +81,29 @@ data:
   config.yaml: |
       eval.grpc.port: 50051
       log.console.level: debug
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: engine-tls
+  namespace: eval
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
+    nginx.ingress.kubernetes.io/proxy-body-size: 10M
+spec:
+  tls:
+    - hosts:
+        - engine.eval.net
+      secretName: cluster-certificates
+  rules:
+  - host: engine.eval.net
+    http:
+      paths:
+      - path: /ui
+        pathType: Prefix
+        backend:
+          service:
+            name: eval-engine
+            port:
+              number: 8081
