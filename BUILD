@@ -25,41 +25,10 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-#container_bundle(
-#    name = "all_container",
-#    images = {
-#        "gcr.io/$(project_id)/$(repo)/client": "//client:container",
-#        "gcr.io/$(project_id)/$(repo)/server": "//server:container",
-#    },
-#)
-
-##container_push(
-#    name = "push_all",
-#    bundle = ":all_container",
-#    format = "Docker",
-#)
-
-#k8s_objects(
-#   name = "gke_deploy",
-#   objects = [
-#      "//server:gke_deploy",
-#      "//client:gke_deploy",
-#   ],
-#)
-
-# k8s_object(
-#     name = "namespace",
-#     # cluster as in `kubectl config view --minify -o=jsonpath='{.contexts[0].context.cluster}'`
-#     cluster = "kind-eval",
-#     context = "kind-eval",
-#     kind = "namespace",
-#     # A template of a Kubernetes Deployment object yaml.
-#     template = "//deployments/namespaces.yaml",
-# )
-
 k8s_objects(
     name = "eval",
     objects = [
+        "//cmd/cache:dev",
         "//cmd/engine:dev",
         "//cmd/grunt:dev",
         "//cmd/builder:dev",

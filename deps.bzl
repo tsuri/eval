@@ -1862,6 +1862,13 @@ def go_dependencies():
         sum = "h1:wUMzuKtKilRgBAD1sUb8gOwwRr2FGoBVumcjoOACClI=",
         version = "v0.3.0",
     )
+    go_repository(
+        name = "com_github_yourbasic_graph",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/yourbasic/graph",
+        sum = "h1:7v7L5lsfw4w8iqBBXETukHo4IPltmD+mWoLRYUmeGN8=",
+        version = "v0.0.0-20210606180040-8ecfec1c2869",
+    )
 
     go_repository(
         name = "com_github_yuin_goldmark",

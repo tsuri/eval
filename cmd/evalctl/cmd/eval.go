@@ -3,8 +3,6 @@ package cmd
 import (
 	"context"
 	"log"
-	"os"
-	"os/user"
 	"path/filepath"
 	"strconv"
 
@@ -34,6 +32,14 @@ func init() {
 	rootCmd.AddCommand(evalCmd)
 }
 
+// evalctl eval/show infra.image --branch --sha --target
+// from infra.image -> action graph
+// from action-graph -> action config
+//
+// not here, but in more MP graphs it is nice to have configs that are inherited from level to level
+// for instance in ab_comparison.a_training.snippet.sfl one could control the image used for SFL or inherit a
+// setting from any of the levels above.
+
 func evalCmdImpl(cmd *cobra.Command, args []string) {
 	n, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
@@ -49,24 +55,10 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
-	client := pbEngine.NewEngineServiceClient(conn)
+	engine := pbEngine.NewEngineServiceClient(conn)
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Fatalf("cannot get hostname: %s", err)
-	}
-	if os.Geteuid() == 0 {
-		log.Fatal("cannot execute as root")
-	}
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf("cannot get username: %s", err)
-	}
-	requester := pbEngine.Requester{
-		UserName: user.Username,
-		HostName: hostname,
-	}
-	response, err := client.Eval(context.Background(), &pbEngine.EvalRequest{Number: n, Requester: &requester})
+	ctx := client.WithRequesterInfo(context.Background())
+	response, err := engine.Eval(ctx, &pbEngine.EvalRequest{Number: n})
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}

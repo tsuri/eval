@@ -5,14 +5,10 @@ import (
 	"eval/pkg/grpc/client"
 	pbEngine "eval/proto/engine"
 	"log"
-	"os"
-	"os/user"
 	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
 
 var imageCmd = &cobra.Command{
@@ -47,7 +43,6 @@ func init() {
 }
 
 func buildCmdImpl(cmd *cobra.Command, args []string) {
-	var conn *grpc.ClientConn
 	conn, err := client.NewConnection("engine.eval.net:443",
 		filepath.Join(baseDir, caCert),
 		filepath.Join(baseDir, clientCert),
@@ -56,7 +51,7 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
-	client := pbEngine.NewEngineServiceClient(conn)
+	engine := pbEngine.NewEngineServiceClient(conn)
 
 	targets, err := cmd.Flags().GetStringArray("target")
 	if err != nil {
@@ -76,30 +71,7 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 	}
 	log.Printf("COMMIT: %v\n", commit)
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		log.Fatalf("cannot get hostname: %s", err)
-	}
-	if os.Geteuid() == 0 {
-		log.Fatal("cannot execute as root")
-	}
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf("cannot get username: %s", err)
-	}
-
 	repo, err := git.PlainOpen("/home/mav/eval")
-	// if err != nil {
-	// 	log.Fatalf("Not in  git workspace")
-	// }
-	// ref, err := repo.Head()
-	// if err != nil {
-	// 	log.Fatalf("Cannot get HEAD")
-	// }
-	// log.Printf("REF: %v\n", ref)
-	// log.Println("REF hash: ", ref.Hash())
-	// log.Println("REF name: ", ref.Name())
-	// log.Println("REF target: ", ref.Target())
 	w, err := repo.Worktree()
 	if err != nil {
 		log.Fatalf("Cannot get worktree")
@@ -115,22 +87,14 @@ func buildCmdImpl(cmd *cobra.Command, args []string) {
 		log.Println("Dirty workspace")
 	}
 
-	requester := pbEngine.Requester{
-		UserName: user.Username,
-		HostName: hostname,
-	}
-
-	md := metadata.Pairs("user", user.Username, "hostname", hostname)
-	ctx := metadata.NewOutgoingContext(context.Background(), md)
-
-	response, err := client.Build(ctx, &pbEngine.BuildRequest{
-		Requester: &requester,
+	ctx := client.WithRequesterInfo(context.Background())
+	response, err := engine.Build(ctx, &pbEngine.BuildRequest{
 		CommitSHA: commit,
 		Branch:    branch,
 		Target:    targets,
 	})
 	if err != nil {
-		log.Fatalf("Error when calling Eval: %s", err)
+		log.Fatalf("Error when calling Build: %s", err)
 	}
 	log.Printf("Response from server: %s", response.Response)
 	log.Printf("Built image %s:%s", response.ImageName, response.ImageTag)

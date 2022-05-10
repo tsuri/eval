@@ -129,15 +129,18 @@ func connectToK8s() *kubernetes.Clientset {
 	return clientset
 }
 
-func NewDB() *gorm.DB {
+func NewDB(schema ...interface{}) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open("/data/sqlite/builder.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&BuildInfo{})
-	return db
+	err = db.AutoMigrate(schema)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
 
 func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
@@ -147,7 +150,7 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 		context.v = server.Config()
 		context.clientSet = connectToK8s()
 		context.asynq = asynq
-		context.db = NewDB()
+		context.db, _ = NewDB(&BuildInfo{})
 		context.log.Info().Msg("Registering service")
 		pb.RegisterBuilderServiceServer(s, &context)
 		reflection.Register(s)

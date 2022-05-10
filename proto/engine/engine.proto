@@ -4,13 +4,8 @@ package engine;
 
 option go_package = "eval/proto/engine";
 
-message Requester {
-  string userName = 1;
-  string hostName = 2;
-}
 message EvalRequest {
-  Requester requester = 1;
-  int64 number = 2;
+  int64 number = 1;
 }
 
 message EvalResponse {
@@ -18,7 +13,6 @@ message EvalResponse {
 }
 
 message BuildRequest {
-  Requester requester = 1;
   string commitSHA = 2;
   string branch = 3;
   repeated string target = 4;

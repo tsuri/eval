@@ -33,6 +33,7 @@ const (
 type serverContext struct {
 	log *zerolog.Logger
 	v   *viper.Viper
+	db  *gorm.DB
 }
 
 func buildImage(ctx context.Context, in *pbeval.BuildRequest) *pbeval.BuildResponse {

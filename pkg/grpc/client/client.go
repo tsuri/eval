@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
+	"os/user"
 	"path/filepath"
 	"time"
 
@@ -71,4 +73,21 @@ func NewConnection(endpoint string,
 	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	ctx = metadata.AppendToOutgoingContext(ctx, "user", "USER", "pass", "PASS")
 	return grpc.DialContext(ctx, endpoint, grpc.WithTransportCredentials(c))
+}
+
+// maybe I should use interceptors so that we don't need to explicitely call this function
+func WithRequesterInfo(parent context.Context) context.Context {
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Fatalf("cannot get hostname: %s", err)
+	}
+	if os.Geteuid() == 0 {
+		log.Fatal("cannot execute as root")
+	}
+	user, err := user.Current()
+	if err != nil {
+		log.Fatalf("cannot get username: %s", err)
+	}
+
+	return metadata.AppendToOutgoingContext(parent, "user", user.Username, "hostname", hostname)
 }
