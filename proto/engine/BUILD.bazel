@@ -6,7 +6,10 @@ proto_library(
     name = "engine_proto",
     srcs = ["engine.proto"],
     visibility = ["//visibility:public"],
-    deps = ["//proto/context:context_proto"],
+    deps = [
+        "//proto/async_service:async_service_proto",
+        "//proto/context:context_proto",
+    ],
 )
 
 go_proto_library(
@@ -15,7 +18,10 @@ go_proto_library(
     importpath = "eval/proto/engine",
     proto = ":engine_proto",
     visibility = ["//visibility:public"],
-    deps = ["//proto/context"],
+    deps = [
+        "//proto/async_service",
+        "//proto/context",
+    ],
 )
 
 go_library(

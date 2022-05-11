@@ -10,6 +10,8 @@ import (
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
 
+	pbasync "eval/proto/async_service"
+	pbasyncService "eval/proto/async_service"
 	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
 	pbeval "eval/proto/engine"
@@ -21,6 +23,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"gorm.io/gorm"
 )
@@ -106,7 +109,7 @@ func (e *EvalInfo) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
+func (s *serverContext) newEvaluation(ctx context.Context) (string, error) {
 	user := "unknown"
 	hostname := "unknown"
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -124,10 +127,35 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbev
 	// why this condition?
 	if result.Error != nil && result.RowsAffected != 1 {
 		s.log.Err(result.Error).Msg("Error occurred while creating a new evaluation")
-		return nil, result.Error
+		return "", result.Error
 	}
-	_ = get(evalInfo.ID.String())
-	return &pbeval.EvalResponse{}, nil
+	return evalInfo.ID.String(), nil
+}
+
+func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
+	name, err := s.newEvaluation(ctx)
+	if err != nil {
+		return nil, err
+	}
+	_ = get(name)
+	return &pbeval.EvalResponse{Number: 42}, nil
+}
+
+func (s *serverContext) EvalAsync(ctx context.Context, in *pbeval.EvalRequest) (*pbasyncService.Operation, error) {
+	name, err := s.newEvaluation(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
+	if err != nil {
+		panic(err)
+	}
+	return &pbasyncService.Operation{
+		Name:   name,
+		Done:   true,
+		Result: &pbasyncService.Operation_Response{result},
+	}, nil
 }
 
 func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
@@ -140,6 +168,18 @@ func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pb
 	//	return &pbeval.BuildResponse{Response: "done"}, nil
 }
 
+func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
+	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
+	if err != nil {
+		panic(err)
+	}
+	return &pbasyncService.Operation{
+		Name:   in.Name,
+		Done:   true,
+		Result: &pbasyncService.Operation_Response{result},
+	}, nil
+}
+
 func serviceRegister(server server.Server) func(*grpc.Server) {
 	return func(s *grpc.Server) {
 		context := serverContext{}
@@ -147,6 +187,7 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 		context.v = server.Config()
 		context.db, _ = db.NewDB("engine", &EvalInfo{})
 		pbeval.RegisterEngineServiceServer(s, &context)
+		pbasync.RegisterOperationsServer(s, &context)
 		reflection.Register(s)
 	}
 }

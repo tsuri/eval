@@ -8,33 +8,24 @@ load(
 load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
 
 go_library(
-    name = "engine_lib",
+    name = "cache_lib",
     srcs = ["main.go"],
-    importpath = "eval/cmd/engine",
+    importpath = "eval/cmd/cache",
     visibility = ["//visibility:private"],
     deps = [
-        "//pkg/db",
-        "//pkg/grpc/client",
         "//pkg/grpc/server",
-        "//proto/async_service",
-        "//proto/builder",
         "//proto/cache",
-        "//proto/engine",
-        "@com_github_gofrs_uuid//:uuid",
         "@com_github_mattn_go_sqlite3//:go-sqlite3",
         "@com_github_rs_zerolog//:zerolog",
         "@com_github_spf13_viper//:viper",
-        "@io_gorm_gorm//:gorm",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_golang_google_grpc//metadata",
         "@org_golang_google_grpc//reflection",
-        "@org_golang_google_protobuf//types/known/anypb",
     ],
 )
 
 go_binary(
-    name = "engine",
-    embed = [":engine_lib"],
+    name = "cache",
+    embed = [":cache_lib"],
     visibility = ["//visibility:public"],
 )
 
@@ -42,11 +33,11 @@ container_image(
     name = "container",
     base = "@distroless_base_debian10//image",
     cmd = [
-        "/dist/engine",
+        "/dist/cache",
     ],
     directory = "/dist",
     files = [
-        ":engine",
+        ":cache",
     ],
     visibility = ["//:__pkg__"],
     workdir = "/dist",

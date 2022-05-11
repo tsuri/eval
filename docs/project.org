@@ -349,6 +349,8 @@ ok.
 ** gRPC
 - https://dev.bitolog.com/grpc-long-lived-streaming/
 - https://blog.tech-fellow.net/2021/04/10/implementing-grpc-auto-reconnect-on-timeout/
+- https://google.aip.dev/2
+- https://google.aip.dev/151
 ** Javascript
 - https://js.cytoscape.org/
 ** golang/cli

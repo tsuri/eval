@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "proto/context/context.proto";
+import "proto/async_service/async_service.proto";
 
 package engine;
 
@@ -29,5 +30,6 @@ message BuildResponse {
 
 service EngineService {
   rpc Eval(EvalRequest) returns (EvalResponse) {}
+  rpc EvalAsync(EvalRequest) returns (async_service.Operation) {}
   rpc Build(BuildRequest) returns (BuildResponse) {}
 }

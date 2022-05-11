@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"eval/pkg/grpc/client"
+	pbasyncService "eval/proto/async_service"
 	pbEngine "eval/proto/engine"
 
 	"github.com/spf13/cobra"
@@ -63,4 +64,26 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
 	log.Printf("Response from server: %s", response.Number)
+
+	operation, err := engine.EvalAsync(ctx, &pbEngine.EvalRequest{Number: n})
+	if err != nil {
+		log.Fatalf("Error when calling EvalAsync: %s", err)
+	}
+	response = new(pbEngine.EvalResponse)
+	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+		log.Fatal("Cannot unmarhshal result")
+	}
+	log.Printf("Response from server: %s", response.Number)
+
+	evalOperations := pbasyncService.NewOperationsClient(conn)
+	operation, err = evalOperations.GetOperation(ctx, &pbasyncService.GetOperationRequest{Name: "foo"})
+	if err != nil {
+		log.Fatalf("Error when calling EvalAsync: %s", err)
+	}
+	response = new(pbEngine.EvalResponse)
+	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+		log.Fatal("Cannot unmarhshal result")
+	}
+	log.Printf("Response from server: %s", response.Number)
+
 }
