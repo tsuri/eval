@@ -1,11 +1,14 @@
 syntax = "proto3";
 
+import "proto/context/context.proto";
+
 package engine;
 
 option go_package = "eval/proto/engine";
 
 message EvalRequest {
   int64 number = 1;
+  context.Context context = 2;
 }
 
 message EvalResponse {

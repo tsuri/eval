@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"eval/pkg/db"
 	"eval/pkg/grpc/server"
 	pb "eval/proto/builder"
 
@@ -19,7 +20,6 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -89,6 +89,7 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 		ImageName: "eval",
 		ImageTag:  imageTag.String(),
 	})
+	s.db.Commit()
 
 	t := NewBuildTask(branch, commit, target, imageTag.String())
 	ti, err := c.Enqueue(t)
@@ -129,19 +130,19 @@ func connectToK8s() *kubernetes.Clientset {
 	return clientset
 }
 
-func NewDB(schema ...interface{}) (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open("/data/sqlite/builder.db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
+// func NewDB(service string, schema ...interface{}) (*gorm.DB, error) {
+// 	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("/data/sqlite/%s.db", service)), &gorm.Config{})
+// 	if err != nil {
+// 		panic("failed to connect database")
+// 	}
 
-	// Migrate the schema
-	err = db.AutoMigrate(schema)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
+// 	// Migrate the schema
+// 	err = db.AutoMigrate(schema...)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return db, nil
+// }
 
 func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 	return func(s *grpc.Server) {
@@ -150,7 +151,7 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 		context.v = server.Config()
 		context.clientSet = connectToK8s()
 		context.asynq = asynq
-		context.db, _ = NewDB(&BuildInfo{})
+		context.db, _ = db.NewDB("builder", &BuildInfo{})
 		context.log.Info().Msg("Registering service")
 		pb.RegisterBuilderServiceServer(s, &context)
 		reflection.Register(s)
