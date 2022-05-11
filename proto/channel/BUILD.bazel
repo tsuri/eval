@@ -1,0 +1,25 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "channel_proto",
+    srcs = ["channel.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["//proto/types:types_proto"],
+)
+
+go_proto_library(
+    name = "channel_go_proto",
+    importpath = "eval/proto/channel",
+    proto = ":channel_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto/types"],
+)
+
+go_library(
+    name = "channel",
+    embed = [":channel_go_proto"],
+    importpath = "eval/proto/channel",
+    visibility = ["//visibility:public"],
+)

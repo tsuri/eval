@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "proto/types/types.proto";
+
+package channel;
+
+option go_package = "eval/proto/channel";
+
+message Channel {
+  string name = 1;
+  types.Type type = 2;
+}
+

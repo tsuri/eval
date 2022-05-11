@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package context;
+
+import "proto/agraph/agraph.proto";
+
+option go_package = "eval/proto/context";
+
+message Context {
+  agraph.AGraph actions = 1;
+}
+
+

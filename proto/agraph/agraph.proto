@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "proto/action/action.proto";
+
+package agraph;
+
+option go_package = "eval/proto/agraph";
+
+message AGraph {
+  string name = 1;
+  repeated action.Action actions = 2;
+}
+
+

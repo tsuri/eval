@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "value_proto",
+    srcs = ["value.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["//proto/types:types_proto"],
+)
+
+go_proto_library(
+    name = "value_go_proto",
+    importpath = "eval/proto/value",
+    proto = ":value_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto/types"],
+)
+
+go_library(
+    name = "value",
+    embed = [":value_go_proto"],
+    importpath = "eval/proto/value",
+    visibility = ["//visibility:public"],
+)

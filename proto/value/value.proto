@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+import "proto/types/types.proto";
+
+package value;
+
+option go_package = "eval/proto/value";
+
+message Result {
+  string value = 1;
+}
+
+message Future {
+  string uuid = 1;
+}
+  
+message Value {
+  string name = 1;
+  types.Type type = 2;
+  oneof data {
+    Result result = 3;
+    Future future = 4;
+  }
+}
+

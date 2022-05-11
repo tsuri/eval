@@ -1,0 +1,31 @@
+#!/bin/bash
+# Ehi, Emacs this is -*- shell-script -*-
+
+  
+if [[ $# -ne 1 ]]; then
+    echo "Usage $0 <proto name>"
+    exit 2
+fi
+
+proto=$1
+
+if [[ -d proto/${proto} ]]; then
+   echo "Protobuf definition for ${proto} already exists"
+   exit 1
+fi
+
+mkdir proto/${proto}
+
+cat > proto/${proto}/${proto}.proto <<EOF
+syntax = "proto3";
+
+package ${proto};
+
+option go_package = "eval/proto/${proto}";
+
+message X {
+}
+
+EOF
+
+bazel run //:gazelle

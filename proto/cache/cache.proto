@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cache;
+
+import "proto/context/context.proto";
+
+option go_package = "eval/proto/cache";
+
+message GetRequest {
+  string evaluation = 1;
+  context.Context context = 2;
+}
+
+message GetResponse {
+  string result = 1;
+}
+
+service CacheService {
+  rpc Get(GetRequest) returns (GetResponse) {}
+}

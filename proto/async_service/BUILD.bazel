@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
+
+proto_library(
+    name = "async_service_proto",
+    srcs = ["async_service.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:any_proto"],
+)
+
+go_proto_library(
+    name = "async_service_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "eval/proto/async_service",
+    proto = ":async_service_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "async_service",
+    embed = [":async_service_go_proto"],
+    importpath = "eval/proto/async_service",
+    visibility = ["//visibility:public"],
+)

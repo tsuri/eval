@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package types;
+
+option go_package = "eval/proto/types";
+
+message Type {
+  enum Atomic {
+    UNKNOWN = 0;
+    STRING = 1;
+    BOOL = 2;
+    DICTIONARY = 3;
+    CONTAINER_IMAGE = 4;
+    IMAGE = 5;
+  }
+
+  oneof impl {
+    Atomic atomic = 6;
+    // Bag bag = 7;
+    // Vector vector = 8;
+    // Tuple tuple = 9;
+  }
+
+}
+
