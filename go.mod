@@ -3,6 +3,7 @@ module eval
 go 1.17
 
 require (
+	github.com/emicklei/proto v1.10.0
 	github.com/fsnotify/fsnotify v1.5.3
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/gofrs/uuid v4.0.0+incompatible
@@ -19,6 +20,7 @@ require (
 	go.starlark.net v0.0.0-20220328144851-d1966c6b9fcd
 	gonum.org/v1/gonum v0.11.0
 	google.golang.org/grpc v1.46.0
+	google.golang.org/protobuf v1.28.0
 	gorm.io/driver/sqlite v1.3.2
 	gorm.io/gorm v1.23.5
 	k8s.io/api v0.23.6
@@ -83,7 +85,6 @@ require (
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220502173005-c8bf987b8c21 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

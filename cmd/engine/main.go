@@ -10,6 +10,7 @@ import (
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
 
+	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
 	pbasyncService "eval/proto/async_service"
 	pbbuilder "eval/proto/builder"
@@ -146,6 +147,10 @@ func (s *serverContext) EvalAsync(ctx context.Context, in *pbeval.EvalRequest) (
 	if err != nil {
 		return nil, err
 	}
+
+	buildImageConfig := new(pbaction.BuildImageConfig)
+	in.EvalContext.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
 	if err != nil {

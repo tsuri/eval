@@ -16,6 +16,7 @@ go_library(
         "//pkg/db",
         "//pkg/grpc/client",
         "//pkg/grpc/server",
+        "//proto/action",
         "//proto/async_service",
         "//proto/builder",
         "//proto/cache",

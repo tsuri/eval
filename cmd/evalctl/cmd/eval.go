@@ -4,14 +4,16 @@ import (
 	"context"
 	"log"
 	"path/filepath"
-	"strconv"
 
 	"eval/pkg/grpc/client"
-	pbasyncService "eval/proto/async_service"
+	pbAction "eval/proto/action"
+	pbAGraph "eval/proto/agraph"
+	pbContext "eval/proto/context"
 	pbEngine "eval/proto/engine"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -42,13 +44,16 @@ func init() {
 // setting from any of the levels above.
 
 func evalCmdImpl(cmd *cobra.Command, args []string) {
-	n, err := strconv.ParseInt(args[0], 10, 64)
-	if err != nil {
-		log.Fatalf("bad argument: %s", err)
-	}
+
+	//	protoflags.FlagsFromProtobuf(pbEngine.EvalRequest{})
+
+	// n, err := strconv.ParseInt(args[0], 10, 64)
+	// if err != nil {
+	// 	log.Fatalf("bad argument: %s", err)
+	// }
 
 	var conn *grpc.ClientConn
-	conn, err = client.NewConnection("engine.eval.net:443",
+	conn, err := client.NewConnection("engine.eval.net:443",
 		filepath.Join(baseDir, caCert),
 		filepath.Join(baseDir, clientCert),
 		filepath.Join(baseDir, clientKey))
@@ -59,31 +64,66 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	engine := pbEngine.NewEngineServiceClient(conn)
 
 	ctx := client.WithRequesterInfo(context.Background())
-	response, err := engine.Eval(ctx, &pbEngine.EvalRequest{Number: n})
-	if err != nil {
-		log.Fatalf("Error when calling Eval: %s", err)
-	}
-	log.Printf("Response from server: %s", response.Number)
+	// response, err := engine.Eval(ctx, &pbEngine.EvalRequest{Number: n})
+	// if err != nil {
+	// 	log.Fatalf("Error when calling Eval: %s", err)
+	// }
+	// log.Printf("Response from server: %s", response.Number)
 
-	operation, err := engine.EvalAsync(ctx, &pbEngine.EvalRequest{Number: n})
+	config, err := anypb.New(&pbAction.BuildImageConfig{
+		ImageName: "eval",
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	var actions []*pbAction.Action
+	for i := 1; i < 50000; i++ {
+		actions = append(actions, &pbAction.Action{
+			Config: config,
+		})
+	}
+
+	// request := pbEngine.EvalRequest{
+	// 	EvalContext: &pbContext.Context{
+	// 		Actions: &pbAGraph.AGraph{
+	// 			Name: "Image Build",
+	// 			Actions: []*pbAction.Action{{
+	// 				Kind:   "build-image",
+	// 				Config: config,
+	// 			}},
+	// 		},
+	// 	},
+	// }
+
+	request := pbEngine.EvalRequest{
+		EvalContext: &pbContext.Context{
+			Actions: &pbAGraph.AGraph{
+				Name:    "Image Build",
+				Actions: actions,
+			},
+		},
+	}
+
+	operation, err := engine.EvalAsync(ctx, &request)
 	if err != nil {
 		log.Fatalf("Error when calling EvalAsync: %s", err)
 	}
-	response = new(pbEngine.EvalResponse)
+	response := new(pbEngine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
 		log.Fatal("Cannot unmarhshal result")
 	}
 	log.Printf("Response from server: %s", response.Number)
 
-	evalOperations := pbasyncService.NewOperationsClient(conn)
-	operation, err = evalOperations.GetOperation(ctx, &pbasyncService.GetOperationRequest{Name: "foo"})
-	if err != nil {
-		log.Fatalf("Error when calling EvalAsync: %s", err)
-	}
-	response = new(pbEngine.EvalResponse)
-	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
-		log.Fatal("Cannot unmarhshal result")
-	}
-	log.Printf("Response from server: %s", response.Number)
+	// evalOperations := pbasyncService.NewOperationsClient(conn)
+	// operation, err = evalOperations.GetOperation(ctx, &pbasyncService.GetOperationRequest{Name: "foo"})
+	// if err != nil {
+	// 	log.Fatalf("Error when calling EvalAsync: %s", err)
+	// }
+	// response = new(pbEngine.EvalResponse)
+	// if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+	// 	log.Fatal("Cannot unmarhshal result")
+	// }
+	// log.Printf("Response from server: %s", response.Number)
 
 }
