@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "actions",
+    srcs = ["actions.go"],
+    importpath = "eval/pkg/actions",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto/action",
+        "//proto/agraph",
+        "//proto/channel",
+        "//proto/types",
+        "@org_golang_google_protobuf//types/known/anypb",
+    ],
+)

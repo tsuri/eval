@@ -13,6 +13,7 @@ go_library(
     importpath = "eval/cmd/engine",
     visibility = ["//visibility:private"],
     deps = [
+        "//pkg/actions",
         "//pkg/db",
         "//pkg/grpc/client",
         "//pkg/grpc/server",
@@ -21,6 +22,7 @@ go_library(
         "//proto/builder",
         "//proto/cache",
         "//proto/engine",
+        "//proto/types",
         "@com_github_gofrs_uuid//:uuid",
         "@com_github_mattn_go_sqlite3//:go-sqlite3",
         "@com_github_rs_zerolog//:zerolog",

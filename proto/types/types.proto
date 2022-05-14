@@ -4,21 +4,44 @@ package types;
 
 option go_package = "eval/proto/types";
 
+message Bag {
+  Type type = 1;
+}
+
+message Vector {
+  Type type = 1;
+}
+
+message Field {
+  string name = 1 ;
+  Type type = 2;
+}
+
+message Tuple {  // not really a tuple, more of an ordered dictionary
+  repeated Field fields = 1;
+}
+
+message Dictionary {
+  repeated Field fields = 1;
+}
+
 message Type {
-  enum Atomic {
-    UNKNOWN = 0;
-    STRING = 1;
-    BOOL = 2;
-    DICTIONARY = 3;
+  enum AtomicType {
+    UNKNOWN         = 0;
+    STRING          = 1;
+    BOOL            = 2;
     CONTAINER_IMAGE = 4;
-    IMAGE = 5;
+
+    IMAGE           = 5;                  // this is domain specific, an image in the sense of a phoo
   }
 
   oneof impl {
-    Atomic atomic = 6;
-    // Bag bag = 7;
-    // Vector vector = 8;
-    // Tuple tuple = 9;
+    // replace atomic w/ scalar everywhere
+    AtomicType atomic     = 1;
+    Bag bag               = 2;
+    Vector vector         = 3;
+    Tuple tuple           = 4;
+    Dictionary dictionary = 5;
   }
 
 }

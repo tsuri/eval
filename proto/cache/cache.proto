@@ -3,12 +3,14 @@ syntax = "proto3";
 package cache;
 
 import "proto/context/context.proto";
+import "proto/async_service/async_service.proto";
 
 option go_package = "eval/proto/cache";
 
 message GetRequest {
   string evaluation = 1;
   context.Context context = 2;
+  repeated string values = 3;
 }
 
 message GetResponse {
@@ -16,5 +18,5 @@ message GetResponse {
 }
 
 service CacheService {
-  rpc Get(GetRequest) returns (GetResponse) {}
+  rpc Get(GetRequest) returns (async_service.Operation) {}
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"eval/pkg/actions"
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
@@ -82,16 +83,21 @@ func get(evalID string) *pbcache.GetResponse {
 
 	cache := pbcache.NewCacheServiceClient(conn)
 
-	response, err := cache.Get(context.Background(), &pbcache.GetRequest{Evaluation: evalID})
+	operation, err := cache.Get(context.Background(), &pbcache.GetRequest{Evaluation: evalID})
 	if err != nil {
 		log.Fatalf("Error when calling Get: %s", err)
+	}
+
+	response := new(pbcache.GetResponse)
+	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+		log.Fatal("Cannot unmarhshal result")
 	}
 
 	return response
 }
 
 type EvalInfo struct {
-	//	gorm.Model
+	//gorm.Model
 	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
 
 	User     string
@@ -133,23 +139,44 @@ func (s *serverContext) newEvaluation(ctx context.Context) (string, error) {
 	return evalInfo.ID.String(), nil
 }
 
-func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbeval.EvalResponse, error) {
+func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbasyncService.Operation, error) {
 	name, err := s.newEvaluation(ctx)
 	if err != nil {
 		return nil, err
 	}
-	_ = get(name)
-	return &pbeval.EvalResponse{Number: 42}, nil
-}
 
-func (s *serverContext) EvalAsync(ctx context.Context, in *pbeval.EvalRequest) (*pbasyncService.Operation, error) {
-	name, err := s.newEvaluation(ctx)
+	// t := pbtypes.Type{
+	// 	//		Impl: &pbtypes.Type_Bag{}, //Type_Impl{Atomic: pbtypes.Type_STRING},
+	// 	Impl: &pbtypes.Type_Atomic{pbtypes.Type_STRING}, //Type_Impl{Atomic: pbtypes.Type_STRING},
+	// }
+	// s.log.Info().Str("type", fmt.Sprintf("%v", t)).Str("atomic", t.GetAtomic().String()).Msg("TYPE")
+
+	a := in.Context.Actions.Actions[0]
+	digest, err := actions.ActionDigest(a)
 	if err != nil {
-		return nil, err
+		s.log.Err(err).Msg("Error computing digest")
+	} else {
+		s.log.Info().Str("digest", digest).Msg("action digest")
+	}
+
+	conn, err := client.Connect("eval-cache.eval.svc.cluster.local:50051")
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer conn.Close()
+
+	cache := pbcache.NewCacheServiceClient(conn)
+	_, err = cache.Get(ctx, &pbcache.GetRequest{
+		Evaluation: name,
+		Context:    in.Context,
+		Values:     in.Values,
+	})
+	if err != nil {
+		s.log.Err(err).Msg("Failure to talk to cache")
 	}
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
-	in.EvalContext.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
@@ -158,7 +185,7 @@ func (s *serverContext) EvalAsync(ctx context.Context, in *pbeval.EvalRequest) (
 	}
 	return &pbasyncService.Operation{
 		Name:   name,
-		Done:   true,
+		Done:   false,
 		Result: &pbasyncService.Operation_Response{result},
 	}, nil
 }
@@ -209,17 +236,7 @@ func main() {
 			fmt.Fprintf(w, "Hi")
 		})
 
-		// baseDir := "/data/eval/certificates"
-		// //		caCert      = "ca.crt"
-		// clientCert := "tls.crt"
-		// clientKey := "tls.key"
-
 		log.Fatal(http.ListenAndServe(":8081", nil))
-
-		// log.Fatal(http.ListenAndServeTLS(":8081",
-		// 	baseDir+"/"+clientCert,
-		// 	baseDir+"/"+clientKey,
-		// 	nil))
 	}()
 
 	server := server.Build(port)

@@ -8,7 +8,8 @@ package engine;
 option go_package = "eval/proto/engine";
 
 message EvalRequest {
-  context.Context eval_context = 2;
+  context.Context context = 2;
+  repeated string values = 3;
 }
 
 message EvalResponse {
@@ -28,7 +29,7 @@ message BuildResponse {
 }
 
 service EngineService {
-  rpc Eval(EvalRequest) returns (EvalResponse) {}
-  rpc EvalAsync(EvalRequest) returns (async_service.Operation) {}
+  //  rpc Eval(EvalRequest) returns (EvalResponse) {}
+  rpc Eval(EvalRequest) returns (async_service.Operation) {}
   rpc Build(BuildRequest) returns (BuildResponse) {}
 }

@@ -8,20 +8,40 @@ import "google/protobuf/any.proto";
 
 option go_package = "eval/proto/action";
 
-message Action {
-  string kind = 1;		// should be enum of builtin/custom?
-  repeated channel.Channel inputs = 2;
-  repeated channel.Channel outputs = 3;
+message CommitPoint {
+  string branch     = 1;
+  string commit_sha = 2;
+}
 
-  google.protobuf.Any config = 4;
-  // config and sources
+message Action {
+  string kind                      = 1;		// should be enum of builtin/custom?
+  string name                      = 2;
+  repeated channel.Channel inputs  = 3;
+  repeated channel.Channel outputs = 4;
+
+  // 'builtin' actions (for now only buid image) won't configure the commit point sha as it is assumed
+  // anything would work. Maybe later we'll have a 'min_ci'. Also for builtins, base_image will be fixed and
+  // branch will be main/master.
+  string base_image                = 5;
+  CommitPoint commit_point         = 6;
+  
+  google.protobuf.Any config       = 7;
 }
 
 message BuildImageConfig {
-  string image_name = 1;
-  string image_tag = 2;
-  string base_image = 3;
-  string branch = 4;
-  string commit_sha = 5;
-  repeated string bazel_target = 6;
+  // image_name and image_tag are not really used for hashing
+  // We can use it in two ways:
+  // 1. we execute a post action that cheapily add a tag
+  // 2. we split the build action in two sequential actions, one building the image and one tagging
+  //    [this would be the most correct way, in which case we should include image_name,image_tag in the hash]
+  string image_name             = 1;
+  string image_tag              = 2;
+
+  // base_image and commit_point (branch and commit_sha) are part of the cache hash
+  string base_image             = 3;
+  CommitPoint commit_point      = 4;
+
+  // bazel_target is not used for hashing but just to check whether a cached
+  // value is acceptable
+  repeated string bazel_targets = 5;
 }
