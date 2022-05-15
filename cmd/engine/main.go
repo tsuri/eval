@@ -17,6 +17,7 @@ import (
 	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
 	pbeval "eval/proto/engine"
+	pbtypes "eval/proto/types"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -145,12 +146,6 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 		return nil, err
 	}
 
-	// t := pbtypes.Type{
-	// 	//		Impl: &pbtypes.Type_Bag{}, //Type_Impl{Atomic: pbtypes.Type_STRING},
-	// 	Impl: &pbtypes.Type_Atomic{pbtypes.Type_STRING}, //Type_Impl{Atomic: pbtypes.Type_STRING},
-	// }
-	// s.log.Info().Str("type", fmt.Sprintf("%v", t)).Str("atomic", t.GetAtomic().String()).Msg("TYPE")
-
 	a := in.Context.Actions.Actions[0]
 	digest, err := actions.ActionDigest(a)
 	if err != nil {
@@ -179,7 +174,22 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
-	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
+	// make helper functions for types in a new types.go file.
+	xvalue := pbtypes.TypedValue{
+		Type: &pbtypes.Type{
+			Impl: &pbtypes.Type_Atomic{pbtypes.Type_STRING},
+		},
+		Fields: []*pbtypes.FieldValue{
+			{
+				Value: &pbtypes.ScalarValue{
+					Value: &pbtypes.ScalarValue_S{"a result"},
+				},
+			},
+		},
+	}
+	s.log.Info().Str("value", fmt.Sprintf("%v", xvalue)).Msg("VALUE")
+
+	result, err := anypb.New(&pbeval.EvalResponse{Value: &xvalue})
 	if err != nil {
 		panic(err)
 	}

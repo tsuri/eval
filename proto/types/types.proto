@@ -46,3 +46,19 @@ message Type {
 
 }
 
+message ScalarValue {
+  oneof value {
+    string s = 2;
+    bool b   = 3;
+  }
+}
+
+message FieldValue {
+  string name       = 1; // used for tuples and dictionaries
+  ScalarValue value = 2;
+}
+
+message TypedValue {
+  Type type                  = 1;
+  repeated FieldValue fields = 2;  // tuples and dictionaries
+}

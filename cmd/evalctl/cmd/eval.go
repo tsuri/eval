@@ -86,6 +86,14 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
 
+	response := new(pbEngine.EvalResponse)
+	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+		log.Fatal("Cannot unmarhshal result")
+	}
+
+	v := response.Value.Fields[0].Value.GetS()
+	log.Printf("Response from server: %T %v", v, v)
+
 	evalOperations := pbAsyncService.NewOperationsClient(conn)
 	for !operation.Done {
 		log.Printf("Waiting...\n")
@@ -94,9 +102,10 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	response := new(pbEngine.EvalResponse)
+	//	response := new(pbEngine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
 		log.Fatal("Cannot unmarhshal result")
 	}
-	log.Printf("Response from server: %s", response.Number)
+
+	log.Printf("Response from server: %v", response.Value)
 }
