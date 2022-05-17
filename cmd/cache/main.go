@@ -3,16 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"eval/pkg/db"
+	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
 
+	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
+	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
 
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
@@ -25,6 +30,33 @@ import (
 const (
 	port = "0.0.0.0:50051"
 )
+
+func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) {
+	// ok, a filure to connect here doesn' return error
+	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
+	if err != nil {
+		log.Fatalf("did not connect")
+	}
+	defer conn.Close()
+
+	client := pbbuilder.NewBuilderServiceClient(conn)
+
+	// md, _ := metadata.FromIncomingContext(ctx)
+	// log.Printf("BUILD METADATA: %v", md["user"][0])
+
+	// ctx = metadata.NewOutgoingContext(ctx, md)
+
+	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
+		CommitSHA: config.CommitPoint.CommitSha,
+		Branch:    config.CommitPoint.Branch,
+		Target:    config.BazelTargets,
+	})
+	if err != nil {
+		log.Printf("bad answer from builder")
+	} else {
+		log.Printf("response %v", response)
+	}
+}
 
 type serverContext struct {
 	log *zerolog.Logger
@@ -69,13 +101,25 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		fmt.Println(wanted)
 	}
 
+	//s.log.Info().Str("ACTIONS", fmt.Sprintf("%v", in.Context.Actions.Actions[0].Config.ImageName)).Msg("BuildConfig")
+
+	buildImageConfig := new(pbaction.BuildImageConfig)
+	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
+
+	buildImage(ctx, buildImageConfig)
+
 	cacheGetResponse := pbcache.GetResponse{}
 	result, err := anypb.New(&cacheGetResponse)
 	if err != nil {
 		panic(err)
 	}
+	id, err := uuid.NewV4()
+	if err != nil {
+		return nil, err
+	}
 	return &pbasync.Operation{
-		Name:   "something",
+		Name:   id.String(),
 		Done:   true,
 		Result: &pbasync.Operation_Response{result},
 	}, nil

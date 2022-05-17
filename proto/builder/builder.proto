@@ -4,13 +4,7 @@ package builder;
 
 option go_package = "eval/proto/builder";
 
-message Requester {
-  string userName = 1;
-  string hostName = 2;
-}
-
 message BuildRequest {
-  Requester requester = 1;
   string commitSHA = 2;
   string branch = 3;
   repeated string target = 4;

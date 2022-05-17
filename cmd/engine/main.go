@@ -10,6 +10,7 @@ import (
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
+	"eval/pkg/types"
 
 	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
@@ -17,7 +18,6 @@ import (
 	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
 	pbeval "eval/proto/engine"
-	pbtypes "eval/proto/types"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -50,18 +50,12 @@ func buildImage(ctx context.Context, in *pbeval.BuildRequest) *pbeval.BuildRespo
 	defer conn.Close()
 	client := pbbuilder.NewBuilderServiceClient(conn)
 
-	requester := pbbuilder.Requester{
-		UserName: "USER",
-		HostName: "HOSTNAME",
-	}
-
 	md, _ := metadata.FromIncomingContext(ctx)
 	log.Printf("BUILD METADATA: %v", md["user"][0])
 
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
-		Requester: &requester,
 		CommitSHA: in.CommitSHA,
 		Branch:    in.Branch,
 		Target:    in.Target,
@@ -97,7 +91,12 @@ func get(evalID string) *pbcache.GetResponse {
 	return response
 }
 
-type EvalInfo struct {
+type Operation struct {
+	EvaluationID uuid.UUID `gorm:"type:uuid;primary_key;"`
+	DependentID  uuid.UUID
+}
+
+type Evaluation struct {
 	//gorm.Model
 	ID uuid.UUID `gorm:"type:uuid;primary_key;"`
 
@@ -106,18 +105,20 @@ type EvalInfo struct {
 
 	State  string
 	Future uuid.UUID `gorm:"type:uuid;"`
+
+	Operations []Operation
 }
 
-func (e *EvalInfo) BeforeCreate(tx *gorm.DB) error {
-	uuid, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
-	tx.Statement.SetColumn("ID", uuid)
-	return nil
-}
+// func (e *Evaluation) BeforeCreate(tx *gorm.DB) error {
+// 	uuid, err := uuid.NewV4()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	tx.Statement.SetColumn("ID", uuid)
+// 	return nil
+// }
 
-func (s *serverContext) newEvaluation(ctx context.Context) (string, error) {
+func (s *serverContext) newEvaluation(ctx context.Context, id uuid.UUID, cacheID uuid.UUID) error {
 	user := "unknown"
 	hostname := "unknown"
 	if md, ok := metadata.FromIncomingContext(ctx); ok {
@@ -125,23 +126,29 @@ func (s *serverContext) newEvaluation(ctx context.Context) (string, error) {
 		hostname = md["hostname"][0]
 	}
 
-	evalInfo := EvalInfo{
+	evaluation := Evaluation{
+		ID:       id,
 		User:     user,
 		Hostname: hostname,
+		Operations: []Operation{
+			{EvaluationID: id,
+				DependentID: cacheID,
+			},
+		},
 	}
 
-	result := s.db.Create(&evalInfo)
+	result := s.db.Create(&evaluation)
 
 	// why this condition?
 	if result.Error != nil && result.RowsAffected != 1 {
 		s.log.Err(result.Error).Msg("Error occurred while creating a new evaluation")
-		return "", result.Error
+		return result.Error
 	}
-	return evalInfo.ID.String(), nil
+	return nil
 }
 
 func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbasyncService.Operation, error) {
-	name, err := s.newEvaluation(ctx)
+	id, err := uuid.NewV4()
 	if err != nil {
 		return nil, err
 	}
@@ -161,42 +168,60 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	defer conn.Close()
 
 	cache := pbcache.NewCacheServiceClient(conn)
-	_, err = cache.Get(ctx, &pbcache.GetRequest{
-		Evaluation: name,
+	operation, err := cache.Get(ctx, &pbcache.GetRequest{
+		Evaluation: id.String(),
 		Context:    in.Context,
 		Values:     in.Values,
 	})
 	if err != nil {
 		s.log.Err(err).Msg("Failure to talk to cache")
+		return nil, err
 	}
+
+	err = s.newEvaluation(ctx, id, uuid.Must(uuid.FromString(operation.Name)))
+	if err != nil {
+		return nil, err
+	}
+
+	// evalOperation := Operation{
+	// 	EvaluationID: id,
+	// 	DependentID:
+	// }
+	// result := s.db.Create(&evalOperation)
+	// // why this condition?
+	// if result.Error != nil && result.RowsAffected != 1 {
+	// 	s.log.Err(result.Error).Msg("Error occurred while creating a new evaluation")
+	// 	return nil, result.Error
+	// }
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
 	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	// make helper functions for types in a new types.go file.
-	xvalue := pbtypes.TypedValue{
-		Type: &pbtypes.Type{
-			Impl: &pbtypes.Type_Atomic{pbtypes.Type_STRING},
-		},
-		Fields: []*pbtypes.FieldValue{
-			{
-				Value: &pbtypes.ScalarValue{
-					Value: &pbtypes.ScalarValue_S{"a result"},
-				},
-			},
-		},
-	}
+	// xvalue := pbtypes.TypedValue{
+	// 	Type: &pbtypes.Type{
+	// 		Impl: &pbtypes.Type_Atomic{pbtypes.Type_STRING},
+	// 	},
+	// 	Fields: []*pbtypes.FieldValue{
+	// 		{
+	// 			Value: &pbtypes.ScalarValue{
+	// 				Value: &pbtypes.ScalarValue_S{"a result"},
+	// 			},
+	// 		},
+	// 	},
+	// }
+	xvalue := types.StringScalar("a nice string value")
 	s.log.Info().Str("value", fmt.Sprintf("%v", xvalue)).Msg("VALUE")
 
-	result, err := anypb.New(&pbeval.EvalResponse{Value: &xvalue})
+	response, err := anypb.New(&pbeval.EvalResponse{Value: xvalue})
 	if err != nil {
 		panic(err)
 	}
 	return &pbasyncService.Operation{
-		Name:   name,
+		Name:   id.String(),
 		Done:   false,
-		Result: &pbasyncService.Operation_Response{result},
+		Result: &pbasyncService.Operation_Response{response},
 	}, nil
 }
 
@@ -227,7 +252,7 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 		context := serverContext{}
 		context.log = server.Logger()
 		context.v = server.Config()
-		context.db, _ = db.NewDB("engine", &EvalInfo{})
+		context.db, _ = db.NewDB("engine", &Evaluation{}, &Operation{})
 		pbeval.RegisterEngineServiceServer(s, &context)
 		pbasync.RegisterOperationsServer(s, &context)
 		reflection.Register(s)
