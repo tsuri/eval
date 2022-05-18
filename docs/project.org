@@ -243,6 +243,29 @@ ok.
 #+RESULTS:
 [[file:ditaa-simpleboxes.png]]
 
+** Week 9
+Took one week vacation so that I could actually work on this during
+the day. Lot of progress. I now have an actual cache service, so I'm
+retiring the ad-hoc image building path I was using for testing the
+kaniko image buiding.
+
+Also I know have support for long-running operations. Still need to
+plumb everything end-to-end.
+
+Last I actually have action graphs, types, evaluation context etc.
+
+Unfortunately all this is where I would have liked to be at the
+beginning of the week rather than the end.
+
+** Week 10
+*** Monday
+Don't remember
+*** Tuesday
+Fixed the kaniko build. Somehow we dropped the 'refs/heads' part from
+the kaniko context and builds were not working.
+Now is all back in order, but using the cache. Also started comuting
+the hash for the action.
+
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)

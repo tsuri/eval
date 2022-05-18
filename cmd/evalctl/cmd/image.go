@@ -1,11 +1,7 @@
 package cmd
 
 import (
-	"context"
-	"eval/pkg/grpc/client"
-	pbEngine "eval/proto/engine"
 	"log"
-	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
@@ -43,59 +39,59 @@ func init() {
 }
 
 func buildCmdImpl(cmd *cobra.Command, args []string) {
-	conn, err := client.NewConnection("engine.eval.net:443",
-		filepath.Join(baseDir, caCert),
-		filepath.Join(baseDir, clientCert),
-		filepath.Join(baseDir, clientKey))
-	if err != nil {
-		log.Fatalf("did not connect: %s", err)
-	}
-	defer conn.Close()
-	engine := pbEngine.NewEngineServiceClient(conn)
+	// conn, err := client.NewConnection("engine.eval.net:443",
+	// 	filepath.Join(baseDir, caCert),
+	// 	filepath.Join(baseDir, clientCert),
+	// 	filepath.Join(baseDir, clientKey))
+	// if err != nil {
+	// 	log.Fatalf("did not connect: %s", err)
+	// }
+	// defer conn.Close()
+	// engine := pbEngine.NewEngineServiceClient(conn)
 
-	targets, err := cmd.Flags().GetStringArray("target")
-	if err != nil {
-		log.Fatalf("Bad argument, target %v", err)
-	}
-	log.Printf("TARGETS: %v\n", targets)
+	// targets, err := cmd.Flags().GetStringArray("target")
+	// if err != nil {
+	// 	log.Fatalf("Bad argument, target %v", err)
+	// }
+	// log.Printf("TARGETS: %v\n", targets)
 
-	branch, err := cmd.Flags().GetString("branch")
-	if err != nil {
-		log.Fatalf("Bad argument, branch")
-	}
-	log.Printf("BRANCH: %v\n", branch)
+	// branch, err := cmd.Flags().GetString("branch")
+	// if err != nil {
+	// 	log.Fatalf("Bad argument, branch")
+	// }
+	// log.Printf("BRANCH: %v\n", branch)
 
-	commit, err := cmd.Flags().GetString("commit")
-	if err != nil {
-		log.Fatalf("Bad argument, commit")
-	}
-	log.Printf("COMMIT: %v\n", commit)
+	// commit, err := cmd.Flags().GetString("commit")
+	// if err != nil {
+	// 	log.Fatalf("Bad argument, commit")
+	// }
+	// log.Printf("COMMIT: %v\n", commit)
 
-	repo, err := git.PlainOpen("/home/mav/eval")
-	w, err := repo.Worktree()
-	if err != nil {
-		log.Fatalf("Cannot get worktree")
-	}
-	status, err := w.Status()
-	if err != nil {
-		log.Fatalf("Cannot get status")
-	}
-	log.Printf("STATUS: %v\n", status)
-	if status.IsClean() {
-		log.Println("Clean workspace")
-	} else {
-		log.Println("Dirty workspace")
-	}
+	// repo, err := git.PlainOpen("/home/mav/eval")
+	// w, err := repo.Worktree()
+	// if err != nil {
+	// 	log.Fatalf("Cannot get worktree")
+	// }
+	// status, err := w.Status()
+	// if err != nil {
+	// 	log.Fatalf("Cannot get status")
+	// }
+	// log.Printf("STATUS: %v\n", status)
+	// if status.IsClean() {
+	// 	log.Println("Clean workspace")
+	// } else {
+	// 	log.Println("Dirty workspace")
+	// }
 
-	ctx := client.WithRequesterInfo(context.Background())
-	response, err := engine.Build(ctx, &pbEngine.BuildRequest{
-		CommitSHA: commit,
-		Branch:    branch,
-		Target:    targets,
-	})
-	if err != nil {
-		log.Fatalf("Error when calling Build: %s", err)
-	}
-	log.Printf("Response from server: %s", response.Response)
-	log.Printf("Built image %s:%s", response.ImageName, response.ImageTag)
+	// ctx := client.WithRequesterInfo(context.Background())
+	// response, err := engine.Build(ctx, &pbEngine.BuildRequest{
+	// 	CommitSHA: commit,
+	// 	Branch:    branch,
+	// 	Target:    targets,
+	// })
+	// if err != nil {
+	// 	log.Fatalf("Error when calling Build: %s", err)
+	// }
+	// log.Printf("Response from server: %s", response.Response)
+	// log.Printf("Built image %s:%s", response.ImageName, response.ImageTag)
 }

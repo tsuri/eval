@@ -15,9 +15,9 @@ import (
 	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
 	pbasyncService "eval/proto/async_service"
-	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
 	pbeval "eval/proto/engine"
+	pbtypes "eval/proto/types"
 
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
@@ -41,36 +41,36 @@ type serverContext struct {
 	db  *gorm.DB
 }
 
-func buildImage(ctx context.Context, in *pbeval.BuildRequest) *pbeval.BuildResponse {
-	// ok, a filure to connect here doesn' return error
-	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
-	if err != nil {
-		log.Fatalf("did not connect")
-	}
-	defer conn.Close()
-	client := pbbuilder.NewBuilderServiceClient(conn)
+// func buildImage(ctx context.Context, in *pbeval.BuildRequest) *pbeval.BuildResponse {
+// 	// ok, a filure to connect here doesn' return error
+// 	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
+// 	if err != nil {
+// 		log.Fatalf("did not connect")
+// 	}
+// 	defer conn.Close()
+// 	client := pbbuilder.NewBuilderServiceClient(conn)
 
-	md, _ := metadata.FromIncomingContext(ctx)
-	log.Printf("BUILD METADATA: %v", md["user"][0])
+// 	md, _ := metadata.FromIncomingContext(ctx)
+// 	log.Printf("BUILD METADATA: %v", md["user"][0])
 
-	ctx = metadata.NewOutgoingContext(ctx, md)
+// 	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
-		CommitSHA: in.CommitSHA,
-		Branch:    in.Branch,
-		Target:    in.Target,
-	})
-	if err != nil {
-		log.Printf("bad answer from builder")
-	} else {
-		log.Printf("response %v", response)
-	}
-	return &pbeval.BuildResponse{
-		ImageName: response.ImageName,
-		ImageTag:  response.ImageTag,
-		Response:  response.Response,
-	}
-}
+// 	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
+// 		CommitSHA: in.CommitSHA,
+// 		Branch:    in.Branch,
+// 		Target:    in.Target,
+// 	})
+// 	if err != nil {
+// 		log.Printf("bad answer from builder")
+// 	} else {
+// 		log.Printf("response %v", response)
+// 	}
+// 	return &pbeval.BuildResponse{
+// 		ImageName: response.ImageName,
+// 		ImageTag:  response.ImageTag,
+// 		Response:  response.Response,
+// 	}
+// }
 
 func get(evalID string) *pbcache.GetResponse {
 	conn, err := client.Connect("eval-cache.eval.svc.cluster.local:50051")
@@ -214,7 +214,10 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	xvalue := types.StringScalar("a nice string value")
 	s.log.Info().Str("value", fmt.Sprintf("%v", xvalue)).Msg("VALUE")
 
-	response, err := anypb.New(&pbeval.EvalResponse{Value: xvalue})
+	response, err := anypb.New(&pbeval.EvalResponse{
+		// for now we hardcode the value name. Will be the values in the request
+		Values: map[string]*pbtypes.TypedValue{"result": xvalue},
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -225,18 +228,19 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	}, nil
 }
 
-func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
-	s.log.Info().Msg("Let's see this one")
-	md, _ := metadata.FromIncomingContext(ctx)
-	s.log.Info().Str("user", md["user"][0]).Msg("Metadata")
-	response := buildImage(ctx, in)
-	s.log.Info().Str("tag", response.ImageTag).Msg("response")
-	return response, nil
-	//	return &pbeval.BuildResponse{Response: "done"}, nil
-}
+// func (s *serverContext) Build(ctx context.Context, in *pbeval.BuildRequest) (*pbeval.BuildResponse, error) {
+// 	s.log.Info().Msg("Let's see this one")
+// 	md, _ := metadata.FromIncomingContext(ctx)
+// 	s.log.Info().Str("user", md["user"][0]).Msg("Metadata")
+// 	response := buildImage(ctx, in)
+// 	s.log.Info().Str("tag", response.ImageTag).Msg("response")
+// 	return response, nil
+// 	//	return &pbeval.BuildResponse{Response: "done"}, nil
+// }
 
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
-	result, err := anypb.New(&pbeval.EvalResponse{Number: 43})
+	// we should get the result from the cache
+	result, err := anypb.New(&pbeval.EvalResponse{})
 	if err != nil {
 		panic(err)
 	}

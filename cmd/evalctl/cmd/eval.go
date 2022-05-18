@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"eval/pkg/actions"
@@ -89,6 +90,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		CommitPoint: &pbAction.CommitPoint{
 			Branch:    "main",
 			CommitSha: "c32b7e6cbac753c54ffa8c78687feae7eae1711c",
+			//CommitSha: "af1b634eb10777ff1b2c4aded960ea1645d49653",
 		},
 	}
 
@@ -111,8 +113,22 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatal("Cannot unmarhshal result")
 	}
 
-	v := response.Value.Fields[0].Value.GetS()
-	log.Printf("Response from server: %T %v", v, v)
+	values := response.Values //.Fields[0].Value.GetS()
+	// create slice and store keys
+	valueNames := make([]string, 0, len(values))
+	for v := range values {
+		valueNames = append(valueNames, v)
+	}
+
+	// sort the slice by keys
+	sort.Strings(valueNames)
+
+	// iterate by sorted keys
+	for _, valueName := range valueNames {
+		log.Printf("%s: %v", valueName, values[valueName])
+	}
+
+	//	log.Printf("Response from server: %T %v", v, v)
 
 	evalOperations := pbAsyncService.NewOperationsClient(conn)
 	for !operation.Done {
@@ -127,5 +143,5 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatal("Cannot unmarhshal result")
 	}
 
-	log.Printf("Response from server: %v", response.Value)
+	log.Printf("Response from server: %v", "don't know how to parse") //response.Value)
 }

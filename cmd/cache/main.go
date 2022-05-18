@@ -59,9 +59,10 @@ func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) {
 }
 
 type serverContext struct {
-	log *zerolog.Logger
-	v   *viper.Viper
-	db  *gorm.DB
+	log   *zerolog.Logger
+	v     *viper.Viper
+	db    *gorm.DB
+	cache *cache.Cache
 }
 
 type CacheInfo struct {
@@ -79,15 +80,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		s.log.Info().Str("value", value).Msg("Value request")
 	}
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "redis.eval.svc.cluster.local:6379",
-	})
-
-	mycache := cache.New(&cache.Options{
-		Redis: redisClient,
-	})
-
-	if err := mycache.Set(&cache.Item{
+	if err := s.cache.Set(&cache.Item{
 		Ctx:   ctx,
 		Key:   "FOO",
 		Value: &Object{Str: "bar", Num: 42},
@@ -97,7 +90,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 
 	var wanted Object
-	if err := mycache.Get(ctx, "FOO", &wanted); err == nil {
+	if err := s.cache.Get(ctx, "FOO", &wanted); err == nil {
 		fmt.Println(wanted)
 	}
 
@@ -109,7 +102,9 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 
 	buildImage(ctx, buildImageConfig)
 
+	// here we should populate a map of results
 	cacheGetResponse := pbcache.GetResponse{}
+
 	result, err := anypb.New(&cacheGetResponse)
 	if err != nil {
 		panic(err)
@@ -132,6 +127,14 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 		context.log = server.Logger()
 		context.v = server.Config()
 		context.db, _ = db.NewDB("cache", &CacheInfo{})
+
+		redisClient := redis.NewClient(&redis.Options{
+			Addr: "redis.eval.svc.cluster.local:6379",
+		})
+
+		context.cache = cache.New(&cache.Options{
+			Redis: redisClient,
+		})
 
 		pbcache.RegisterCacheServiceServer(s, &context)
 		reflection.Register(s)

@@ -176,10 +176,10 @@ func NewBuildTask(branch string, commitSHA string, target []string, imageTag str
 
 func buildJobSpec(branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
 	var backOffLimit int32 = 0
-	var ttlSecondsAfterFinished int32 = 600
+	var ttlSecondsAfterFinished int32 = 60
 
-	//	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
-	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
+	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/" + branch + "#" + commitSHA
+	//gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -214,6 +214,7 @@ func buildJobSpec(branch string, commitSHA string, targets []string, imageTag st
 								"--log-format=color",
 								"--log-timestamp=true",
 								"--use-new-run",
+								//								"--verbosity=debug",
 								"--dockerfile=dockerfile"},
 							Env: []v1.EnvVar{
 								{

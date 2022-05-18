@@ -3,18 +3,19 @@ syntax = "proto3";
 package cache;
 
 import "proto/context/context.proto";
+import "proto/types/types.proto";
 import "proto/async_service/async_service.proto";
 
 option go_package = "eval/proto/cache";
 
 message GetRequest {
-  string evaluation = 1;
+  string evaluation       = 1;
   context.Context context = 2;
-  repeated string values = 3;
+  repeated string values  = 3;
 }
 
 message GetResponse {
-  string result = 1;
+  map<string, types.TypedValue> values = 2;
 }
 
 service CacheService {
