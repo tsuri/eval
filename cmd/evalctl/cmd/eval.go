@@ -14,6 +14,7 @@ import (
 	pbEngine "eval/proto/engine"
 
 	"github.com/spf13/cobra"
+	"github.com/thediveo/enumflag"
 	"google.golang.org/grpc"
 )
 
@@ -32,8 +33,27 @@ var evalCmd = &cobra.Command{
 	Run:   evalCmdImpl,
 }
 
+type ExecutionEngine enumflag.Flag
+
+const (
+	Cloud ExecutionEngine = iota
+	Local
+)
+
+var ExecutionEngineIds = map[ExecutionEngine][]string{
+	Cloud: {"cloud"},
+	Local: {"local"},
+}
+
+var executionEngine ExecutionEngine
+
 func init() {
 	rootCmd.AddCommand(evalCmd)
+	rootCmd.PersistentFlags().VarP(
+		enumflag.New(&executionEngine, "engine", ExecutionEngineIds, enumflag.EnumCaseInsensitive),
+		"engine", "e",
+		"execution engine; can be 'cloud' or 'local'")
+
 }
 
 func evalBuildImage(branch string, commitSHA string) {

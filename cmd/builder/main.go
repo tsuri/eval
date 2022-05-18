@@ -74,7 +74,7 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 		// we will be able to count on the field tobe there
 		// here we should check tags are compatible and if there're multiple matches
 		// keep he image that has more tags as it is the most useful to keep around.
-		if len(build.ImageTag) > 0 {
+		if false && len(build.ImageTag) > 0 {
 			s.log.Info().Msg("Returning available image")
 			return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
 		}
@@ -176,9 +176,10 @@ func NewBuildTask(branch string, commitSHA string, target []string, imageTag str
 
 func buildJobSpec(branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
 	var backOffLimit int32 = 0
-	var ttlSecondsAfterFinished int32 = 0
+	var ttlSecondsAfterFinished int32 = 600
 
-	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
+	//	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#" + branch + "#" + commitSHA
+	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{

@@ -66,7 +66,6 @@ kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.
 kubectl apply -f deployments/namespaces.yaml
 ./scripts/certificates
 
-bazel run :eval.apply
 
 kubectl apply -f deployments/ingress.yaml
 
@@ -76,3 +75,5 @@ kubectl apply -f deployments/redis.yaml
 ./scripts/docker_secrets
 kubectl apply -f deployments/rabbitmq.yaml
 kubectl apply -f deployments/asynqmon.yaml
+
+bazel run :eval.apply
