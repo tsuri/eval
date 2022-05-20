@@ -1,0 +1,4 @@
+#!/bin/bash
+# -*- Ehi Emacs, this is shell-script -*-
+
+bazel run --ui_event_filters=-info,-stdout,-stderr --noshow_progress cmd/evalctl:evalctl  -- "$@"

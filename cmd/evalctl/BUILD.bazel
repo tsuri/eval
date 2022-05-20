@@ -5,7 +5,10 @@ go_library(
     srcs = ["main.go"],
     importpath = "eval/cmd/evalctl",
     visibility = ["//visibility:private"],
-    deps = ["//cmd/evalctl/cmd"],
+    deps = [
+        "//cmd/evalctl/cmd",
+        "@com_github_kyokomi_emoji_v2//:emoji",
+    ],
 )
 
 go_binary(

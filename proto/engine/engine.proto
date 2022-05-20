@@ -17,20 +17,6 @@ message EvalResponse {
   map<string, types.TypedValue> values = 2;
 }
 
-// message BuildRequest {
-//   string commitSHA       = 2;
-//   string branch          = 3;
-//   repeated string target = 4;
-// }
-
-// message BuildResponse {
-//   string response  = 1;
-//   string imageName = 2;
-//   string imageTag  = 3;
-// }
-
 service EngineService {
-  //  rpc Eval(EvalRequest) returns (EvalResponse) {}
   rpc Eval(EvalRequest) returns (async_service.Operation) {}
-  // rpc Build(BuildRequest) returns (BuildResponse) {}
 }

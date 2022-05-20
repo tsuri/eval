@@ -1561,6 +1561,14 @@ def go_dependencies():
         version = "v0.2.0",
     )
     go_repository(
+        name = "com_github_kyokomi_emoji_v2",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/kyokomi/emoji/v2",
+        sum = "h1:UWYkjplPZ4rMPvLxc+/e12/xTqoRcn55oUySkpZ554g=",
+        version = "v2.2.9",
+    )
+
+    go_repository(
         name = "com_github_lightstep_lightstep_tracer_common_golang_gogo",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/lightstep/lightstep-tracer-common/golang/gogo",

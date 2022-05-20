@@ -9,6 +9,7 @@ import (
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
+	"eval/pkg/types"
 
 	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
@@ -76,9 +77,7 @@ type Object struct {
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
 	s.log.Info().Str("evaluation", in.Evaluation).Msg("Cache Get")
 
-	for _, value := range in.Values {
-		s.log.Info().Str("value", value).Msg("Value request")
-	}
+	s.log.Info().Str("value", in.Value).Msg("Value request")
 
 	if err := s.cache.Set(&cache.Item{
 		Ctx:   ctx,
@@ -113,12 +112,28 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if err != nil {
 		return nil, err
 	}
+	//	time.Sleep(5 * time.Minute)
 	return &pbasync.Operation{
 		Name:   id.String(),
-		Done:   true,
+		Done:   false,
 		Result: &pbasync.Operation_Response{result},
 	}, nil
 
+}
+
+func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
+	var response *anypb.Any
+	response, err := anypb.New(&pbcache.GetResponse{
+		Value: types.StringScalar("xvalue from cache"),
+	})
+	if err != nil {
+		panic(err)
+	}
+	return &pbasync.Operation{
+		Name:   in.Name,
+		Done:   true,
+		Result: &pbasync.Operation_Response{response},
+	}, nil
 }
 
 func serviceRegister(server server.Server) func(*grpc.Server) {
@@ -137,6 +152,7 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 		})
 
 		pbcache.RegisterCacheServiceServer(s, &context)
+		pbasync.RegisterOperationsServer(s, &context)
 		reflection.Register(s)
 	}
 }

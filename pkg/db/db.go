@@ -5,10 +5,14 @@ import (
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func NewDB(service string, schema ...interface{}) (*gorm.DB, error) {
-	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("/data/sqlite/%s.db", service)), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("/data/sqlite/%s.db", service)),
+		&gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		})
 	if err != nil {
 		panic("failed to connect database")
 	}

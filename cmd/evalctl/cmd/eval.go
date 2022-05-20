@@ -103,10 +103,13 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("Launching evaluation")
+
 	operation, err := engine.Eval(ctx, &request)
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
+
+	log.Println("Got answer")
 
 	response := new(pbEngine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
@@ -128,20 +131,22 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Printf("%s: %v", valueName, values[valueName])
 	}
 
-	//	log.Printf("Response from server: %T %v", v, v)
-
 	evalOperations := pbAsyncService.NewOperationsClient(conn)
 	for !operation.Done {
 		log.Printf("Waiting...\n")
-		operation, err = evalOperations.GetOperation(ctx, &pbAsyncService.GetOperationRequest{Name: "foo"})
+		operation, err = evalOperations.GetOperation(ctx,
+			&pbAsyncService.GetOperationRequest{
+				Name: operation.Name,
+			})
 
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(5000 * time.Millisecond)
 	}
 
-	//	response := new(pbEngine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
 		log.Fatal("Cannot unmarhshal result")
 	}
 
-	log.Printf("Response from server: %v", "don't know how to parse") //response.Value)
+	for k, v := range response.Values {
+		log.Printf("%s: %v", k, v)
+	}
 }

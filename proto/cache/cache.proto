@@ -11,11 +11,12 @@ option go_package = "eval/proto/cache";
 message GetRequest {
   string evaluation       = 1;
   context.Context context = 2;
-  repeated string values  = 3;
+  string value            = 3;
 }
 
 message GetResponse {
-  map<string, types.TypedValue> values = 2;
+  string name            = 1;
+  types.TypedValue value = 2;
 }
 
 service CacheService {
