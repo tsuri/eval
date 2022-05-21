@@ -11,6 +11,8 @@ import (
 
 	"eval/pkg/db"
 	"eval/pkg/grpc/server"
+
+	pbasync "eval/proto/async_service"
 	pb "eval/proto/builder"
 
 	"github.com/google/uuid"
@@ -20,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/anypb"
 	"gorm.io/gorm"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -33,7 +36,11 @@ const (
 )
 
 type BuildInfo struct {
+	// we should split this first part as a generic piece supporting Operaations
 	gorm.Model
+	BuildID uuid.UUID `gorm:"type:uuid;"`
+
+	// and this part which is the application specific data
 	Branch    string
 	CommitSHA string
 	Targets   string
@@ -49,7 +56,7 @@ type serverContext struct {
 	db        *gorm.DB
 }
 
-func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.BuildResponse, error) {
+func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasync.Operation, error) {
 	s.log.Info().Msg("Builder summoned")
 
 	r := asynq.RedisClientOpt{Addr: "redis.eval.svc.cluster.local:6379"}
@@ -64,25 +71,30 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 	if err != nil {
 		log.Printf("Cannot generate UUID: %v", err)
 	}
-
-	// caching should really be in the caching service when we have it
-	// and the builder sshould  just build
-	var builds []BuildInfo
-	s.db.Where("commit_sha = ?", commit).Find(&builds)
-	for _, build := range builds {
-		log.Printf("*** BUILD %v", build.ImageTag)
-		// we will be able to count on the field tobe there
-		// here we should check tags are compatible and if there're multiple matches
-		// keep he image that has more tags as it is the most useful to keep around.
-		if false && len(build.ImageTag) > 0 {
-			s.log.Info().Msg("Returning available image")
-			return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
-		}
+	buildID, err := uuid.NewRandom()
+	if err != nil {
+		log.Printf("Cannot generate UUID: %v", err)
 	}
+
+	// // caching should really be in the caching service when we have it
+	// // and the builder sshould  just build
+	// var builds []BuildInfo
+	// s.db.Where("commit_sha = ?", commit).Find(&builds)
+	// for _, build := range builds {
+	// 	log.Printf("*** BUILD %v", build.ImageTag)
+	// 	// we will be able to count on the field tobe there
+	// 	// here we should check tags are compatible and if there're multiple matches
+	// 	// keep he image that has more tags as it is the most useful to keep around.
+	// 	if false && len(build.ImageTag) > 0 {
+	// 		s.log.Info().Msg("Returning available image")
+	// 		return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
+	// 	}
+	// }
 
 	s.log.Info().Msg("Building image")
 	targetJSON, _ := json.Marshal(target)
 	s.db.Create(&BuildInfo{
+		BuildID:   buildID,
 		Branch:    branch,
 		CommitSHA: commit,
 		Targets:   string(targetJSON),
@@ -92,14 +104,42 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pb.Bui
 	s.db.Commit()
 
 	t := NewBuildTask(branch, commit, target, imageTag.String())
-	ti, err := c.Enqueue(t)
+	taskInfo, err := c.Enqueue(t)
 	if err != nil {
 		log.Fatal("could not enqueue task: %v", err)
 	}
-	log.Printf("INFO: %v", ti)
+	log.Printf("INFO: %v", taskInfo)
+
+	count = 0
 
 	// imageName should be passed to newBuildTask
-	return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: imageTag.String()}, nil
+	return &pbasync.Operation{
+		Name: buildID.String(),
+	}, nil
+
+}
+
+var count = 0
+
+func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
+	var response *anypb.Any
+
+	count++
+
+	done := count > 4
+
+	s.log.Info().Msg("Builder GetOperation")
+
+	response, err := anypb.New(&pb.BuildResponse{})
+	if err != nil {
+		panic(err)
+	}
+
+	return &pbasync.Operation{
+		Name:   in.Name,
+		Done:   done,
+		Result: &pbasync.Operation_Response{response},
+	}, nil
 }
 
 func connectToK8s() *kubernetes.Clientset {
@@ -154,6 +194,7 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 		context.db, _ = db.NewDB("builder", &BuildInfo{})
 		context.log.Info().Msg("Registering service")
 		pb.RegisterBuilderServiceServer(s, &context)
+		pbasync.RegisterOperationsServer(s, &context)
 		reflection.Register(s)
 	}
 }
@@ -341,7 +382,8 @@ func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
 }
 
 type Asynq struct {
-	server *asynq.Server
+	server    *asynq.Server
+	inspector *asynq.Inspector
 }
 
 func NewAsynq() *Asynq {
@@ -358,8 +400,12 @@ func NewAsynq() *Asynq {
 		},
 		// See the godoc for other configuration options
 	})
+
+	inspector := asynq.NewInspector(r)
+
 	return &Asynq{
-		server: server,
+		server:    server,
+		inspector: inspector,
 	}
 }
 

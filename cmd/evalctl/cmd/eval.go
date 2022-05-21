@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"path/filepath"
 	"sort"
@@ -14,6 +15,7 @@ import (
 	pbContext "eval/proto/context"
 	pbEngine "eval/proto/engine"
 
+	"github.com/kyokomi/emoji"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"google.golang.org/grpc"
@@ -68,6 +70,8 @@ func evalBuildImage(branch string, commitSHA string) {
 // for instance in ab_comparison.a_training.snippet.sfl one could control the image used for SFL or inherit a
 // setting from any of the levels above.
 
+var EvalOperation *pbAsyncService.Operation
+
 func evalCmdImpl(cmd *cobra.Command, args []string) {
 	var conn *grpc.ClientConn
 	conn, err := client.NewConnection("engine.eval.net:443",
@@ -102,14 +106,15 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		Values: []string{"image.build"},
 	}
 
-	log.Printf("Launching evaluation")
+	//	log.Printf("Launching evaluation")
 
 	operation, err := engine.Eval(ctx, &request)
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
+	EvalOperation = operation
 
-	log.Println("Got answer")
+	//	log.Println("Got answer")
 
 	response := new(pbEngine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
@@ -128,12 +133,15 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	// iterate by sorted keys
 	for _, valueName := range valueNames {
-		log.Printf("%s: %v", valueName, values[valueName])
+		fmt.Printf("%s: %v", valueName, values[valueName])
+	}
+
+	if !operation.Done {
+		emoji.Printf("Hold my :beer:\n\n")
 	}
 
 	evalOperations := pbAsyncService.NewOperationsClient(conn)
 	for !operation.Done {
-		log.Printf("Waiting...\n")
 		operation, err = evalOperations.GetOperation(ctx,
 			&pbAsyncService.GetOperationRequest{
 				Name: operation.Name,
@@ -147,6 +155,6 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	}
 
 	for k, v := range response.Values {
-		log.Printf("%s: %v", k, v)
+		fmt.Printf("%s: %v", k, v)
 	}
 }

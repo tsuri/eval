@@ -24,3 +24,6 @@ func StringScalar(s string) *pbtypes.TypedValue {
 		Fields: scalarValueString(s),
 	}
 }
+
+func PrettyPrint(v *pbtypes.TypedValue) {
+}

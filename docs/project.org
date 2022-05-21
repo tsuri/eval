@@ -265,7 +265,20 @@ Fixed the kaniko build. Somehow we dropped the 'refs/heads' part from
 the kaniko context and builds were not working.
 Now is all back in order, but using the cache. Also started comuting
 the hash for the action.
-
+*** Wednesday
+mhh
+*** Thursday
+end-to-end passing using async operations. Results now actually come
+from the cache.
+Still have to actually cache values and remember the UUID to be used
+in GetOperation.
+*** Friday
+Moved the builder service to use Operations. Still work to do to check
+the state of the asynq job and return meaningful values.
+Also need to take the caching decisions in the cache service. I
+disabled the code in builder, but haven't implemented something
+similar in cache. Anyhow, we are not far from returning a nice tuple
+with informaton about the build.
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)
@@ -347,6 +360,8 @@ the hash for the action.
 *** Caching
 - https://github.com/eko/gocache
 - https://github.com/dgraph-io/ristretto
+- https://arxiv.org/pdf/1812.00669.pdf
+- https://arxiv.org/pdf/1909.13839.pdf
 ** Frontend / UI
 - https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash
 - https://www.youtube.com/watch?v=hahZGMIhqkY
@@ -374,6 +389,7 @@ the hash for the action.
 - https://blog.tech-fellow.net/2021/04/10/implementing-grpc-auto-reconnect-on-timeout/
 - https://google.aip.dev/2
 - https://google.aip.dev/151
+- https://github.com/gidyon/services/blob/master/pkg/api/longrunning/longrunning.pb.go
 ** Javascript
 - https://js.cytoscape.org/
 ** golang/cli

@@ -15,8 +15,6 @@ import (
 
 	pbaction "eval/proto/action"
 	pbasync "eval/proto/async_service"
-
-	//	pbasync "eval/proto/async_service"
 	pbcache "eval/proto/cache"
 	pbeval "eval/proto/engine"
 	pbtypes "eval/proto/types"

@@ -6,6 +6,7 @@ proto_library(
     name = "builder_proto",
     srcs = ["builder.proto"],
     visibility = ["//visibility:public"],
+    deps = ["//proto/async_service:async_service_proto"],
 )
 
 go_proto_library(
@@ -14,6 +15,7 @@ go_proto_library(
     importpath = "eval/proto/builder",
     proto = ":builder_proto",
     visibility = ["//visibility:public"],
+    deps = ["//proto/async_service"],
 )
 
 go_library(

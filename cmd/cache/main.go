@@ -32,7 +32,7 @@ const (
 	port = "0.0.0.0:50051"
 )
 
-func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) {
+func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) (*pbasync.Operation, error) {
 	// ok, a filure to connect here doesn' return error
 	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
@@ -54,8 +54,10 @@ func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) {
 	})
 	if err != nil {
 		log.Printf("bad answer from builder")
+		return nil, err
 	} else {
 		log.Printf("response %v", response)
+		return response, nil
 	}
 }
 
@@ -73,6 +75,8 @@ type Object struct {
 	Str string
 	Num int
 }
+
+var downstreamOperation map[string]string = make(map[string]string)
 
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
 	s.log.Info().Str("evaluation", in.Evaluation).Msg("Cache Get")
@@ -99,7 +103,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
-	buildImage(ctx, buildImageConfig)
+	operation, err := buildImage(ctx, buildImageConfig)
 
 	// here we should populate a map of results
 	cacheGetResponse := pbcache.GetResponse{}
@@ -112,27 +116,55 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if err != nil {
 		return nil, err
 	}
+	downstreamOperation[id.String()] = operation.Name
+
 	//	time.Sleep(5 * time.Minute)
 	return &pbasync.Operation{
 		Name:   id.String(),
-		Done:   false,
+		Done:   operation.Done,
 		Result: &pbasync.Operation_Response{result},
 	}, nil
 
 }
 
+var count = 0
+
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
-	var response *anypb.Any
-	response, err := anypb.New(&pbcache.GetResponse{
-		Value: types.StringScalar("xvalue from cache"),
-	})
+
+	// ok, a filure to connect here doesn' return error
+	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
-		panic(err)
+		log.Fatalf("did not connect")
 	}
+	defer conn.Close()
+
+	client := pbasync.NewOperationsClient(conn)
+
+	if operationID, ok := downstreamOperation[in.Name]; ok {
+		operation, err := client.GetOperation(ctx,
+			&pbasync.GetOperationRequest{
+				Name: operationID,
+			})
+
+		var response *anypb.Any
+		response, err = anypb.New(&pbcache.GetResponse{
+			Value: types.StringScalar("xvalue from cache"),
+		})
+		if err != nil {
+			panic(err)
+		}
+		count = count + 1
+		return &pbasync.Operation{
+			Name:   in.Name,
+			Done:   operation.Done,
+			Result: &pbasync.Operation_Response{response},
+		}, nil
+	}
+
+	/// should be an error here, but I don't remember how
 	return &pbasync.Operation{
-		Name:   in.Name,
-		Done:   true,
-		Result: &pbasync.Operation_Response{response},
+		Name: in.Name,
+		Done: true,
 	}, nil
 }
 
