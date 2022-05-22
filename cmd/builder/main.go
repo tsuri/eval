@@ -56,13 +56,15 @@ type serverContext struct {
 	db        *gorm.DB
 }
 
+var buildDone = make(map[string]bool)
+
 func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasync.Operation, error) {
-	s.log.Info().Msg("Builder summoned")
+	//	s.log.Info().Msg("Builder summoned")
 
 	r := asynq.RedisClientOpt{Addr: "redis.eval.svc.cluster.local:6379"}
 	c := asynq.NewClient(r)
 
-	log.Printf("Enqueuing task")
+	//	log.Printf("Enqueuing task")
 	branch := in.Branch
 	commit := in.CommitSHA
 	target := in.Target
@@ -91,7 +93,7 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 	// 	}
 	// }
 
-	s.log.Info().Msg("Building image")
+	//	s.log.Info().Msg("Building image")
 	targetJSON, _ := json.Marshal(target)
 	s.db.Create(&BuildInfo{
 		BuildID:   buildID,
@@ -103,14 +105,12 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 	})
 	s.db.Commit()
 
-	t := NewBuildTask(branch, commit, target, imageTag.String())
-	taskInfo, err := c.Enqueue(t)
+	t := NewBuildTask(buildID.String(), branch, commit, target, imageTag.String())
+	_, err = c.Enqueue(t)
 	if err != nil {
 		log.Fatal("could not enqueue task: %v", err)
 	}
-	log.Printf("INFO: %v", taskInfo)
-
-	count = 0
+	//	log.Printf("INFO: %v", taskInfo)
 
 	// imageName should be passed to newBuildTask
 	return &pbasync.Operation{
@@ -119,27 +119,27 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 
 }
 
-var count = 0
-
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
-	var response *anypb.Any
+	//	var response *anypb.Any
 
-	count++
+	//	s.log.Info().Msg("Builder GetOperation")
 
-	done := count > 4
+	if done, ok := buildDone[in.Name]; ok && done {
+		response, err := anypb.New(&pb.BuildResponse{})
+		if err != nil {
+			panic(err)
+		}
 
-	s.log.Info().Msg("Builder GetOperation")
-
-	response, err := anypb.New(&pb.BuildResponse{})
-	if err != nil {
-		panic(err)
+		return &pbasync.Operation{
+			Name:   in.Name,
+			Done:   true,
+			Result: &pbasync.Operation_Response{response},
+		}, nil
+	} else {
+		return &pbasync.Operation{
+			Name: in.Name,
+		}, nil
 	}
-
-	return &pbasync.Operation{
-		Name:   in.Name,
-		Done:   done,
-		Result: &pbasync.Operation_Response{response},
-	}, nil
 }
 
 func connectToK8s() *kubernetes.Clientset {
@@ -200,6 +200,7 @@ func serviceRegister(server server.Server, asynq *Asynq) func(*grpc.Server) {
 }
 
 type BuildPayload struct {
+	BuildID   string
 	Branch    string
 	CommitSHA string
 	Target    []string
@@ -207,20 +208,19 @@ type BuildPayload struct {
 }
 
 //  return errorin addition to task
-func NewBuildTask(branch string, commitSHA string, target []string, imageTag string) *asynq.Task {
-	payload, err := json.Marshal(BuildPayload{Branch: branch, CommitSHA: commitSHA, Target: target, ImageTag: imageTag})
+func NewBuildTask(buildID string, branch string, commitSHA string, target []string, imageTag string) *asynq.Task {
+	payload, err := json.Marshal(BuildPayload{BuildID: buildID, Branch: branch, CommitSHA: commitSHA, Target: target, ImageTag: imageTag})
 	if err != nil {
 		return nil
 	}
 	return asynq.NewTask("image:build", payload, asynq.Queue("critical"))
 }
 
-func buildJobSpec(branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
+func buildJobSpec(buildID string, branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
 	var backOffLimit int32 = 0
-	var ttlSecondsAfterFinished int32 = 60
+	var ttlSecondsAfterFinished int32 = 0
 
 	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/" + branch + "#" + commitSHA
-	//gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git"
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -229,6 +229,11 @@ func buildJobSpec(branch string, commitSHA string, targets []string, imageTag st
 		},
 		Spec: batchv1.JobSpec{
 			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"buildID": buildID,
+					},
+				},
 				Spec: v1.PodSpec{
 					HostAliases: []v1.HostAlias{
 						{
@@ -279,18 +284,16 @@ func buildJobSpec(branch string, commitSHA string, targets []string, imageTag st
 	return jobSpec
 }
 
-func build(branch string, commitSHA string, targets []string, imageTag string) {
+func build(buildID string, branch string, commitSHA string, targets []string, imageTag string) {
 	clientset := connectToK8s()
 	batchAPI := clientset.BatchV1()
 	jobs := batchAPI.Jobs("default")
 
-	playWithDocker()
-
-	job, err := jobs.Create(context.TODO(), buildJobSpec(branch, commitSHA, targets, imageTag), metav1.CreateOptions{})
+	_, err := jobs.Create(context.TODO(), buildJobSpec(buildID, branch, commitSHA, targets, imageTag), metav1.CreateOptions{})
 	if err != nil {
 		log.Fatalln("Failed to create K8s job. %v", err)
 	}
-	log.Printf("Kaniko job created: %T %v", job, job)
+	//	log.Printf("Kaniko job created: %T %v", job, job)
 
 	timeout := int64(3600)
 	watchres, err := jobs.Watch(context.Background(), metav1.ListOptions{
@@ -304,46 +307,50 @@ func build(branch string, commitSHA string, targets []string, imageTag string) {
 
 	eventres := watchres.ResultChan()
 	for we := range eventres {
-		log.Println("----")
-		log.Printf("TYPE: %T (%v) %v\n", we.Type, we.Type, we.Type == "DELETED")
+		// log.Println("----")
+		// log.Printf("TYPE: %T (%v) %v\n", we.Type, we.Type, we.Type == "DELETED")
 		if we.Type == "DELETED" {
 			break
 		}
-		job, ok := we.Object.(*batchv1.Job)
+		_, ok := we.Object.(*batchv1.Job)
 		if !ok {
 			continue
 		}
-		log.Println("-")
-		log.Println(job.Status.Conditions)
-		log.Println(job.Status.Active > 0)
-		log.Println(job.Status.Succeeded > 0)
+		// log.Println("-")
+		// log.Println(job.Status.Conditions)
+		// log.Println(job.Status.Active > 0)
+		// log.Println(job.Status.Succeeded > 0)
 	}
+
+	buildDone[buildID] = true
+	//	playWithDocker(imageTag)
 
 	// We should get to the pod for the job, which doesn't seem
 	// directly doable a way is to assign a label to the pod, say the
 	// build ID and then search for that. This would allow ud to get
 	// to the status message, which is where we ask kaniko to put the
 	// image SHA
-
 	//	 create a pod with label, and then I get it through LabelSelector. Like it :
 	// config, err := clientcmd.BuildConfigFromFlags("", "~/.kube/config")
 	// if err != nil {
-	//     println("config build error")
+	// 	println("config build error")
 	// }
 
 	// client, err := kubernetes.NewForConfig(config)
 
-	// pods, err := client.CoreV1().Pods("test").List(context.TODO(),
-	//     v1.ListOptions{LabelSelector: "name=label_name"})
+	// pods, err := client.CoreV1().Pods("default").List(context.TODO(),
+	// 	v1.ListOptions{LabelSelector: fmt.Sprintf("buildID=%s", buildID)})
 
 	// for _, v := range pods.Items {
-	//     log := client.CoreV1().Pods("test").GetLogs(v.Name, &v12.PodLogOptions{})
+	// 	log := client.CoreV1().Pods("default").GetLogs(v.Name, &v12.PodLogOptions{})
+	// 	log.Println(log)
 	// }
 
 }
 
-func playWithDocker() {
+func playWithDocker(imageTag string) {
 	//	url := "http://registry.other.net:5000/"
+	log.Printf("PlayWithDocker")
 	url := "http://192.168.1.8:5000/"
 	username := "" // anonymous
 	password := "" // anonymous
@@ -368,6 +375,49 @@ func playWithDocker() {
 
 	}
 
+	// tags, err := hub.Tags("eval")
+	// if err != nil {
+	// 	log.Printf("Cannot get list of tags")
+	// }
+	// for _, t := range tags {
+	// 	log.Printf("Tag: %v\n", t)
+	// 	manifest, err := hub.ManifestDigest("eval", t)
+	// 	if err != nil {
+	// 		log.Printf("Error %v", err)
+	// 	} else {
+	// 		log.Printf("Manifest: %v", manifest)
+	// 	}
+	// }
+
+	log.Printf("===================================================")
+	//	manifest, err := hub.ManifestDigest("eval", imageTag)
+	manifest, err := hub.Manifest("eval", imageTag)
+	if err != nil {
+		log.Printf("Error getting digest for image %s", imageTag)
+	} else {
+		payload, _, _ := manifest.Payload()
+		log.Printf("Payload %s", payload)
+		log.Printf("Digest: %T %v", manifest, manifest)
+	}
+	log.Printf("===================================================")
+	// client, err := docker.NewClient("http://192.168.1.8:5000/")
+	// if err != nil {
+	// 	log.Println("Failed to connect")
+	// 	panic(err)
+	// }
+	// imgs, err := client.ListImages(docker.ListImagesOptions{All: false})
+	// if err != nil {
+	// 	log.Printf("Failed to get lsit of images: %v", err)
+	// 	panic(err)
+	// }
+	// for _, img := range imgs {
+	// 	fmt.Println("ID: ", img.ID)
+	// 	fmt.Println("RepoTags: ", img.RepoTags)
+	// 	fmt.Println("Created: ", img.Created)
+	// 	fmt.Println("Size: ", img.Size)
+	// 	fmt.Println("VirtualSize: ", img.VirtualSize)
+	// 	fmt.Println("ParentId: ", img.ParentID)
+	// }
 }
 
 func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
@@ -376,7 +426,9 @@ func HandleBuildTask(ctx context.Context, t *asynq.Task) error {
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
 	}
 	log.Printf("Building targets=%s @ branch=%s, commitSHA=%s -> imageTag: %s", p.Target, p.Branch, p.CommitSHA, p.ImageTag)
-	build(p.Branch, p.CommitSHA, p.Target, p.ImageTag)
+	log.Printf("-------------------")
+	build(p.BuildID, p.Branch, p.CommitSHA, p.Target, p.ImageTag)
+	log.Printf("-------------------")
 	log.Printf("Done building branch=%s, commitSHA=%s", p.Branch, p.CommitSHA)
 	return nil
 }

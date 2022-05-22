@@ -79,13 +79,12 @@ type Object struct {
 var downstreamOperation map[string]string = make(map[string]string)
 
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
-	s.log.Info().Str("evaluation", in.Evaluation).Msg("Cache Get")
-
-	s.log.Info().Str("value", in.Value).Msg("Value request")
+	//	s.log.Info().Str("evaluation", in.Evaluation).Msg("Cache Get")
+	//	s.log.Info().Str("value", in.Value).Msg("Value request")
 
 	if err := s.cache.Set(&cache.Item{
 		Ctx:   ctx,
-		Key:   "FOO",
+		Key:   "image.build",
 		Value: &Object{Str: "bar", Num: 42},
 		TTL:   time.Hour,
 	}); err != nil {
@@ -93,7 +92,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 
 	var wanted Object
-	if err := s.cache.Get(ctx, "FOO", &wanted); err == nil {
+	if err := s.cache.Get(ctx, "image.build", &wanted); err == nil {
 		fmt.Println(wanted)
 	}
 

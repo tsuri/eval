@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func NewDB(service string, schema ...interface{}) (*gorm.DB, error) {
+func NewDB(service string, schema ...any) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("/data/sqlite/%s.db", service)),
 		&gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),
