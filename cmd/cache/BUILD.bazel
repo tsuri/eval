@@ -13,6 +13,7 @@ go_library(
     importpath = "eval/cmd/cache",
     visibility = ["//visibility:private"],
     deps = [
+        "//pkg/agraph",
         "//pkg/db",
         "//pkg/grpc/client",
         "//pkg/grpc/server",

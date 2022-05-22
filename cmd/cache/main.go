@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"eval/pkg/agraph"
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
@@ -76,12 +77,7 @@ type Object struct {
 	Num int
 }
 
-var downstreamOperation map[string]string = make(map[string]string)
-
-func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
-	//	s.log.Info().Str("evaluation", in.Evaluation).Msg("Cache Get")
-	//	s.log.Info().Str("value", in.Value).Msg("Value request")
-
+func (s *serverContext) CacheExperiment(ctx context.Context) {
 	if err := s.cache.Set(&cache.Item{
 		Ctx:   ctx,
 		Key:   "image.build",
@@ -95,11 +91,17 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if err := s.cache.Get(ctx, "image.build", &wanted); err == nil {
 		fmt.Println(wanted)
 	}
+}
 
-	//s.log.Info().Str("ACTIONS", fmt.Sprintf("%v", in.Context.Actions.Actions[0].Config.ImageName)).Msg("BuildConfig")
+var downstreamOperation map[string]string = make(map[string]string)
+
+func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
+	actions := agraph.EssentialActions(in.Context.Actions, in.Value)
+
+	agraph.Execute(actions)
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
-	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	operation, err := buildImage(ctx, buildImageConfig)
@@ -117,16 +119,12 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 	downstreamOperation[id.String()] = operation.Name
 
-	//	time.Sleep(5 * time.Minute)
 	return &pbasync.Operation{
 		Name:   id.String(),
 		Done:   operation.Done,
 		Result: &pbasync.Operation_Response{result},
 	}, nil
-
 }
-
-var count = 0
 
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
 
@@ -152,7 +150,6 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 		if err != nil {
 			panic(err)
 		}
-		count = count + 1
 		return &pbasync.Operation{
 			Name:   in.Name,
 			Done:   operation.Done,

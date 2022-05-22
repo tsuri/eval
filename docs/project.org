@@ -362,6 +362,8 @@ with informaton about the build.
 - https://github.com/dgraph-io/ristretto
 - https://arxiv.org/pdf/1812.00669.pdf
 - https://arxiv.org/pdf/1909.13839.pdf
+- https://hal.archives-ouvertes.fr/hal-03189130/document
+- https://hal.inrae.fr/hal-02962579/document
 ** Frontend / UI
 - https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash
 - https://www.youtube.com/watch?v=hahZGMIhqkY
