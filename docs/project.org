@@ -364,6 +364,13 @@ with informaton about the build.
 - https://arxiv.org/pdf/1909.13839.pdf
 - https://hal.archives-ouvertes.fr/hal-03189130/document
 - https://hal.inrae.fr/hal-02962579/document
+- https://ieftimov.com/posts/when-why-least-frequently-used-cache-implementation-golang/
+- https://pkg.go.dev/github.com/hashicorp/golang-lru#section-readme
+- https://www.usenix.org/legacy/events/fast03/tech/full_papers/megiddo/megiddo.pdf
+- http://dhruvbird.com/lfu.pdf
+*** Futures/Tasks/Lazy Eval
+- https://monix.io/docs/current/eval/task.html
+  
 ** Frontend / UI
 - https://www.digitalocean.com/community/tutorials/how-to-build-an-infinite-scroll-image-gallery-with-react-css-grid-and-unsplash
 - https://www.youtube.com/watch?v=hahZGMIhqkY
@@ -396,3 +403,7 @@ with informaton about the build.
 - https://js.cytoscape.org/
 ** golang/cli
 - https://golangexample.com/like-grpcurl-and-cobra-had-a-baby/
+** flow graphs
+- https://github.com/galliaproject/gallia-core
+- https://monix.io/docs/current/eval/task.html
+- https://doc.akka.io/docs/akka/current/stream/index.html

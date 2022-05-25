@@ -91,6 +91,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		ImageTag:     "latest",
 		BaseImage:    "debian:buster",
 		BazelTargets: []string{"//test:test", "//test:runner"},
+		//		BazelTargets: []string{"//test:runner"},
 		CommitPoint: &pbAction.CommitPoint{
 			Branch:    "main",
 			CommitSha: "c32b7e6cbac753c54ffa8c78687feae7eae1711c",

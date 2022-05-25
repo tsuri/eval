@@ -1,0 +1,4 @@
+#!/bin/bash
+# -*- shell-script -*-
+
+bazel run pkg/cache:cache_test -- -test.bench=.

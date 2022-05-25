@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	a "eval/pkg/actions"
 	"eval/pkg/agraph"
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
@@ -13,6 +14,7 @@ import (
 	"eval/pkg/types"
 
 	pbaction "eval/proto/action"
+	pbagraph "eval/proto/agraph"
 	pbasync "eval/proto/async_service"
 	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
@@ -93,10 +95,38 @@ func (s *serverContext) CacheExperiment(ctx context.Context) {
 	}
 }
 
-var downstreamOperation map[string]string = make(map[string]string)
+var downstreamOperation = make(map[string]string)
+
+type cacheValue struct {
+	Action    *pbaction.Action
+	Operation string
+}
+
+var cacheContent = make(map[string][]cacheValue)
+
+func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) {
+	if value == "image.build" && agraph.Name == "image" && agraph.Actions[0].Name == "image.build" {
+		return agraph.Actions[0], nil
+	}
+
+	return nil, fmt.Errorf("GetAction")
+}
 
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
 	actions := agraph.EssentialActions(in.Context.Actions, in.Value)
+
+	mainAction, err := GetAction(actions, in.Value)
+	if err != nil {
+		return nil, err
+	}
+	digest, err := a.ActionDigest(mainAction)
+	if err != nil {
+		return nil, err
+	}
+
+	if cv, ok := cacheContent[digest]; ok {
+		s.log.Info().Str("op", cv[0].Operation).Msg("previous operation")
+	}
 
 	agraph.Execute(actions)
 
@@ -118,6 +148,11 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		return nil, err
 	}
 	downstreamOperation[id.String()] = operation.Name
+
+	cacheContent[digest] = []cacheValue{{
+		Action:    actions.Actions[0],
+		Operation: id.String(),
+	}}
 
 	return &pbasync.Operation{
 		Name:   id.String(),

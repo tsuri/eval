@@ -11,14 +11,14 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func actionBuildImage(config *pbAction.BuildImageConfig) *pbAction.Action {
+func actionBuildImage(parent string, config *pbAction.BuildImageConfig) *pbAction.Action {
 	anyConfig, err := anypb.New(config)
 	if err != nil {
 		fmt.Println("Error")
 	}
 	return &pbAction.Action{
 		Kind: "build-image",
-		Name: "build",
+		Name: fmt.Sprintf("%s.build", parent),
 		Outputs: []*pbChannel.Channel{{
 			Name: "info",
 			Type: &pbTypes.Type{
@@ -31,7 +31,7 @@ func actionBuildImage(config *pbAction.BuildImageConfig) *pbAction.Action {
 
 func AGraphBuildImage(config *pbAction.BuildImageConfig) *pbAGraph.AGraph {
 	actions := []*pbAction.Action{
-		actionBuildImage(config),
+		actionBuildImage("image", config),
 	}
 
 	return &pbAGraph.AGraph{
