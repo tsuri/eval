@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "generate_lib",
+    srcs = ["generate.go"],
+    importpath = "eval/actions/generate",
+    visibility = ["//visibility:private"],
+    deps = ["@com_github_rs_zerolog//log"],
+)
+
+go_binary(
+    name = "generate",
+    embed = [":generate_lib"],
+    visibility = ["//visibility:public"],
+)
