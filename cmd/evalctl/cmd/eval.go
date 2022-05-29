@@ -56,7 +56,6 @@ func init() {
 		enumflag.New(&executionEngine, "engine", ExecutionEngineIds, enumflag.EnumCaseInsensitive),
 		"engine", "e",
 		"execution engine; can be 'cloud' or 'local'")
-
 }
 
 func evalBuildImage(branch string, commitSHA string) {
