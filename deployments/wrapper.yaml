@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: wrapper
-    image: localhost:5000/eval:7dc0ecd1-b961-4e9d-ae91-6dd621a43013
+    image: localhost:5000/eval:2c13d7ad-9d6f-40ce-a489-4734db111eee
     command: ["/app/actions/wrapper/wrapper_/wrapper"]
     # command: ["/bin/ls"]
     # args: ["-lR", "/app"]
