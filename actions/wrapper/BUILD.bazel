@@ -5,10 +5,7 @@ go_library(
     srcs = ["wrapper.go"],
     importpath = "eval/actions/wrapper",
     visibility = ["//visibility:private"],
-    deps = [
-        "@com_github_rs_zerolog//:zerolog",
-        "@com_github_rs_zerolog//log",
-    ],
+    deps = ["@com_github_rs_zerolog//log"],
 )
 
 go_binary(

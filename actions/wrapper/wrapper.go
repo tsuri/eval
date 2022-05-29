@@ -11,6 +11,6 @@ import (
 func main() {
 	log.Print("Starting action wrapper")
 
-	_, err := exec.Command("/app/test/sub_/sub").Output()
+	_, err := exec.Command("/app/actions/generate/generate_/generate").Output()
 	log.Err(err).Msg("failed to run action")
 }
