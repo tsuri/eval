@@ -11,6 +11,7 @@ go_library(
     visibility = ["//visibility:public"],
     deps = [
         "//pkg/actions",
+        "//pkg/git",
         "//pkg/grpc/client",
         "//proto/action",
         "//proto/async_service",

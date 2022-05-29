@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"eval/pkg/actions"
+	"eval/pkg/git"
 	"eval/pkg/grpc/client"
 	pbAction "eval/proto/action"
 	pbAsyncService "eval/proto/async_service"
@@ -84,6 +85,18 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	engine := pbEngine.NewEngineServiceClient(conn)
 
 	ctx := client.WithRequesterInfo(context.Background())
+
+	// $WORK
+	status, err := git.WorkspaceStatus("/home/mav/eval")
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+	if status.IsClean() {
+		emoji.Printf(":ok_hand: your workspace is clean\n")
+	} else {
+		emoji.Printf(":pile_of_poo: Do you really want to ignore:\n")
+		fmt.Printf("%s\n", status.String())
+	}
 
 	buildImageConfig := pbAction.BuildImageConfig{
 		ImageName:    "eval",
