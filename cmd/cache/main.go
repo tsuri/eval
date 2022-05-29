@@ -11,6 +11,7 @@ import (
 	"eval/pkg/db"
 	"eval/pkg/grpc/client"
 	"eval/pkg/grpc/server"
+	"eval/pkg/sizeof"
 	"eval/pkg/types"
 
 	pbaction "eval/proto/action"
@@ -113,6 +114,10 @@ func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) 
 }
 
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
+
+	s.log.Info().Int64("proto size", sizeof.DeepSize(in.Context)).Msg("Size")
+	s.log.Info().Int64("struct size", sizeof.DeepSize(a.B())).Msg("Size")
+
 	actions := agraph.EssentialActions(in.Context.Actions, in.Value)
 
 	mainAction, err := GetAction(actions, in.Value)

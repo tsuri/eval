@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "hash",
+    srcs = ["hash.go"],
+    importpath = "eval/pkg/hash",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "hash_test",
+    srcs = ["hash_test.go"],
+    deps = [":hash"],
+)

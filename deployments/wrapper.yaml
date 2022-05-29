@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wrapper
+spec:
+  containers:
+  - name: wrapper
+    image: localhost:5000/eval:latest
+    command: ["/app/actions/wrapper/wrapper_/wrapper"]
+    # command: ["/bin/ls"]
+    # args: ["-lR", "/app"]
+#    command: ["/app/test"]
+    imagePullPolicy: Always
+  restartPolicy: Never

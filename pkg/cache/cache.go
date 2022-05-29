@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"hash"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -10,6 +11,11 @@ import (
 // 	Get(K) (V, bool)
 // 	Put(K, V)
 // }
+
+type Document interface {
+	Digest() hash.Hash
+	Compatible(other Document) bool
+}
 
 type Cache[K comparable, V any] struct {
 	Data map[K]V

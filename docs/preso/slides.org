@@ -1,8 +1,9 @@
-#+OPTIONS: num:nil toc:nil
+#+OPTIONS: timestamp:nil num:nil toc:nil
 #+PROPERTY: header-args:mermaid :pupeteer-config-file ./puppeteer-config.json :background-color transparent :theme dark
-#+REVEAL_TRANS: none
-#+REVEAL_THEME: blood
+#+REVEAL_TRANS: cube
+#+REVEAL_THEME: league
 #+REVEAL_PLUGINS: (markdown notes highlight)
+#+ATTR_REVEAL: :frag (appear)
 
 #+Title: The Vanishing Act
 #+Author: Maurizio Vitale
@@ -15,7 +16,10 @@
 by: Maurizio Vitale
 
 * This is my slide
-
+** A List
+- something
+- rather
+  
 #+begin_src mermaid :file sequence.png 
 sequenceDiagram
  A-->B: Works!
@@ -75,6 +79,9 @@ gantt
 * Bad News
 
 [[file:./images/xkcd-training.png]]
+
+* Effort
+[[file:./images/is_it_worth_the_time.png]]
 
 * Slide with an image background (remove this text)
 :PROPERTIES:

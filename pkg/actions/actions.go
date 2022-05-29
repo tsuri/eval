@@ -68,3 +68,71 @@ func ActionDigest(action *pbAction.Action) (string, error) {
 		return "", fmt.Errorf("digest: unknown action type %s", action.Kind)
 	}
 }
+
+type TypeTag int64
+
+type Type struct {
+}
+
+type Channel struct {
+	Type Type
+}
+
+type InputChannel struct {
+	Channel
+	Action *Action
+}
+
+type Action struct {
+	Name    string
+	Inputs  map[string]InputChannel
+	Outputs map[string]Channel
+	Config  any
+}
+
+type CommitPoint struct {
+	Branch    string
+	CommitSHA string
+}
+
+type CommonActionConfig struct {
+	CommitPoint
+}
+
+type BuildImageConfig struct {
+	CommonActionConfig
+	ImageName    string
+	ImageTag     string
+	BaseImage    string
+	CommitPoint  CommitPoint
+	BazelTargets []string
+}
+
+type ActionGraph struct {
+	Name    string
+	Actions []Action
+}
+
+func B() ActionGraph {
+	return ActionGraph{
+		Name: "image",
+		Actions: []Action{
+			{
+				Name: "build",
+				Outputs: map[string]Channel{
+					"info": Channel{},
+				},
+				Config: BuildImageConfig{
+					ImageName:    "eval",
+					ImageTag:     "latest",
+					BaseImage:    "debian:buster",
+					BazelTargets: []string{"//test:test", "//test:runner"},
+					CommitPoint: CommitPoint{
+						Branch:    "main",
+						CommitSHA: "c32b7e6cbac753c54ffa8c78687feae7eae1711c",
+					},
+				},
+			},
+		},
+	}
+}
