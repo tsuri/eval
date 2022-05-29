@@ -1,0 +1,10 @@
+#!/bin/zsh
+# -* Ehi Emacs, this is -*- shell-script -
+
+echo "You need to source this file (or start a new zsh)"
+
+export PATH=/home/mav/eval/bazel-bin/cmd/evalctl/evalctl_:$PATH
+bazel build //cmd/evalctl:evalctl
+evalctl completion zsh > "${fpath[1]}/_evalctl"
+unfunction _evalctl && compinit
+
