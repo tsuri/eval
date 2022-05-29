@@ -86,6 +86,10 @@ type SummarizeAction struct {
 	Action
 }
 
+type ImageBuildAction struct {
+	Action
+}
+
 func NewGenerateAction(commit string) *GenerateAction {
 	return &GenerateAction{
 		Action: Action{
@@ -120,6 +124,10 @@ func NewSummarizeAction(commit string, inputA string, inputB string) *SummarizeA
 	return &SummarizeAction{}
 }
 
+func NewImageBuildAction() *ImageBuildAction {
+	return &ImageBuildAction{}
+}
+
 var AG = map[string]any{
 	"compare.baseline.train.features.generate":  NewGenerateAction("golden"),
 	"compare.baseline.train.features.process":   NewProcessAction("golden", "compare.baseline.train.features.generate.images"),
@@ -132,4 +140,5 @@ var AG = map[string]any{
 	"compare.exp.train.model_train":             NewModelTrainAction("dev", "compare.exp.train.features.aggregate.out"),
 	"compare.exp.analyze":                       NewAnalyzeAction("dev", "compare.exp.train.model_train.out"),
 	"compare.summarize":                         NewSummarizeAction("golden", "compare.baseline.anlyze.out", "compare.baseline.anlyze.out"),
+	"image.build":                               NewImageBuildAction(),
 }

@@ -91,12 +91,16 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
+	// TODO we should be silent when everything is ok
+	// and we should wait for an answer when not ok
 	if status.IsClean() {
 		emoji.Printf(":ok_hand: your workspace is clean\n")
 	} else {
 		emoji.Printf(":pile_of_poo: Do you really want to ignore:\n")
 		fmt.Printf("%s\n", status.String())
 	}
+
+	emoji.Printf(":magic_wand: here you are\n")
 
 	buildImageConfig := pbAction.BuildImageConfig{
 		ImageName:    "eval",

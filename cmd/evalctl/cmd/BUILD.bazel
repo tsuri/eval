@@ -4,7 +4,6 @@ go_library(
     name = "cmd",
     srcs = [
         "eval.go",
-        "image.go",
         "root.go",
     ],
     importpath = "eval/cmd/evalctl/cmd",
@@ -17,7 +16,6 @@ go_library(
         "//proto/async_service",
         "//proto/context",
         "//proto/engine",
-        "@com_github_go_git_go_git_v5//:go-git",
         "@com_github_kyokomi_emoji//:emoji",
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_viper//:viper",
