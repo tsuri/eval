@@ -15,6 +15,12 @@
 :END:
 by: Maurizio Vitale
 
+* Process
+
+- Reduce (do as little as possible)
+- Reuse (history has good lessons)
+- Recycle (don't keep around things we won't need)
+  
 * This is my slide
 ** A List
 - something

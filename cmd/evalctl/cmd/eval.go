@@ -94,7 +94,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		//		BazelTargets: []string{"//test:runner"},
 		CommitPoint: &pbAction.CommitPoint{
 			Branch:    "main",
-			CommitSha: "ed45d0b2f5397a854f6f98f1b51b0222b52acdd9",
+			CommitSha: "c736a863bd8dbc5b76579b840464290077c98fa9",
 			//CommitSha: "af1b634eb10777ff1b2c4aded960ea1645d49653",
 		},
 	}
