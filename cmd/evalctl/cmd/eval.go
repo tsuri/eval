@@ -107,7 +107,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		ImageTag:     "latest",
 		BaseImage:    "debian:buster",
 		BazelTargets: []string{"//actions/wrapper:wrapper", "//actions/generate:generate"},
-		//		BazelTargets: []string{"//test:runner"},
+		//BazelTargets: []string{"//actions/wrapper:wrapper", "//actions/generate:generate", "//test:runner"},
 		CommitPoint: &pbAction.CommitPoint{
 			Branch:    "main",
 			CommitSha: "c736a863bd8dbc5b76579b840464290077c98fa9",
@@ -115,10 +115,26 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		},
 	}
 
+	// TODO make top of workspace a constant. Better, see is there's a way to derive it
+	// automatically
+	workspace_branch, workspace_commit_sha, err := git.GetHead("/home/mav/eval")
+	if err != nil {
+		log.Fatalf("Cannot get workspace head references")
+	}
 	actionGraph := actions.AGraphBuildImage(&buildImageConfig)
 	request := pbEngine.EvalRequest{
 		Context: &pbContext.Context{
 			Actions: actionGraph,
+			Substitutions: []*pbContext.Substitution{
+				{
+					Variable: "workspace_branch",
+					Value:    workspace_branch,
+				},
+				{
+					Variable: "workspace_commit_sha",
+					Value:    workspace_commit_sha,
+				},
+			},
 		},
 		Values: []string{"image.build"},
 	}

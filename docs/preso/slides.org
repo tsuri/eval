@@ -20,6 +20,9 @@ by: Maurizio Vitale
 - Reduce (do as little as possible)
 - Reuse (history has good lessons)
 - Recycle (don't keep around things we won't need)
+
+  This is not an MVP. It is a prototype.
+  It will be thrown away.
   
 * This is my slide
 ** A List

@@ -30,6 +30,9 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/anypb"
 	"gorm.io/gorm"
+
+	//	"k8s.io/utils/strings/slices"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -103,7 +106,62 @@ type cacheValue struct {
 	Operation string
 }
 
-var cacheContent = make(map[string][]cacheValue)
+var cacheContent *CacheBackend
+
+type CacheBackend struct {
+	data map[string][]cacheValue
+}
+
+func NewCacheBackend() *CacheBackend {
+	return &CacheBackend{
+		data: make(map[string][]cacheValue),
+	}
+}
+
+func Compatible(new, old *pbaction.BuildImageConfig) bool {
+	fmt.Printf("new: %v\nold: %v\n", new.BazelTargets, old.BazelTargets)
+	for _, t := range new.BazelTargets {
+		if !slices.Contains(old.BazelTargets, t) {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *CacheBackend) Get(s *serverContext, action *pbaction.Action) (string, error) {
+	digest, err := a.ActionDigest(action)
+	if err != nil {
+		return "", err
+	}
+
+	buildConfig := pbaction.BuildImageConfig{}
+	_ = action.Config.UnmarshalTo(&buildConfig)
+
+	if cv, ok := c.data[digest]; ok {
+		for _, c := range cv {
+			cachedBuildConfig := pbaction.BuildImageConfig{}
+			if err := c.Action.Config.UnmarshalTo(&cachedBuildConfig); err == nil {
+				if Compatible(&buildConfig, &cachedBuildConfig) {
+					return c.Operation, nil
+				}
+			}
+		}
+		s.log.Info().Str("op", cv[0].Operation).Msg("previous operation")
+	}
+
+	return "", fmt.Errorf("no cached operation")
+}
+
+func (c *CacheBackend) Put(digest, operation string, action *pbaction.Action) {
+	c.data[digest] = append(c.data[digest], cacheValue{
+		Action:    action,
+		Operation: operation,
+	})
+}
+
+func init() {
+	cacheContent = NewCacheBackend()
+}
 
 func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) {
 	if value == "image.build" && agraph.Name == "image" && agraph.Actions[0].Name == "image.build" {
@@ -124,13 +182,19 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if err != nil {
 		return nil, err
 	}
+
+	cachedOperation, err := cacheContent.Get(s, mainAction)
+	if err == nil {
+		// we should return a new operation
+		return &pbasync.Operation{
+			Name: cachedOperation,
+			Done: true,
+		}, nil
+	}
+
 	digest, err := a.ActionDigest(mainAction)
 	if err != nil {
 		return nil, err
-	}
-
-	if cv, ok := cacheContent[digest]; ok {
-		s.log.Info().Str("op", cv[0].Operation).Msg("previous operation")
 	}
 
 	agraph.Execute(actions)
@@ -154,10 +218,12 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 	downstreamOperation[id.String()] = operation.Name
 
-	cacheContent[digest] = []cacheValue{{
-		Action:    actions.Actions[0],
-		Operation: id.String(),
-	}}
+	cacheContent.Put(digest, id.String(), actions.Actions[0])
+
+	// cacheContent[digest] = append(cacheContent[digest], cacheValue{
+	// 	Action:    actions.Actions[0],
+	// 	Operation: id.String(),
+	// })
 
 	return &pbasync.Operation{
 		Name:   id.String(),

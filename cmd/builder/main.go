@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"strings"
+	"time"
 
 	"eval/pkg/db"
 	"eval/pkg/grpc/server"
+	"eval/pkg/k8s"
 
 	pbasync "eval/proto/async_service"
 	pb "eval/proto/builder"
@@ -143,18 +143,18 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 }
 
 func connectToK8s() *kubernetes.Clientset {
-	_, err := os.Stat("/var/run/secrets/kubernetes.io/serviceaccount/token")
-	if err != nil {
-		log.Printf("token not found")
-	} else {
-		content, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
-		if err != nil {
-			log.Fatal(err)
-		}
-		// Convert []byte to string and print to screen
-		text := string(content)
-		fmt.Println(text)
-	}
+	// _, err := os.Stat("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	// if err != nil {
+	// 	log.Printf("token not found")
+	// } else {
+	// 	content, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	// Convert []byte to string and print to screen
+	// 	text := string(content)
+	// 	fmt.Println(text)
+	// }
 
 	config, err := rest.InClusterConfig()
 	if err != nil {
@@ -218,7 +218,7 @@ func NewBuildTask(buildID string, branch string, commitSHA string, target []stri
 
 func buildJobSpec(buildID string, branch string, commitSHA string, targets []string, imageTag string) *batchv1.Job {
 	var backOffLimit int32 = 0
-	var ttlSecondsAfterFinished int32 = 0
+	var ttlSecondsAfterFinished int32 = 10
 
 	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/" + branch + "#" + commitSHA
 
@@ -295,7 +295,7 @@ func build(buildID string, branch string, commitSHA string, targets []string, im
 	}
 	//	log.Printf("Kaniko job created: %T %v", job, job)
 
-	timeout := int64(3600)
+	timeout := int64(600)
 	watchres, err := jobs.Watch(context.Background(), metav1.ListOptions{
 		TimeoutSeconds: &timeout,
 	})
@@ -305,8 +305,39 @@ func build(buildID string, branch string, commitSHA string, targets []string, im
 	}
 	defer watchres.Stop()
 
+	cl, err := k8s.NewK8SClient()
+	if err != nil {
+		log.Printf("error getting a client")
+	}
+	go func() {
+		for {
+			status, err := cl.GetPodStatus("default", fmt.Sprintf("buildID=%s", buildID))
+			if err != nil {
+				log.Printf("Error: %v", err)
+			} else {
+				log.Printf(">>> Phase: %v", status.Phase)
+				log.Printf(">>> Message: %v", status.Message)
+			}
+			time.Sleep(5 * time.Second)
+		}
+	}()
+
 	eventres := watchres.ResultChan()
 	for we := range eventres {
+		pods, err := clientset.CoreV1().Pods("default").List(context.TODO(),
+			metav1.ListOptions{LabelSelector: fmt.Sprintf("buildID=%s", buildID)})
+		if err != nil {
+			log.Println("Cannot get pod info")
+			return
+		}
+		//		log.Printf("Log info :\n%v\n", pods)
+		for _, podInfo := range (*pods).Items {
+			fmt.Printf("pods-name=%v\n", podInfo.Name)
+			fmt.Printf("pods-status=%v\n", podInfo.Status.Phase)
+			fmt.Printf("pods-message=%v\n", podInfo.Status.Message)
+			//		fmt.Printf("pods-condition=%v\n", podInfo.Status.Conditions)
+		}
+
 		// log.Println("----")
 		// log.Printf("TYPE: %T (%v) %v\n", we.Type, we.Type, we.Type == "DELETED")
 		if we.Type == "DELETED" {
@@ -335,11 +366,34 @@ func build(buildID string, branch string, commitSHA string, targets []string, im
 	// if err != nil {
 	// 	println("config build error")
 	// }
+	// This is what we get:
+	// State:          Terminated
+	//   Reason:       Completed
+	//   Message:      sha256:5bd5af3382faa4e15b33f03b6ab7dfc9405406dcfddf23723588dfc5faeec839
+	//   Exit Code:    0
+	//   Started:      Mon, 30 May 2022 11:24:45 -0400
+	//   Finished:     Mon, 30 May 2022 11:27:49 -0400
 
-	// client, err := kubernetes.NewForConfig(config)
-
+	//	client, err := kubernetes.NewForConfig(config)
+	// client, err := rest.InClusterConfig()
+	// if err != nil {
+	// 	log.Println("cannot connect")
+	// 	return
+	// }
 	// pods, err := client.CoreV1().Pods("default").List(context.TODO(),
 	// 	v1.ListOptions{LabelSelector: fmt.Sprintf("buildID=%s", buildID)})
+	pods, err := clientset.CoreV1().Pods("default").List(context.TODO(),
+		metav1.ListOptions{LabelSelector: fmt.Sprintf("buildID=%s", buildID)})
+	if err != nil {
+		log.Println("Cannot get pod info")
+		return
+	}
+	log.Printf("Log info :\n%v\n", pods)
+	for _, podInfo := range (*pods).Items {
+		fmt.Printf("pods-name=%v\n", podInfo.Name)
+		fmt.Printf("pods-status=%v\n", podInfo.Status.Phase)
+		fmt.Printf("pods-condition=%v\n", podInfo.Status.Conditions)
+	}
 
 	// for _, v := range pods.Items {
 	// 	log := client.CoreV1().Pods("default").GetLogs(v.Name, &v12.PodLogOptions{})

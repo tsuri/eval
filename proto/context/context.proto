@@ -6,8 +6,18 @@ import "proto/agraph/agraph.proto";
 
 option go_package = "eval/proto/context";
 
+message Substitution {
+  string variable = 1;
+  // if replace_value is present, then value is only replaced when the old value is replace_value
+  // useful for variable="image.build.commit_point.commit_sha", replace_value="dev" and value the present sha
+  // maybe we have to handle that ad-hoc as what is 'dev' is "image.build.commit_point.name"
+  string replace_value = 2;
+  string value = 3;
+}
+
 message Context {
   agraph.AGraph actions = 1;
+  repeated Substitution substitutions = 2;
 }
 
 

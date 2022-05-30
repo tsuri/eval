@@ -9,8 +9,12 @@ import "google/protobuf/any.proto";
 option go_package = "eval/proto/action";
 
 message CommitPoint {
-  string branch     = 1;
-  string commit_sha = 2;
+  // Name denotes a symbolic commit, whose exact sha will be computed from the list of
+  // substitutions. Can be "golden" or "dev" for the demo
+  string name            = 1;
+  string branch          = 2;
+  string commit_sha      = 3;
+  string commit_required = 4;
 }
 
 message Action {
