@@ -121,27 +121,35 @@ func unique(s []string) []string {
 }
 
 func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildImageConfig {
-	var bazelTargets = []string{"//actions/wrapper:wrapper"}
 
 	// This should probably go to a substitution validation and transformation
 	// were we also check that these are valid targets (syntactically) and maybe even that
 	// they exists at the requested commit SHA.
+	var bazelTargets = []string{"//actions/wrapper:wrapper"}
 	if bazelTargetsString, present := substitutionMap["image.build.bazel_targets"]; present {
 		bazelTargets = unique(append(bazelTargets, strings.Split(bazelTargetsString, " ")...))
 		sort.Strings(bazelTargets)
 	}
 
-	log.Printf("TARGETS: %v", bazelTargets)
+	var branch string = "main"
+	if branchString, present := substitutionMap["image.build.commit_point.branch"]; present {
+		branch = branchString
+	}
 
-	// image.build.commit_point.commit_sha
+	// TODO by default we should use "golden" in the cluster repo
+	var commit string = "dcc35cc6d501d0b966ff89d589754ca5f31cb429"
+	if commitString, present := substitutionMap["image.build.commit_point.commit_sha"]; present {
+		commit = commitString
+	}
+
 	buildImageConfig := pbAction.BuildImageConfig{
 		ImageName:    "eval",
 		ImageTag:     "latest",
 		BaseImage:    "debian:buster",
 		BazelTargets: bazelTargets,
 		CommitPoint: &pbAction.CommitPoint{
-			Branch:    "main",
-			CommitSha: "dcc35cc6d501d0b966ff89d589754ca5f31cb429",
+			Branch:    branch,
+			CommitSha: commit,
 		},
 	}
 
