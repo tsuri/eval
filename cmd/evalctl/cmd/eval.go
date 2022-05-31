@@ -33,7 +33,7 @@ const (
 var evalCmd = &cobra.Command{
 	Use:               "eval",
 	Short:             "causes the evaluation of a graph",
-	Long:              `Something deeper here.`,
+	Long:              `evalctl controls task graph evaluations.`,
 	Args:              cobra.ExactArgs(1),
 	Run:               evalCmdImpl,
 	ValidArgsFunction: completeTargets,
@@ -123,6 +123,9 @@ func unique(s []string) []string {
 func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildImageConfig {
 	var bazelTargets = []string{"//actions/wrapper:wrapper"}
 
+	// This should probably go to a substitution validation and transformation
+	// were we also check that these are valid targets (syntactically) and maybe even that
+	// they exists at the requested commit SHA.
 	if bazelTargetsString, present := substitutionMap["image.build.bazel_targets"]; present {
 		bazelTargets = unique(append(bazelTargets, strings.Split(bazelTargetsString, " ")...))
 		sort.Strings(bazelTargets)
