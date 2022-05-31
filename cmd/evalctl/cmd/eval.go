@@ -138,7 +138,7 @@ func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildIm
 		BazelTargets: bazelTargets,
 		CommitPoint: &pbAction.CommitPoint{
 			Branch:    "main",
-			CommitSha: "c736a863bd8dbc5b76579b840464290077c98fa9",
+			CommitSha: "dcc35cc6d501d0b966ff89d589754ca5f31cb429",
 		},
 	}
 
