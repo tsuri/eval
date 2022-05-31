@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "process_lib",
+    srcs = ["process.go"],
+    importpath = "eval/actions/process",
+    visibility = ["//visibility:private"],
+    deps = ["@com_github_rs_zerolog//log"],
+)
+
+go_binary(
+    name = "process",
+    embed = [":process_lib"],
+    visibility = ["//visibility:public"],
+)

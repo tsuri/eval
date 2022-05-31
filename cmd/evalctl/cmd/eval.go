@@ -6,6 +6,7 @@ import (
 	"log"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"eval/pkg/actions"
@@ -30,11 +31,19 @@ const (
 )
 
 var evalCmd = &cobra.Command{
-	Use:   "eval",
-	Short: "causes the evaluation of a graph",
-	Long:  `Something deeper here.`,
-	Args:  cobra.ExactArgs(1),
-	Run:   evalCmdImpl,
+	Use:               "eval",
+	Short:             "causes the evaluation of a graph",
+	Long:              `Something deeper here.`,
+	Args:              cobra.ExactArgs(1),
+	Run:               evalCmdImpl,
+	ValidArgsFunction: completeTargets,
+}
+
+func completeTargets(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) > 0 {
+		return []string{"foo", "bar"}, cobra.ShellCompDirectiveNoFileComp
+	}
+	return completions, cobra.ShellCompDirectiveNoFileComp
 }
 
 type ExecutionEngine enumflag.Flag
@@ -51,12 +60,39 @@ var ExecutionEngineIds = map[ExecutionEngine][]string{
 
 var executionEngine ExecutionEngine
 
+var completions []string
+
+var substitutionMap = make(map[string]string)
+
+var skipCaching bool
+
+func GenerateCompletions() []string {
+	return []string{
+		"compare.baseline.train.features.generate",
+		"compare.baseline.train.features.generate.images",
+		"compare.baseline.train.features.process",
+		"compare.baseline.train.features.process.out",
+		"compare.baseline.train.features.aggregate",
+		"compare.baseline.train.model_train",
+		"compare.baseline.analyze",
+		"compare.exp.train.features.generate",
+		"compare.exp.train.features.process",
+		"compare.exp.train.features.aggregate",
+		"compare.exp.train.model_train",
+		"compare.exp.analyze",
+		"compare.summarize",
+		"image.build"}
+}
+
 func init() {
 	rootCmd.AddCommand(evalCmd)
-	rootCmd.PersistentFlags().VarP(
+	evalCmd.PersistentFlags().VarP(
 		enumflag.New(&executionEngine, "engine", ExecutionEngineIds, enumflag.EnumCaseInsensitive),
 		"engine", "e",
 		"execution engine; can be 'cloud' or 'local'")
+	evalCmd.PersistentFlags().StringToStringVar(&substitutionMap, "with", nil, "some more docs")
+	evalCmd.PersistentFlags().BoolVarP(&skipCaching, "no-cache", "x", false, "bypass the cache")
+	completions = GenerateCompletions()
 }
 
 func evalBuildImage(branch string, commitSHA string) {
@@ -71,6 +107,43 @@ func evalBuildImage(branch string, commitSHA string) {
 // setting from any of the levels above.
 
 var EvalOperation *pbAsyncService.Operation
+
+func unique(s []string) []string {
+	inResult := make(map[string]bool)
+	var result []string
+	for _, str := range s {
+		if _, ok := inResult[str]; !ok {
+			inResult[str] = true
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
+func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildImageConfig {
+	var bazelTargets = []string{"//actions/wrapper:wrapper"}
+
+	if bazelTargetsString, present := substitutionMap["image.build.bazel_targets"]; present {
+		bazelTargets = unique(append(bazelTargets, strings.Split(bazelTargetsString, " ")...))
+		sort.Strings(bazelTargets)
+	}
+
+	log.Printf("TARGETS: %v", bazelTargets)
+
+	// image.build.commit_point.commit_sha
+	buildImageConfig := pbAction.BuildImageConfig{
+		ImageName:    "eval",
+		ImageTag:     "latest",
+		BaseImage:    "debian:buster",
+		BazelTargets: bazelTargets,
+		CommitPoint: &pbAction.CommitPoint{
+			Branch:    "main",
+			CommitSha: "c736a863bd8dbc5b76579b840464290077c98fa9",
+		},
+	}
+
+	return &buildImageConfig
+}
 
 func evalCmdImpl(cmd *cobra.Command, args []string) {
 	var conn *grpc.ClientConn
@@ -102,27 +175,18 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	emoji.Printf(":magic_wand: here you are\n")
 
-	buildImageConfig := pbAction.BuildImageConfig{
-		ImageName:    "eval",
-		ImageTag:     "latest",
-		BaseImage:    "debian:buster",
-		BazelTargets: []string{"//actions/wrapper:wrapper", "//actions/generate:generate"},
-		//BazelTargets: []string{"//actions/wrapper:wrapper", "//actions/generate:generate", "//test:runner"},
-		CommitPoint: &pbAction.CommitPoint{
-			Branch:    "main",
-			CommitSha: "c736a863bd8dbc5b76579b840464290077c98fa9",
-			//CommitSha: "af1b634eb10777ff1b2c4aded960ea1645d49653",
-		},
-	}
-
 	// TODO make top of workspace a constant. Better, see is there's a way to derive it
 	// automatically
 	workspace_branch, workspace_commit_sha, err := git.GetHead("/home/mav/eval")
 	if err != nil {
 		log.Fatalf("Cannot get workspace head references")
 	}
-	actionGraph := actions.AGraphBuildImage(&buildImageConfig)
+
+	buildImageConfig := createBuildImageConfig(substitutionMap)
+
+	actionGraph := actions.AGraphBuildImage(buildImageConfig)
 	request := pbEngine.EvalRequest{
+		SkipCaching: skipCaching,
 		Context: &pbContext.Context{
 			Actions: actionGraph,
 			Substitutions: []*pbContext.Substitution{

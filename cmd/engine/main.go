@@ -166,9 +166,10 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	for _, value := range in.Values {
 		s.log.Info().Str("value", value).Msg("Request")
 		operation, err := s.cache.Get(ctx, &pbcache.GetRequest{
-			Evaluation: id.String(),
-			Context:    in.Context,
-			Value:      value,
+			SkipCaching: in.SkipCaching,
+			Evaluation:  id.String(),
+			Context:     in.Context,
+			Value:       value,
 		})
 		if err != nil {
 			s.log.Err(err).Msg("Failure to talk to cache")

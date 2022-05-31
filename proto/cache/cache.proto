@@ -12,6 +12,7 @@ message GetRequest {
   string evaluation       = 1;
   context.Context context = 2;
   string value            = 3;
+  bool skip_caching       = 4;
 }
 
 message GetResponse {

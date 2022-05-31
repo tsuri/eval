@@ -183,13 +183,15 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		return nil, err
 	}
 
-	cachedOperation, err := cacheContent.Get(s, mainAction)
-	if err == nil {
-		// we should return a new operation
-		return &pbasync.Operation{
-			Name: cachedOperation,
-			Done: true,
-		}, nil
+	if !in.SkipCaching {
+		cachedOperation, err := cacheContent.Get(s, mainAction)
+		if err == nil {
+			// we should return a new operation
+			return &pbasync.Operation{
+				Name: cachedOperation,
+				Done: true,
+			}, nil
+		}
 	}
 
 	digest, err := a.ActionDigest(mainAction)

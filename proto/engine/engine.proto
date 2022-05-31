@@ -11,6 +11,7 @@ option go_package = "eval/proto/engine";
 message EvalRequest {
   context.Context context = 2;
   repeated string values  = 3;
+  bool skip_caching       = 4;
 }
 
 message EvalResponse {
