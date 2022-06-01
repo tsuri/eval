@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"eval/pkg/db"
 	"eval/pkg/grpc/server"
-	"eval/pkg/k8s"
 
 	pbasync "eval/proto/async_service"
 	pb "eval/proto/builder"
@@ -125,7 +123,9 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 	//	s.log.Info().Msg("Builder GetOperation")
 
 	if done, ok := buildDone[in.Name]; ok && done {
-		response, err := anypb.New(&pb.BuildResponse{})
+		response, err := anypb.New(&pb.BuildResponse{
+			Response: "will be nicer: " + in.Name,
+		})
 		if err != nil {
 			panic(err)
 		}
@@ -305,22 +305,22 @@ func build(buildID string, branch string, commitSHA string, targets []string, im
 	}
 	defer watchres.Stop()
 
-	cl, err := k8s.NewK8SClient()
-	if err != nil {
-		log.Printf("error getting a client")
-	}
-	go func() {
-		for {
-			status, err := cl.GetPodStatus("default", fmt.Sprintf("buildID=%s", buildID))
-			if err != nil {
-				log.Printf("Error: %v", err)
-			} else {
-				log.Printf(">>> Phase: %v", status.Phase)
-				log.Printf(">>> Message: %v", status.Message)
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
+	// cl, err := k8s.NewK8SClient()
+	// if err != nil {
+	// 	log.Printf("error getting a client")
+	// }
+	// go func() {
+	// 	for {
+	// 		status, err := cl.GetPodStatus("default", fmt.Sprintf("buildID=%s", buildID))
+	// 		if err != nil {
+	// 			log.Printf("Error: %v", err)
+	// 		} else {
+	// 			log.Printf(">>> Phase: %v", status.Phase)
+	// 			log.Printf(">>> Message: %v", status.Message)
+	// 		}
+	// 		time.Sleep(5 * time.Second)
+	// 	}
+	// }()
 
 	eventres := watchres.ResultChan()
 	for we := range eventres {

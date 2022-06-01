@@ -176,8 +176,26 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 			return nil, err
 		}
 		done = done && operation.Done
+		log.Println("Unmarshaling")
+		if operation.Done {
+			response := new(pbcache.GetResponse)
+			protoResponse := operation.GetResponse()
+			if protoResponse != nil {
+				if err := protoResponse.UnmarshalTo(response); err != nil {
+					log.Fatalf("1 Cannot unmarhshal result for %s", value)
+				}
+			} else {
+				log.Println("nil response in operation")
+			}
+		}
+
 		s.log.Info().Str("dependent", operation.Name).Msg("Cache op ID")
 		operations[value] = operation
+		response := new(pbcache.GetResponse)
+		if err := operations[value].GetResponse().UnmarshalTo(response); err != nil {
+			log.Fatalf("2 Cannot unmarhshal result for %s", value)
+		}
+
 	}
 
 	s.log.Info().Str("OPERATIONS", fmt.Sprintf("%v", operations)).Msg("Dependent Operations")
@@ -188,8 +206,15 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 
 	values := make(map[string]*pbtypes.TypedValue)
 	if done {
-		// for now we hardcode the value name. Will be the values in the request
-		values["result"] = types.StringScalar("xvalue 1")
+		for _, value := range in.Values {
+			response := new(pbcache.GetResponse)
+			if operation, present := operations[value]; present {
+				if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+					log.Fatalf("3 Cannot unmarhshal result for %s", value)
+				}
+				values[value] = response.Value //types.StringScalar("xvalue 1")
+			}
+		}
 	}
 
 	var response *anypb.Any

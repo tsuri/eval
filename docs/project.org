@@ -279,6 +279,27 @@ Also need to take the caching decisions in the cache service. I
 disabled the code in builder, but haven't implemented something
 similar in cache. Anyhow, we are not far from returning a nice tuple
 with informaton about the build.
+
+** Week ? [May 30]
+cat /etc/hosts
+127.0.0.1	golang2021.conf42.com
+127.0.0.1	engine
+127.0.0.1	engine.eval.net
+127.0.0.1	asynqmon.eval.net
+127.0.0.1	gitea.eval.net
+127.0.0.1	engine.local.net
+127.0.0.1	zipkin.eval.net
+127.0.0.1	registry.other.net
+127.0.0.1	localhost ingress.local
+127.0.1.1	idoniko.polyhome.net	idoniko
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+192.168.1.14 storage.polymath-solutions.com
+10.0.2.151 git.polymath-solutions.com
+
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)

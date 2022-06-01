@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -29,6 +30,8 @@ const (
 	clientCert = "evalctl.crt"
 	clientKey  = "evalctl.key"
 )
+
+var workspaceTop string
 
 var evalCmd = &cobra.Command{
 	Use:               "eval",
@@ -93,6 +96,13 @@ func init() {
 	evalCmd.PersistentFlags().StringToStringVar(&substitutionMap, "with", nil, "some more docs")
 	evalCmd.PersistentFlags().BoolVarP(&skipCaching, "no-cache", "x", false, "bypass the cache")
 	completions = GenerateCompletions()
+
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	workspaceTop = dirname + "/eval"
 }
 
 func evalBuildImage(branch string, commitSHA string) {
@@ -171,24 +181,28 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	ctx := client.WithRequesterInfo(context.Background())
 
 	// $WORK
-	status, err := git.WorkspaceStatus("/home/mav/eval")
+	status, err := git.WorkspaceStatus(workspaceTop)
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-	// TODO we should be silent when everything is ok
-	// and we should wait for an answer when not ok
-	if status.IsClean() {
-		emoji.Printf(":ok_hand: your workspace is clean\n")
-	} else {
+
+	wantedValues := args
+
+	// we should do this check only when a commit sha is not passed (for build, so it is tricky; the
+	// reason we can do it is that the build action doesn't depend on the commit sha, only the
+	// image build. In that case all we need to check that the desired sha is available in repo.
+	// But in general, we always need to make this check if the graph contains 'dev' as an image
+	// anywhere.
+	if !status.IsClean() {
+		// TODO: we should wait for an answer when not ok
 		emoji.Printf(":pile_of_poo: Do you really want to ignore:\n")
+		// TODO: format workspace status nicely
 		fmt.Printf("%s\n", status.String())
 	}
 
-	emoji.Printf(":magic_wand: here you are\n")
-
 	// TODO make top of workspace a constant. Better, see is there's a way to derive it
 	// automatically
-	workspace_branch, workspace_commit_sha, err := git.GetHead("/home/mav/eval")
+	workspace_branch, workspace_commit_sha, err := git.GetHead(workspaceTop)
 	if err != nil {
 		log.Fatalf("Cannot get workspace head references")
 	}
@@ -211,7 +225,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 				},
 			},
 		},
-		Values: []string{"image.build"},
+		Values: wantedValues,
 	}
 
 	//	log.Printf("Launching evaluation")
@@ -239,13 +253,15 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	// sort the slice by keys
 	sort.Strings(valueNames)
 
-	// iterate by sorted keys
-	for _, valueName := range valueNames {
-		fmt.Printf("%s: %v", valueName, values[valueName])
-	}
+	// // iterate by sorted keys
+	// for _, valueName := range valueNames {
+	// 	fmt.Printf("%s: %v", valueName, values[valueName])
+	// }
 
 	if !operation.Done {
 		emoji.Printf("Hold my :beer:\n\n")
+	} else {
+		emoji.Printf(":magic_wand: here you are\n\n")
 	}
 
 	evalOperations := pbAsyncService.NewOperationsClient(conn)

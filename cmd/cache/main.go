@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	a "eval/pkg/actions"
 	"eval/pkg/agraph"
@@ -83,23 +82,24 @@ type Object struct {
 	Num int
 }
 
-func (s *serverContext) CacheExperiment(ctx context.Context) {
-	if err := s.cache.Set(&cache.Item{
-		Ctx:   ctx,
-		Key:   "image.build",
-		Value: &Object{Str: "bar", Num: 42},
-		TTL:   time.Hour,
-	}); err != nil {
-		panic(err)
-	}
+// func (s *serverContext) CacheExperiment(ctx context.Context) {
+// 	if err := s.cache.Set(&cache.Item{
+// 		Ctx:   ctx,
+// 		Key:   "image.build",
+// 		Value: &Object{Str: "bar", Num: 42},
+// 		TTL:   time.Hour,
+// 	}); err != nil {
+// 		panic(err)
+// 	}
 
-	var wanted Object
-	if err := s.cache.Get(ctx, "image.build", &wanted); err == nil {
-		fmt.Println(wanted)
-	}
-}
+// 	var wanted Object
+// 	if err := s.cache.Get(ctx, "image.build", &wanted); err == nil {
+// 		fmt.Println(wanted)
+// 	}
+// }
 
 var downstreamOperation = make(map[string]string)
+var waitingOn = make(map[string]string)
 
 type cacheValue struct {
 	Action    *pbaction.Action
@@ -110,11 +110,15 @@ var cacheContent *CacheBackend
 
 type CacheBackend struct {
 	data map[string][]cacheValue
+
+	// The last we know for an upstream operation
+	upstreamOperation map[string]pbasync.Operation
 }
 
 func NewCacheBackend() *CacheBackend {
 	return &CacheBackend{
-		data: make(map[string][]cacheValue),
+		data:              make(map[string][]cacheValue),
+		upstreamOperation: make(map[string]pbasync.Operation),
 	}
 }
 
@@ -172,11 +176,11 @@ func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) 
 }
 
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
-
 	s.log.Info().Int64("proto size", sizeof.DeepSize(in.Context)).Msg("Size")
-	s.log.Info().Int64("struct size", sizeof.DeepSize(a.B())).Msg("Size")
 
 	actions := agraph.EssentialActions(in.Context.Actions, in.Value)
+
+	s.log.Info().Str("value", in.Value).Msg("get cache")
 
 	mainAction, err := GetAction(actions, in.Value)
 	if err != nil {
@@ -186,10 +190,38 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if !in.SkipCaching {
 		cachedOperation, err := cacheContent.Get(s, mainAction)
 		if err == nil {
-			// we should return a new operation
+			if lastResult, present := cacheContent.upstreamOperation[cachedOperation]; present && lastResult.Done {
+				buildResponse := new(pbbuilder.BuildResponse)
+				if err := lastResult.GetResponse().UnmarshalTo(buildResponse); err != nil {
+					log.Fatalf("4 Cannot unmarhshal result")
+				}
+
+				var response *anypb.Any
+				response, err = anypb.New(&pbcache.GetResponse{
+					Value: types.StringScalar(buildResponse.Response),
+				})
+				if err != nil {
+					panic(err)
+				}
+				return &pbasync.Operation{
+					Name:   cachedOperation,
+					Done:   true,
+					Result: &pbasync.Operation_Response{response},
+				}, nil
+
+				return &lastResult, nil
+			}
+
+			// we should return a new operation; and we shouldn't return 'done' inconditionally as
+			// the operation could be ongoing
+			result, err := anypb.New(&pbcache.GetResponse{})
+			if err != nil {
+				panic(err)
+			}
 			return &pbasync.Operation{
-				Name: cachedOperation,
-				Done: true,
+				Name:   cachedOperation,
+				Done:   true,
+				Result: &pbasync.Operation_Response{result},
 			}, nil
 		}
 	}
@@ -235,7 +267,9 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 }
 
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
-
+	if lastResult, present := cacheContent.upstreamOperation[in.Name]; present && lastResult.Done {
+		return &lastResult, nil
+	}
 	// ok, a filure to connect here doesn' return error
 	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
 	if err != nil {
@@ -251,9 +285,22 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 				Name: operationID,
 			})
 
+		if err != nil {
+			log.Fatal("Failure to get operation from upstream")
+		}
+
+		cacheContent.upstreamOperation[in.Name] = *operation
+
+		buildResponse := new(pbbuilder.BuildResponse)
+		if operation.Done {
+			if err := operation.GetResponse().UnmarshalTo(buildResponse); err != nil {
+				log.Fatal("Cannot unmarhshal result from builder")
+			}
+		}
+
 		var response *anypb.Any
 		response, err = anypb.New(&pbcache.GetResponse{
-			Value: types.StringScalar("xvalue from cache"),
+			Value: types.StringScalar(buildResponse.Response),
 		})
 		if err != nil {
 			panic(err)
