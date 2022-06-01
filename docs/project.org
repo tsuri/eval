@@ -281,6 +281,7 @@ similar in cache. Anyhow, we are not far from returning a nice tuple
 with informaton about the build.
 
 ** Week ? [May 30]
+*** Tuesday
 cat /etc/hosts
 127.0.0.1	golang2021.conf42.com
 127.0.0.1	engine
@@ -299,6 +300,11 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 192.168.1.14 storage.polymath-solutions.com
 10.0.2.151 git.polymath-solutions.com
+
+Quite a bit of rework. Now we propagate the resut of builder all the
+way to evalctl, both when the value is cached and when it is not.
+Still lot of work needed to make the cache half decent and make
+'image build' not the only hardwired action we can execute.
 
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
