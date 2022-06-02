@@ -2,18 +2,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: eval
-  name: grunt
+  name: runner
   labels:
-    app: eval-grunt
+    app: eval-runner
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: eval-grunt
+      app: eval-runner
   template:
     metadata:
       labels:
-        app: eval-grunt
+        app: eval-runner
     spec:
       volumes:
       - name: data
@@ -23,7 +23,7 @@ spec:
         secret:
           secretName: cluster-certificates
       containers:
-      - name: grunt
+      - name: runner
         image: localhost:5000/main:dev
         ports:
         - containerPort: 50051
@@ -50,12 +50,12 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: eval
-  name: eval-grunt
+  name: eval-runner
   labels:
-    app: eval-grunt
+    app: eval-runner
 spec:
   selector:
-    app: eval-grunt
+    app: eval-runner
   ports:
     - name: grpc
       port: 50051

@@ -4,13 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
 	"path/filepath"
 
-	pb "eval/proto/grunt"
+	pbasync "eval/proto/async_service"
+	pbrunner "eval/proto/runner"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -29,14 +29,12 @@ const (
 
 type server struct{}
 
-func (s *server) Eval(ctx context.Context, in *pb.EvalRequest) (*pb.EvalResponse, error) {
-	fmt.Println("EVAL")
-	log.Printf("Grunt of %v is %v, no?", in.Number, 1000+in.Number)
-	return &pb.EvalResponse{Number: in.Number + 1000}, nil
+func (s *server) CreateJob(ctx context.Context, in *pbrunner.CreateJobRequest) (*pbasync.Operation, error) {
+	return &pbasync.Operation{}, nil
 }
 
 func main() {
-	log.Print("Hello there, this is a grunt squad")
+	log.Print("Hello there, this is a runner squad")
 
 	cert, err := tls.LoadX509KeyPair(filepath.Join(baseDir, ServerCert),
 		filepath.Join(baseDir, ServerKey))
@@ -63,7 +61,7 @@ func main() {
 	}
 
 	s := grpc.NewServer(opts...)
-	pb.RegisterEngineServiceServer(s, &server{})
+	pbrunner.RegisterRunnerServiceServer(s, &server{})
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {

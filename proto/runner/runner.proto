@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package runner;
+
+import "proto/agraph/agraph.proto";
+import "proto/async_service/async_service.proto";
+
+option go_package = "eval/proto/runner";
+
+message CreateJobRequest {
+  agraph.AGraph actions = 2;
+}
+
+message CreateJobResponse {
+  int64 number = 1;
+}
+
+service RunnerService {
+  rpc CreateJob(CreateJobRequest) returns (async_service.Operation);
+}

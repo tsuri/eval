@@ -30,7 +30,7 @@ k8s_objects(
     objects = [
         "//cmd/cache:dev",
         "//cmd/engine:dev",
-        "//cmd/grunt:dev",
+        "//cmd/runner:dev",
         "//cmd/builder:dev",
     ],
 )
