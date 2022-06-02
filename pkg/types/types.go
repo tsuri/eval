@@ -9,7 +9,7 @@ func scalarType(t pbtypes.Type_AtomicType) *pbtypes.Type {
 }
 
 func stringMapType(m map[string]string) *pbtypes.Type {
-	fields := make([]*pbtypes.Field, 16)
+	fields := make([]*pbtypes.Field, len(m))
 	for k, _ := range m {
 		fields = append(fields, &pbtypes.Field{
 			Name: k,
@@ -45,7 +45,7 @@ func PrettyPrint(v *pbtypes.TypedValue) {
 }
 
 func StringDictionary(m map[string]string) *pbtypes.TypedValue {
-	fieldValues := make([]*pbtypes.FieldValue, 16)
+	fieldValues := make([]*pbtypes.FieldValue, len(m))
 	for k, v := range m {
 		fieldValues = append(fieldValues, &pbtypes.FieldValue{
 			Name: k,
