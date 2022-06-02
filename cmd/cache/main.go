@@ -175,6 +175,20 @@ func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) 
 	return nil, fmt.Errorf("GetAction")
 }
 
+// func getResponse[T any](m *pbasync.Operation) (*T, error) {
+// 	r := m.GetResponse()
+// 	if r == nil {
+// 		return nil, errors.New("failed to get operation response")
+// 	}
+
+// 	out := &T{}
+// 	if err := r.UnmarshalTo(out); err {
+// 		return nil, err
+// 	}
+
+// 	return out, nil
+// }
+
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
 	s.log.Info().Int64("proto size", sizeof.DeepSize(in.Context)).Msg("Size")
 
@@ -196,9 +210,17 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 					log.Fatalf("4 Cannot unmarhshal result")
 				}
 
+				buildInfo := map[string]string{
+					"image_name":   buildResponse.ImageName,
+					"image_tag":    buildResponse.ImageTag,
+					"image_digest": buildResponse.ImageDigest,
+				}
+
+				log.Printf("%v", buildInfo)
 				var response *anypb.Any
 				response, err = anypb.New(&pbcache.GetResponse{
-					Value: types.StringScalar(buildResponse.Response),
+					//					Value: types.StringScalar(buildResponse.Response),
+					Value: types.StringDictionary(buildInfo),
 				})
 				if err != nil {
 					panic(err)

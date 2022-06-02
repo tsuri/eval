@@ -117,14 +117,35 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 
 }
 
+func getDigest(image string, tag string) (string, error) {
+	url := "http://192.168.1.8:5000/"
+	username := "" // anonymous
+	password := "" // anonymous
+	hub, err := registry.NewInsecure(url, username, password)
+	if err != nil {
+		return "", err
+	}
+
+	digest, err := hub.ManifestDigest(image, tag)
+	if err != nil {
+		return "", err
+	}
+	return digest.String(), nil
+}
+
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
 	//	var response *anypb.Any
 
 	//	s.log.Info().Msg("Builder GetOperation")
 
 	if done, ok := buildDone[in.Name]; ok && done {
+		digest, err := getDigest("eval", in.Name)
+		// all wrong, need tag from DB
 		response, err := anypb.New(&pb.BuildResponse{
-			Response: "will be nicer: " + in.Name,
+			Response:    "will be nicer: " + in.Name,
+			ImageName:   "eval",
+			ImageTag:    in.Name,
+			ImageDigest: digest,
 		})
 		if err != nil {
 			panic(err)
@@ -354,7 +375,7 @@ func build(buildID string, branch string, commitSHA string, targets []string, im
 	}
 
 	buildDone[buildID] = true
-	//	playWithDocker(imageTag)
+	playWithDocker(imageTag)
 
 	// We should get to the pod for the job, which doesn't seem
 	// directly doable a way is to assign a label to the pod, say the
@@ -413,20 +434,36 @@ func playWithDocker(imageTag string) {
 		log.Printf("Cannot connect to docker registry")
 	}
 
-	repositories, err := hub.Repositories()
-	if err != nil {
-		log.Printf("Cannot get list of repositories")
-	}
-	for r := range repositories {
-		log.Printf("Repo: %T %v\n", r, r)
-		// tags, err := hub.Tags(r)
-		// if err != nil {
-		// 	log.Printf("Cannot get list of tags")
-		// }
-		// for t := range tags {
-		// 	log.Printf("Tag: %v\n", t)
-		// }
+	// repositories are actually image names
+	//
+	// 2022/06/02 03:06:26 Digest: sha256:420b8b829b3ecfa95768b68581bbf61b269cba00ad725fd67495668fa45d9f4e
+	// 2022/06/02 03:06:26 Tag: a00a0805-815a-4890-9bf7-56283ebc28c3
+	// 2022/06/02 03:06:26 registry.manifest.head url=http://192.168.1.8:5000/v2/eval/manifests/a00a0805-815a-4890-9bf7-56283ebc28c3 repository=eval reference=a00a0805-815a-4890-9bf7-56283ebc28c3
+	// repositories, err := hub.Repositories()
+	// if err != nil {
+	// 	log.Printf("Cannot get list of repositories")
+	// }
+	// for _, r := range repositories {
+	// 	log.Printf("Repo: %v\n", r, r)
+	// 	tags, err := hub.Tags(r)
+	// 	if err != nil {
+	// 		log.Printf("Cannot get list of tags")
+	// 	}
+	// 	for _, t := range tags {
+	// 		log.Printf("Tag: %v\n", t)
+	// 		digest, err := hub.ManifestDigest(r, t)
+	// 		if err != nil {
+	// 			continue
+	// 		}
+	// 		log.Printf("Digest: %v\n", digest)
+	// 	}
 
+	// }
+
+	digest, err := hub.ManifestDigest("eval", imageTag)
+	if err == nil {
+		log.Printf("========== DIGEST FOR eval:%s ===========", imageTag)
+		log.Printf("Digest: %v\n", digest)
 	}
 
 	// tags, err := hub.Tags("eval")
@@ -451,9 +488,47 @@ func playWithDocker(imageTag string) {
 	} else {
 		payload, _, _ := manifest.Payload()
 		log.Printf("Payload %s", payload)
-		log.Printf("Digest: %T %v", manifest, manifest)
+		log.Printf("Name %v", manifest.Name)
+		log.Printf("Tag %v", manifest.Tag)
 	}
 	log.Printf("===================================================")
+
+	// oc, err := otherdocker.NewClient("http://192.168.1.8:5000/")
+	// if err != nil {
+	// 	log.Println("Failed to connect")
+	// 	panic(err)
+	// }
+
+	// history, err := oc.ImageHistory("eval")
+	// if err != nil {
+	// 	log.Printf("Failed to get history: %v", err)
+	// 	panic(err)
+	// }
+	// for _, h := range history {
+	// 	log.Printf("HISTORY: %v", h)
+	// }
+
+	// ii, err := oc.InspectImage("eval:" + imageTag)
+	// if err != nil {
+	// 	log.Printf("Failed to get image info: %v", err)
+	// 	panic(err)
+	// }
+	// log.Printf("INFO: %v", ii)
+
+	// imgs, err := oc.ListImages(docker.ListImagesOptions{All: false})
+	// if err != nil {
+	// 	log.Printf("Failed to get list of images: %v", err)
+	// 	panic(err)
+	// }
+	// for _, img := range imgs {
+	// 	fmt.Println("ID: ", img.ID)
+	// 	fmt.Println("RepoTags: ", img.RepoTags)
+	// 	fmt.Println("Created: ", img.Created)
+	// 	fmt.Println("Size: ", img.Size)
+	// 	fmt.Println("VirtualSize: ", img.VirtualSize)
+	// 	fmt.Println("ParentId: ", img.ParentID)
+	// }
+
 	// client, err := docker.NewClient("http://192.168.1.8:5000/")
 	// if err != nil {
 	// 	log.Println("Failed to connect")

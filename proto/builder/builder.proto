@@ -16,6 +16,7 @@ message BuildResponse {
   string response = 1;
   string imageName = 2;
   string imageTag = 3;
+  string imageDigest = 4;
 }
 
 service BuilderService {

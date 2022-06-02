@@ -306,6 +306,30 @@ way to evalctl, both when the value is cached and when it is not.
 Still lot of work needed to make the cache half decent and make
 'image build' not the only hardwired action we can execute.
 
+#+begin_src sh
+$ ./scripts/evalctl eval  -x image.build --with image.build.commit_point.commit_sha=ba30cd4a1ae02cb2b21dbe3054b2c0028f8295ed
+Hold my 🍺 
+
+image.build: type:{atomic:STRING}  fields:{value:{s:"will be nicer: ef42ef0a-deab-4b7f-a262-c9de62458cb3"}}%                                                                     
+~/eval on  main ⌚ 23:40:49
+$ ./scripts/evalctl eval   image.build --with image.build.commit_point.commit_sha=ba30cd4a1ae02cb2b21dbe3054b2c0028f8295ed 
+🪄  here you are
+
+image.build: type:{atomic:STRING}  fields:{value:{s:"will be nicer: 1a8e9905-cf81-400e-aace-3bcfacc6499b"}}%                                                                     
+~/eval on  main ⌚ 23:41:19
+$ ./scripts/evalctl eval   image.build --with image.build.commit_point.commit_sha=ba30cd4a1ae02cb2b21dbe3054b2c0028f8295ed
+🪄  here you are
+
+#+end_src
+
+#+begin_src sh
+git remote -v        
+cluster	http://mav:969c5cb1eaee59d878648cb862bef551cac70d34@gitea.eval.net/mav/eval.git (fetch)
+cluster	http://mav:969c5cb1eaee59d878648cb862bef551cac70d34@gitea.eval.net/mav/eval.git (push)
+origin	git@github.com:tsuri/eval.git (fetch)
+origin	git@github.com:tsuri/eval.git (push)
+#+end_src
+
 * Tasks
 ** DONE build base images and place them in the registry (for istance the
     buider one with bazel takes a long time in kaniko)
