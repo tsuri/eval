@@ -25,6 +25,7 @@ go_library(
         "//proto/async_service",
         "//proto/builder",
         "//proto/cache",
+        "//proto/runner",
         "@com_github_go_redis_cache_v8//:cache",
         "@com_github_go_redis_redis_v8//:redis",
         "@com_github_gofrs_uuid//:uuid",

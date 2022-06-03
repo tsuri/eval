@@ -49,3 +49,21 @@ message BuildImageConfig {
   // value is acceptable
   repeated string bazel_targets = 5;
 }
+
+message GenerateConfig {
+}
+
+message ProcessConfig {
+}
+
+message AggregateConfig {
+}
+
+message ModelTrainConfig {
+}
+
+message AnalyzeConfig {
+}
+
+message SummarizeConfig {
+}

@@ -30,8 +30,8 @@ func actionBuildImage(parent string, config *pbAction.BuildImageConfig) *pbActio
 }
 
 func AGraphBuildImage(config *pbAction.BuildImageConfig) *pbAGraph.AGraph {
-	actions := []*pbAction.Action{
-		actionBuildImage("image", config),
+	actions := map[string]*pbAction.Action{
+		"image.build": actionBuildImage("image", config),
 	}
 
 	return &pbAGraph.AGraph{

@@ -237,7 +237,7 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	s.log.Info().Str("THING", fmt.Sprintf("%v", evaluation)).Msg("XXXXXXXXXXXXXXXXXX")
 
 	s.log.Info().Str("graph name", in.Context.Actions.Name).Msg("eval")
-	a := in.Context.Actions.Actions[0]
+	a := in.Context.Actions.Actions["image.build"]
 	digest, err := actions.ActionDigest(a)
 	if err != nil {
 		s.log.Err(err).Msg("Error computing digest")
@@ -265,7 +265,7 @@ func (s *serverContext) Eval(ctx context.Context, in *pbeval.EvalRequest) (*pbas
 	// }
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
-	in.Context.Actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	in.Context.Actions.Actions["image.build"].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	xvalue := types.StringScalar("a nice string value")

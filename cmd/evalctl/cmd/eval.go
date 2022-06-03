@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"eval/pkg/actions"
+	"eval/pkg/agraph"
 	"eval/pkg/git"
 	"eval/pkg/grpc/client"
 	pbAction "eval/proto/action"
@@ -209,7 +210,12 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	buildImageConfig := createBuildImageConfig(substitutionMap)
 
+	knownActions := agraph.KnownActions()
+	agraph.Dump(knownActions)
+
 	actionGraph := actions.AGraphBuildImage(buildImageConfig)
+	agraph.Dump(actionGraph)
+
 	request := pbEngine.EvalRequest{
 		SkipCaching: skipCaching,
 		Context: &pbContext.Context{

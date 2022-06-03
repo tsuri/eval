@@ -30,6 +30,7 @@ const (
 type server struct{}
 
 func (s *server) CreateJob(ctx context.Context, in *pbrunner.CreateJobRequest) (*pbasync.Operation, error) {
+	log.Printf("CreateJob")
 	return &pbasync.Operation{}, nil
 }
 

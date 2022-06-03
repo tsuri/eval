@@ -3,6 +3,7 @@ package agraph
 import (
 	"eval/pkg/actions"
 	pbagraph "eval/proto/agraph"
+	"fmt"
 	"log"
 )
 
@@ -21,4 +22,24 @@ func Execute(agraph *pbagraph.AGraph) {
 		}
 		log.Printf("DIGEST: %v", digest)
 	}
+}
+
+func KnownActions() *pbagraph.AGraph {
+	actions := pbagraph.AGraph{}
+
+	return &actions
+}
+
+func Dump(ag *pbagraph.AGraph) {
+	for k, v := range ag.Actions {
+		inputs := ""
+		for _, i := range v.Inputs {
+			inputs += " " + i.Name
+		}
+		fmt.Printf("\n%s: %s\n", k, inputs)
+		for _, o := range v.Outputs {
+			fmt.Printf("    %s\n", o.Name)
+		}
+	}
+	fmt.Printf("\n\n")
 }

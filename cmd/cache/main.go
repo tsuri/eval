@@ -18,6 +18,7 @@ import (
 	pbasync "eval/proto/async_service"
 	pbbuilder "eval/proto/builder"
 	pbcache "eval/proto/cache"
+	pbrunner "eval/proto/runner"
 
 	"github.com/go-redis/cache/v8"
 	"github.com/go-redis/redis/v8"
@@ -168,8 +169,13 @@ func init() {
 }
 
 func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) {
-	if value == "image.build" && agraph.Name == "image" && agraph.Actions[0].Name == "image.build" {
-		return agraph.Actions[0], nil
+	log.Printf("AGRAPH: %s %v", value, agraph.Actions)
+	log.Printf("=== %v ===", agraph.Actions[value])
+	for k, v := range agraph.Actions {
+		log.Printf("   %s: %v", k, v)
+	}
+	if a, present := agraph.Actions[value]; present {
+		return a, nil
 	}
 
 	return nil, fmt.Errorf("GetAction")
@@ -189,6 +195,21 @@ func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) 
 // 	return out, nil
 // }
 
+func createJob(ctx context.Context, actions *pbagraph.AGraph) {
+	log.Printf("createJob")
+	conn, err := client.Connect("eval-runner.eval.svc.cluster.local:50051")
+	if err != nil {
+		log.Fatalf("did not connect")
+	}
+	defer conn.Close()
+
+	runnerClient := pbrunner.NewRunnerServiceClient(conn)
+	_, err = runnerClient.CreateJob(ctx, &pbrunner.CreateJobRequest{})
+	if err != nil {
+		log.Printf("Error in create job")
+	}
+}
+
 func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasync.Operation, error) {
 	s.log.Info().Int64("proto size", sizeof.DeepSize(in.Context)).Msg("Size")
 
@@ -200,6 +221,8 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	if err != nil {
 		return nil, err
 	}
+
+	createJob(ctx, in.Context.Actions)
 
 	if !in.SkipCaching {
 		cachedOperation, err := cacheContent.Get(s, mainAction)
@@ -256,7 +279,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	agraph.Execute(actions)
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
-	actions.Actions[0].Config.UnmarshalTo(buildImageConfig)
+	actions.Actions["image.build"].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	operation, err := buildImage(ctx, buildImageConfig)
@@ -274,7 +297,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 	downstreamOperation[id.String()] = operation.Name
 
-	cacheContent.Put(digest, id.String(), actions.Actions[0])
+	cacheContent.Put(digest, id.String(), actions.Actions["image.build"])
 
 	// cacheContent[digest] = append(cacheContent[digest], cacheValue{
 	// 	Action:    actions.Actions[0],
