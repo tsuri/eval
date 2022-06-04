@@ -1,7 +1,11 @@
 package git
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 func GetRepo(workspace string) (*git.Repository, error) {
@@ -42,4 +46,34 @@ func WorkspaceStatus(workspace string) (git.Status, error) {
 		return nil, err
 	}
 	return worktree.Status()
+}
+
+type Commit struct {
+	Branch string
+	Hash   string
+}
+
+func GetTags(workspace string) (map[string]Commit, error) {
+	tags := make(map[string]Commit)
+
+	repo, err := GetRepo(workspace)
+	if err != nil {
+		return nil, err
+	}
+	tagIter, err := repo.Tags()
+	if err != nil {
+		return nil, err
+	}
+	tagIter.ForEach(func(t *plumbing.Reference) error {
+		tag := strings.Split(t.Name().String(), "/")
+		tags[tag[len(tag)-1]] = Commit{
+			// TODO I don't know how to do `git branch -a --contains commit`
+			// for demo we assume tags are on 'main'
+			Branch: "main",
+			Hash:   t.Hash().String(),
+		}
+		fmt.Println(t)
+		return nil
+	})
+	return tags, nil
 }

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	a "eval/pkg/actions"
 	"eval/pkg/agraph"
@@ -142,7 +144,8 @@ func (c *CacheBackend) Get(s *serverContext, action *pbaction.Action) (string, e
 	buildConfig := pbaction.BuildImageConfig{}
 	_ = action.Config.UnmarshalTo(&buildConfig)
 
-	if cv, ok := c.data[digest]; ok {
+	if cv, present := c.data[digest]; present {
+		s.log.Info().Str("CACHE", fmt.Sprintf("%v", cv)).Msg("****************")
 		for _, c := range cv {
 			cachedBuildConfig := pbaction.BuildImageConfig{}
 			if err := c.Action.Config.UnmarshalTo(&cachedBuildConfig); err == nil {
@@ -168,7 +171,14 @@ func init() {
 	cacheContent = NewCacheBackend()
 }
 
-func GetAction(agraph *pbagraph.AGraph, value string) (*pbaction.Action, error) {
+func GetAction(agraph *pbagraph.AGraph, fullValuePath string) (*pbaction.Action, error) {
+	valueNameComponents := strings.Split(fullValuePath, ".")
+	if agraph.Name != valueNameComponents[0] {
+		return nil, errors.New("wrong action graph")
+	}
+
+	value := strings.Join(valueNameComponents[1:], ".")
+
 	log.Printf("AGRAPH: %s %v", value, agraph.Actions)
 	log.Printf("=== %v ===", agraph.Actions[value])
 	for k, v := range agraph.Actions {
@@ -222,7 +232,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		return nil, err
 	}
 
-	createJob(ctx, in.Context.Actions)
+	//	createJob(ctx, in.Context.Actions)
 
 	if !in.SkipCaching {
 		cachedOperation, err := cacheContent.Get(s, mainAction)
@@ -279,7 +289,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	agraph.Execute(actions)
 
 	buildImageConfig := new(pbaction.BuildImageConfig)
-	actions.Actions["image.build"].Config.UnmarshalTo(buildImageConfig)
+	actions.Actions["build"].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
 	operation, err := buildImage(ctx, buildImageConfig)
@@ -297,7 +307,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	}
 	downstreamOperation[id.String()] = operation.Name
 
-	cacheContent.Put(digest, id.String(), actions.Actions["image.build"])
+	cacheContent.Put(digest, id.String(), actions.Actions["build"])
 
 	// cacheContent[digest] = append(cacheContent[digest], cacheValue{
 	// 	Action:    actions.Actions[0],

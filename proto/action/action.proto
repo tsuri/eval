@@ -19,7 +19,7 @@ message CommitPoint {
 
 message Action {
   string kind                      = 1;		// should be enum of builtin/custom?
-  string name                      = 2;
+  //  string name                      = 2;
   repeated channel.Channel inputs  = 3;
   repeated channel.Channel outputs = 4;
 

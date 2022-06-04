@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"eval/pkg/actions"
 	"eval/pkg/agraph"
 	"eval/pkg/git"
 	"eval/pkg/grpc/client"
@@ -131,6 +130,13 @@ func unique(s []string) []string {
 	return result
 }
 
+func getWithDefault(vars map[string]string, varName string, defaultValue string) string {
+	if value, present := vars[varName]; present {
+		return value
+	}
+	return defaultValue
+}
+
 func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildImageConfig {
 
 	// This should probably go to a substitution validation and transformation
@@ -142,16 +148,17 @@ func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildIm
 		sort.Strings(bazelTargets)
 	}
 
-	var branch string = "main"
-	if branchString, present := substitutionMap["image.build.commit_point.branch"]; present {
-		branch = branchString
-	}
+	bazelTargetsString := getWithDefault(substitutionMap, "image.build.bazel_targets", "//actions/wrapper")
+	bazelTargets = unique(append(bazelTargets, strings.Split(bazelTargetsString, " ")...))
+	sort.Strings(bazelTargets)
 
-	// TODO by default we should use "golden" in the cluster repo
-	var commit string = "dcc35cc6d501d0b966ff89d589754ca5f31cb429"
-	if commitString, present := substitutionMap["image.build.commit_point.commit_sha"]; present {
-		commit = commitString
-	}
+	branch := getWithDefault(substitutionMap, "image.build.commit_point.branch", "main")
+	commit := getWithDefault(substitutionMap, "image.build.commit_point.commit_sha", "golden")
+	// // TODO by default we should use "golden" in the cluster repo
+	// var commit string = "dcc35cc6d501d0b966ff89d589754ca5f31cb429"
+	// if commitString, present := substitutionMap["image.build.commit_point.commit_sha"]; present {
+	// 	commit = commitString
+	// }
 
 	buildImageConfig := pbAction.BuildImageConfig{
 		ImageName:    "eval",
@@ -208,12 +215,29 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Cannot get workspace head references")
 	}
 
-	buildImageConfig := createBuildImageConfig(substitutionMap)
+	tags, err := git.GetTags(workspaceTop)
+	if err != nil {
+		fmt.Printf("Cannot get tags: %v", err)
+	}
+	fmt.Printf("Tags: %v", tags)
 
-	knownActions := agraph.KnownActions()
-	agraph.Dump(knownActions)
+	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
-	actionGraph := actions.AGraphBuildImage(buildImageConfig)
+	knownActionGraphs := agraph.KnownActionGraphs()
+	for name, graph := range knownActionGraphs {
+		fmt.Println(name)
+		agraph.Dump(graph)
+	}
+
+	// TODO here we want to suppoer multiple values. In this case we would have to send in
+	// a minimal set of graphs.
+	fullValuePath := wantedValues[0]
+	graphName := strings.Split(fullValuePath, ".")[0]
+
+	actionGraph, present := knownActionGraphs[graphName]
+	if !present {
+		log.Fatalf("Unknown action graph: %v", graphName)
+	}
 	agraph.Dump(actionGraph)
 
 	request := pbEngine.EvalRequest{

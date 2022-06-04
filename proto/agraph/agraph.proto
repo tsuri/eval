@@ -9,7 +9,6 @@ option go_package = "eval/proto/agraph";
 
 message AGraph {
   string name = 1;
-  //repeated action.Action actions = 2;
   map<string,action.Action> actions = 3;
 }
 

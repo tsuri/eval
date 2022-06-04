@@ -2,6 +2,7 @@ package agraph
 
 import (
 	"eval/pkg/actions"
+	pbaction "eval/proto/action"
 	pbagraph "eval/proto/agraph"
 	"fmt"
 	"log"
@@ -24,10 +25,21 @@ func Execute(agraph *pbagraph.AGraph) {
 	}
 }
 
-func KnownActions() *pbagraph.AGraph {
-	actions := pbagraph.AGraph{}
+func ImageGraph() *pbagraph.AGraph {
+	return &pbagraph.AGraph{
+		Name: "image", // maybe name is not needed
+		Actions: map[string]*pbaction.Action{
+			"build": actions.NewBuildImageAction(),
+		},
+	}
+}
 
-	return &actions
+func KnownActionGraphs() map[string]*pbagraph.AGraph {
+	actionGraphs := make(map[string]*pbagraph.AGraph)
+
+	actionGraphs["image"] = ImageGraph()
+
+	return actionGraphs
 }
 
 func Dump(ag *pbagraph.AGraph) {
