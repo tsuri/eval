@@ -55,6 +55,7 @@ type serverContext struct {
 }
 
 var buildDone = make(map[string]bool)
+var buildInfo = make(map[string]BuildInfo)
 
 func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasync.Operation, error) {
 	//	s.log.Info().Msg("Builder summoned")
@@ -62,7 +63,6 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 	r := asynq.RedisClientOpt{Addr: "redis.eval.svc.cluster.local:6379"}
 	c := asynq.NewClient(r)
 
-	//	log.Printf("Enqueuing task")
 	branch := in.Branch
 	commit := in.CommitSHA
 	target := in.Target
@@ -76,23 +76,17 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 		log.Printf("Cannot generate UUID: %v", err)
 	}
 
-	// // caching should really be in the caching service when we have it
-	// // and the builder sshould  just build
-	// var builds []BuildInfo
-	// s.db.Where("commit_sha = ?", commit).Find(&builds)
-	// for _, build := range builds {
-	// 	log.Printf("*** BUILD %v", build.ImageTag)
-	// 	// we will be able to count on the field tobe there
-	// 	// here we should check tags are compatible and if there're multiple matches
-	// 	// keep he image that has more tags as it is the most useful to keep around.
-	// 	if false && len(build.ImageTag) > 0 {
-	// 		s.log.Info().Msg("Returning available image")
-	// 		return &pb.BuildResponse{Response: "something built", ImageName: "eval", ImageTag: build.ImageTag}, nil
-	// 	}
-	// }
-
-	//	s.log.Info().Msg("Building image")
 	targetJSON, _ := json.Marshal(target)
+
+	buildInfo[buildID.String()] = BuildInfo{
+		BuildID:   buildID,
+		Branch:    branch,
+		CommitSHA: commit,
+		Targets:   string(targetJSON),
+		ImageName: "eval",
+		ImageTag:  imageTag.String(),
+	}
+
 	s.db.Create(&BuildInfo{
 		BuildID:   buildID,
 		Branch:    branch,
@@ -108,7 +102,6 @@ func (s *serverContext) Build(ctx context.Context, in *pb.BuildRequest) (*pbasyn
 	if err != nil {
 		log.Fatal("could not enqueue task: %v", err)
 	}
-	//	log.Printf("INFO: %v", taskInfo)
 
 	// imageName should be passed to newBuildTask
 	return &pbasync.Operation{
@@ -134,17 +127,33 @@ func getDigest(image string, tag string) (string, error) {
 }
 
 func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperationRequest) (*pbasync.Operation, error) {
-	//	var response *anypb.Any
-
-	//	s.log.Info().Msg("Builder GetOperation")
-
 	if done, ok := buildDone[in.Name]; ok && done {
-		digest, err := getDigest("eval", in.Name)
-		// all wrong, need tag from DB
+		// buildInfo := BuildInfo{}
+
+		//		s.db.Debug().First(&buildInfo, "BuildID = ?", in.Name)
+		//buildID, err := uuid.Parse(in.Name)
+		// if err != nil {
+		// 	s.log.Err(err).Msg("cannot parse uuid")
+		// }
+
+		// DB doesn't woork, stuff is inserted, but no dice
+		// s.db.Debug().First(&buildInfo, "BuildID = ?", buildID)
+		// s.log.Info().Msg("***********************************")
+		// s.log.Info().Str("ID", in.Name).Str("Build Info", fmt.Sprintf("%v", buildInfo)).Msg("get operation")
+		// s.log.Info().Msg("***********************************")
+
+		s.log.Info().Str("ID", in.Name).Str("Build Info", fmt.Sprintf("%v", buildInfo[in.Name])).Msg("get operation")
+		bi := buildInfo[in.Name]
+
+		digest, err := getDigest(bi.ImageName, bi.ImageTag)
+		if err != nil {
+			s.log.Info().Msg(fmt.Sprintf("Cannot get digest: %v", err))
+		}
+		s.log.Info().Str("name", bi.ImageName).Str("tag", bi.ImageTag).Str("digest", digest).Msg("Image")
 		response, err := anypb.New(&pb.BuildResponse{
-			Response:    "will be nicer: " + in.Name,
-			ImageName:   "eval",
-			ImageTag:    in.Name,
+			Response:    "will be nicer (but is real): " + in.Name,
+			ImageName:   bi.ImageName,
+			ImageTag:    bi.ImageTag,
 			ImageDigest: digest,
 		})
 		if err != nil {

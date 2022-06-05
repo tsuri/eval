@@ -353,13 +353,22 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 			}
 		}
 
+		buildInfo := map[string]string{
+			"image_name":   buildResponse.ImageName,
+			"image_tag":    buildResponse.ImageTag,
+			"image_digest": buildResponse.ImageDigest,
+		}
+
+		log.Printf("%v", buildInfo)
 		var response *anypb.Any
 		response, err = anypb.New(&pbcache.GetResponse{
-			Value: types.StringScalar(buildResponse.Response),
+			//					Value: types.StringScalar(buildResponse.Response),
+			Value: types.StringDictionary(buildInfo),
 		})
 		if err != nil {
 			panic(err)
 		}
+
 		return &pbasync.Operation{
 			Name:   in.Name,
 			Done:   operation.Done,

@@ -19,16 +19,17 @@ message CommitPoint {
 
 message Action {
   string kind                      = 1;		// should be enum of builtin/custom?
-  //  string name                      = 2;
+  //  string name                  = 2;
   repeated channel.Channel inputs  = 3;
   repeated channel.Channel outputs = 4;
 
-  // 'builtin' actions (for now only buid image) won't configure the commit point sha as it is assumed
+  // 'builtin' actions (for now only build image) won't configure the commit point sha as it is assumed
   // anything would work. Maybe later we'll have a 'min_ci'. Also for builtins, base_image will be fixed and
   // branch will be main/master.
   string base_image                = 5;
   CommitPoint commit_point         = 6;
-  
+
+  string cmd_target                = 8;
   google.protobuf.Any config       = 7;
 }
 
@@ -51,6 +52,7 @@ message BuildImageConfig {
 }
 
 message GenerateConfig {
+  string id = 1;
 }
 
 message ProcessConfig {

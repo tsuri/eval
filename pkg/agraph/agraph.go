@@ -10,6 +10,7 @@ import (
 
 //
 func EssentialActions(agraph *pbagraph.AGraph, value string) *pbagraph.AGraph {
+	// TODO here we should remove actions not reachable from value
 	return agraph
 }
 
@@ -34,10 +35,21 @@ func ImageGraph() *pbagraph.AGraph {
 	}
 }
 
+func GenerateGraph() *pbagraph.AGraph {
+	return &pbagraph.AGraph{
+		Name: "generate", // maybe name is not needed
+		Actions: map[string]*pbaction.Action{
+			"generate": actions.NewGenerateAction(),
+		},
+	}
+}
+
 func KnownActionGraphs() map[string]*pbagraph.AGraph {
 	actionGraphs := make(map[string]*pbagraph.AGraph)
 
 	actionGraphs["image"] = ImageGraph()
+
+	actionGraphs["generate"] = GenerateGraph()
 
 	return actionGraphs
 }

@@ -23,6 +23,26 @@ by: Maurizio Vitale
 
   This is not an MVP. It is a prototype.
   It will be thrown away.
+
+* Quotes
+- Infrastructure should be like oxygen, ubiquotous, necessary and
+  invisible
+
+- Creativiy is just connecting things - Steve Jobs
+
+- Controling complexity is the essence of computer literate
+  programming
+
+- There are two ways of constructing a software design: One way is to
+  make it so simple that there are obviously no deficiencies, and the
+  other way is to make it so complicated that there are no obvious
+  deficiencies. The first method is far more difficult. --
+  C.A.R. Hoare
+
+- Design is the art of arranging code to work today, and be changeable 
+  forever -- Sandy Metz
+
+- Less is esponentially more -- Rob Pike
   
 * This is my slide
 ** A List
@@ -91,6 +111,12 @@ gantt
 
 * Effort
 [[file:./images/is_it_worth_the_time.png]]
+
+* What
+file:./images/darth_vader.jpg]]
+
+* Stair to the sun/moon
+file:./images/stairs-to-moon.jpg
 
 * Slide with an image background (remove this text)
 :PROPERTIES:

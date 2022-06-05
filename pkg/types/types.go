@@ -1,6 +1,8 @@
 package types
 
-import pbtypes "eval/proto/types"
+import (
+	pbtypes "eval/proto/types"
+)
 
 func scalarType(t pbtypes.Type_AtomicType) *pbtypes.Type {
 	return &pbtypes.Type{
@@ -9,7 +11,7 @@ func scalarType(t pbtypes.Type_AtomicType) *pbtypes.Type {
 }
 
 func stringMapType(m map[string]string) *pbtypes.Type {
-	fields := make([]*pbtypes.Field, len(m))
+	fields := make([]*pbtypes.Field, 0, len(m))
 	for k, _ := range m {
 		fields = append(fields, &pbtypes.Field{
 			Name: k,
@@ -45,7 +47,8 @@ func PrettyPrint(v *pbtypes.TypedValue) {
 }
 
 func StringDictionary(m map[string]string) *pbtypes.TypedValue {
-	fieldValues := make([]*pbtypes.FieldValue, len(m))
+	fieldValues := make([]*pbtypes.FieldValue, 0, len(m))
+	//	log.Printf("*** %v %d %v ***", m, len(m), fieldValues)
 	for k, v := range m {
 		fieldValues = append(fieldValues, &pbtypes.FieldValue{
 			Name: k,

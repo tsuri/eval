@@ -13,11 +13,13 @@ import (
 	"eval/pkg/agraph"
 	"eval/pkg/git"
 	"eval/pkg/grpc/client"
-	pbAction "eval/proto/action"
-	pbAsyncService "eval/proto/async_service"
-	pbContext "eval/proto/context"
-	pbEngine "eval/proto/engine"
+	pbaction "eval/proto/action"
+	pbasync "eval/proto/async_service"
+	pbcontext "eval/proto/context"
+	pbengine "eval/proto/engine"
+	pbtypes "eval/proto/types"
 
+	"github.com/gosuri/uitable"
 	"github.com/kyokomi/emoji"
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
@@ -116,7 +118,7 @@ func evalBuildImage(branch string, commitSHA string) {
 // for instance in ab_comparison.a_training.snippet.sfl one could control the image used for SFL or inherit a
 // setting from any of the levels above.
 
-var EvalOperation *pbAsyncService.Operation
+var EvalOperation *pbasync.Operation
 
 func unique(s []string) []string {
 	inResult := make(map[string]bool)
@@ -137,7 +139,7 @@ func getWithDefault(vars map[string]string, varName string, defaultValue string)
 	return defaultValue
 }
 
-func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildImageConfig {
+func createBuildImageConfig(substitutionMap map[string]string) *pbaction.BuildImageConfig {
 
 	// This should probably go to a substitution validation and transformation
 	// were we also check that these are valid targets (syntactically) and maybe even that
@@ -160,18 +162,35 @@ func createBuildImageConfig(substitutionMap map[string]string) *pbAction.BuildIm
 	// 	commit = commitString
 	// }
 
-	buildImageConfig := pbAction.BuildImageConfig{
+	buildImageConfig := pbaction.BuildImageConfig{
 		ImageName:    "eval",
 		ImageTag:     "latest",
 		BaseImage:    "debian:buster",
 		BazelTargets: bazelTargets,
-		CommitPoint: &pbAction.CommitPoint{
+		CommitPoint: &pbaction.CommitPoint{
 			Branch:    branch,
 			CommitSha: commit,
 		},
 	}
 
 	return &buildImageConfig
+}
+
+func ppScalar(v *pbtypes.ScalarValue) string {
+	switch x := v.Value.(type) {
+	case *pbtypes.ScalarValue_S:
+		return x.S
+	case *pbtypes.ScalarValue_B:
+		if x.B {
+			return "true"
+		} else {
+			return "false"
+		}
+	case nil:
+		return "null"
+	default:
+		return fmt.Sprintf("unknown type: %v", v)
+	}
 }
 
 func evalCmdImpl(cmd *cobra.Command, args []string) {
@@ -184,7 +203,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("did not connect: %s", err)
 	}
 	defer conn.Close()
-	engine := pbEngine.NewEngineServiceClient(conn)
+	engine := pbengine.NewEngineServiceClient(conn)
 
 	ctx := client.WithRequesterInfo(context.Background())
 
@@ -215,19 +234,19 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Cannot get workspace head references")
 	}
 
-	tags, err := git.GetTags(workspaceTop)
-	if err != nil {
-		fmt.Printf("Cannot get tags: %v", err)
-	}
-	fmt.Printf("Tags: %v", tags)
+	// tags, err := git.GetTags(workspaceTop)
+	// if err != nil {
+	// 	fmt.Printf("Cannot get tags: %v", err)
+	// }
+	// fmt.Printf("Tags: %v", tags)
 
 	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
 	knownActionGraphs := agraph.KnownActionGraphs()
-	for name, graph := range knownActionGraphs {
-		fmt.Println(name)
-		agraph.Dump(graph)
-	}
+	// for name, graph := range knownActionGraphs {
+	// 	fmt.Println(name)
+	// 	agraph.Dump(graph)
+	// }
 
 	// TODO here we want to suppoer multiple values. In this case we would have to send in
 	// a minimal set of graphs.
@@ -238,13 +257,16 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	if !present {
 		log.Fatalf("Unknown action graph: %v", graphName)
 	}
-	agraph.Dump(actionGraph)
+	// fmt.Println("--------------")
+	// fmt.Printf("Graph Name: %s\n", graphName)
+	// agraph.Dump(actionGraph)
+	// fmt.Println("--------------")
 
-	request := pbEngine.EvalRequest{
+	request := pbengine.EvalRequest{
 		SkipCaching: skipCaching,
-		Context: &pbContext.Context{
+		Context: &pbcontext.Context{
 			Actions: actionGraph,
-			Substitutions: []*pbContext.Substitution{
+			Substitutions: []*pbcontext.Substitution{
 				{
 					Variable: "workspace_branch",
 					Value:    workspace_branch,
@@ -268,7 +290,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	//	log.Println("Got answer")
 
-	response := new(pbEngine.EvalResponse)
+	response := new(pbengine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
 		log.Fatal("Cannot unmarhshal result")
 	}
@@ -294,10 +316,10 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		emoji.Printf(":magic_wand: here you are\n\n")
 	}
 
-	evalOperations := pbAsyncService.NewOperationsClient(conn)
+	evalOperations := pbasync.NewOperationsClient(conn)
 	for !operation.Done {
 		operation, err = evalOperations.GetOperation(ctx,
-			&pbAsyncService.GetOperationRequest{
+			&pbasync.GetOperationRequest{
 				Name: operation.Name,
 			})
 
@@ -309,6 +331,13 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	}
 
 	for k, v := range response.Values {
-		fmt.Printf("%s: %v", k, v)
+		fmt.Println(k)
+		table := uitable.New()
+		table.MaxColWidth = 78
+		for _, el := range v.Fields {
+			table.AddRow(el.Name, ppScalar(el.Value))
+		}
+		fmt.Println(table)
 	}
+
 }

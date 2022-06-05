@@ -9,7 +9,6 @@ go_library(
     importpath = "eval/cmd/evalctl/cmd",
     visibility = ["//visibility:public"],
     deps = [
-        "//pkg/actions",
         "//pkg/agraph",
         "//pkg/git",
         "//pkg/grpc/client",
@@ -17,6 +16,8 @@ go_library(
         "//proto/async_service",
         "//proto/context",
         "//proto/engine",
+        "//proto/types",
+        "@com_github_gosuri_uitable//:uitable",
         "@com_github_kyokomi_emoji//:emoji",
         "@com_github_spf13_cobra//:cobra",
         "@com_github_spf13_viper//:viper",
