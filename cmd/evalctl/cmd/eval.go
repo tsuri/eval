@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -243,6 +244,35 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
 	knownActionGraphs := agraph.KnownActionGraphs()
+
+	if bazelTargets, present := substitutionMap["image.build.bazel_targets"]; present {
+		config := knownActionGraphs["image"].Actions["build"].Config
+		fmt.Printf(">>> %T: %v\n", config, config)
+
+		buildConfig := pbaction.BuildImageConfig{}
+		if err = config.UnmarshalTo(&buildConfig); err == nil {
+			buildConfig.BazelTargets = strings.Split(bazelTargets, " ")
+
+			fmt.Printf(">>> %T: %v\n", buildConfig, buildConfig)
+			c, err := anypb.New(&buildConfig)
+			if err != nil {
+				fmt.Println("error")
+			}
+			fmt.Printf(">>> %T: %v", c, c)
+			knownActionGraphs["image"].Actions["build"].Config = c
+		}
+		// 	_, err := anypb.New(buildConfig)
+		// 	if err != nil {
+		// 		fmt.Println("Error")
+		// 	}
+		//
+		// }
+
+		fmt.Printf("[%v]\n", bazelTargets)
+		//		fmt.Printf("> %v\n", el)
+
+	}
+
 	// for name, graph := range knownActionGraphs {
 	// 	fmt.Println(name)
 	// 	agraph.Dump(graph)

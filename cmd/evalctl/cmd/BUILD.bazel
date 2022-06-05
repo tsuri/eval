@@ -23,5 +23,6 @@ go_library(
         "@com_github_spf13_viper//:viper",
         "@com_github_thediveo_enumflag//:enumflag",
         "@org_golang_google_grpc//:go_default_library",
+        "@org_golang_google_protobuf//types/known/anypb",
     ],
 )

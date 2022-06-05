@@ -5,8 +5,8 @@ metadata:
 spec:
   containers:
   - name: test
-    image: localhost:5000/test:bar
-    command: ["/app/test/runner_/runner"]
+    image: localhost:5000/eval:4c07efae-123b-4b02-aef6-2adf1992d3d6
+    command: ["/app/actions/wrapper/wrapper_/wrapper"]
     # command: ["/bin/ls"]
     # args: ["-lR", "/app"]
 #    command: ["/app/test"]
