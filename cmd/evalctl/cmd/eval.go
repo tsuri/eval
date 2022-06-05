@@ -247,36 +247,21 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	if bazelTargets, present := substitutionMap["image.build.bazel_targets"]; present {
 		config := knownActionGraphs["image"].Actions["build"].Config
-		fmt.Printf(">>> %T: %v\n", config, config)
+		//		fmt.Printf(">>> %T: %v\n", config, config)
 
 		buildConfig := pbaction.BuildImageConfig{}
 		if err = config.UnmarshalTo(&buildConfig); err == nil {
 			buildConfig.BazelTargets = strings.Split(bazelTargets, " ")
 
-			fmt.Printf(">>> %T: %v\n", buildConfig, buildConfig)
+			//			fmt.Printf(">>> %T: %v\n", buildConfig, buildConfig)
 			c, err := anypb.New(&buildConfig)
 			if err != nil {
 				fmt.Println("error")
 			}
-			fmt.Printf(">>> %T: %v", c, c)
+			//			fmt.Printf(">>> %T: %v", c, c)
 			knownActionGraphs["image"].Actions["build"].Config = c
 		}
-		// 	_, err := anypb.New(buildConfig)
-		// 	if err != nil {
-		// 		fmt.Println("Error")
-		// 	}
-		//
-		// }
-
-		fmt.Printf("[%v]\n", bazelTargets)
-		//		fmt.Printf("> %v\n", el)
-
 	}
-
-	// for name, graph := range knownActionGraphs {
-	// 	fmt.Println(name)
-	// 	agraph.Dump(graph)
-	// }
 
 	// TODO here we want to suppoer multiple values. In this case we would have to send in
 	// a minimal set of graphs.
@@ -287,10 +272,6 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	if !present {
 		log.Fatalf("Unknown action graph: %v", graphName)
 	}
-	// fmt.Println("--------------")
-	// fmt.Printf("Graph Name: %s\n", graphName)
-	// agraph.Dump(actionGraph)
-	// fmt.Println("--------------")
 
 	request := pbengine.EvalRequest{
 		SkipCaching: skipCaching,
@@ -310,15 +291,11 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		Values: wantedValues,
 	}
 
-	//	log.Printf("Launching evaluation")
-
 	operation, err := engine.Eval(ctx, &request)
 	if err != nil {
 		log.Fatalf("Error when calling Eval: %s", err)
 	}
 	EvalOperation = operation
-
-	//	log.Println("Got answer")
 
 	response := new(pbengine.EvalResponse)
 	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
@@ -335,15 +312,8 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	// sort the slice by keys
 	sort.Strings(valueNames)
 
-	// // iterate by sorted keys
-	// for _, valueName := range valueNames {
-	// 	fmt.Printf("%s: %v", valueName, values[valueName])
-	// }
-
 	if !operation.Done {
 		emoji.Printf("Hold my :beer:\n\n")
-	} else {
-		emoji.Printf(":magic_wand: here you are\n\n")
 	}
 
 	evalOperations := pbasync.NewOperationsClient(conn)
@@ -360,14 +330,19 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatal("Cannot unmarhshal result")
 	}
 
+	emoji.Printf(":magic_wand: Evaluation %s\n\n", operation.Name)
+
 	for k, v := range response.Values {
-		fmt.Println(k)
+		// TODO we should chose whether o have k on  aseparate line depending on its length
+		//		fmt.Println(k)
 		table := uitable.New()
 		table.MaxColWidth = 78
-		for _, el := range v.Fields {
-			table.AddRow(el.Name, ppScalar(el.Value))
+		for i, el := range v.Fields {
+			if i != 0 {
+				k = ""
+			}
+			table.AddRow(k, el.Name, ppScalar(el.Value))
 		}
 		fmt.Println(table)
 	}
-
 }

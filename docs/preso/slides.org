@@ -21,6 +21,8 @@ by: Maurizio Vitale
 - Reuse (history has good lessons)
 - Recycle (don't keep around things we won't need)
 
+Nothing is faster than doing no work
+
   This is not an MVP. It is a prototype.
   It will be thrown away.
 

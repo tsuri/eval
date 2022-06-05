@@ -41,22 +41,8 @@ const (
 	port = "0.0.0.0:50051"
 )
 
-func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) (*pbasync.Operation, error) {
-	// ok, a filure to connect here doesn' return error
-	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
-	if err != nil {
-		log.Fatalf("did not connect")
-	}
-	defer conn.Close()
-
-	client := pbbuilder.NewBuilderServiceClient(conn)
-
-	// md, _ := metadata.FromIncomingContext(ctx)
-	// log.Printf("BUILD METADATA: %v", md["user"][0])
-
-	// ctx = metadata.NewOutgoingContext(ctx, md)
-
-	response, err := client.Build(ctx, &pbbuilder.BuildRequest{
+func (s *serverContext) buildImage(ctx context.Context, config *pbaction.BuildImageConfig) (*pbasync.Operation, error) {
+	response, err := s.builder.Build(ctx, &pbbuilder.BuildRequest{
 		CommitSHA: config.CommitPoint.CommitSha,
 		Branch:    config.CommitPoint.Branch,
 		Target:    config.BazelTargets,
@@ -71,10 +57,12 @@ func buildImage(ctx context.Context, config *pbaction.BuildImageConfig) (*pbasyn
 }
 
 type serverContext struct {
-	log   *zerolog.Logger
-	v     *viper.Viper
-	db    *gorm.DB
-	cache *cache.Cache
+	log     *zerolog.Logger
+	v       *viper.Viper
+	db      *gorm.DB
+	cache   *cache.Cache
+	runner  pbrunner.RunnerServiceClient
+	builder pbbuilder.BuilderServiceClient
 }
 
 type CacheInfo struct {
@@ -126,7 +114,6 @@ func NewCacheBackend() *CacheBackend {
 }
 
 func Compatible(new, old *pbaction.BuildImageConfig) bool {
-	fmt.Printf("new: %v\nold: %v\n", new.BazelTargets, old.BazelTargets)
 	for _, t := range new.BazelTargets {
 		if !slices.Contains(old.BazelTargets, t) {
 			return false
@@ -136,6 +123,7 @@ func Compatible(new, old *pbaction.BuildImageConfig) bool {
 }
 
 func (c *CacheBackend) Get(s *serverContext, action *pbaction.Action) (string, error) {
+	// TODO this should be a) a bucket hash and b) computed on the fu graph
 	digest, err := a.ActionDigest(action)
 	if err != nil {
 		return "", err
@@ -157,7 +145,7 @@ func (c *CacheBackend) Get(s *serverContext, action *pbaction.Action) (string, e
 		s.log.Info().Str("op", cv[0].Operation).Msg("previous operation")
 	}
 
-	return "", fmt.Errorf("no cached operation")
+	return "", errors.New("no cached operation")
 }
 
 func (c *CacheBackend) Put(digest, operation string, action *pbaction.Action) {
@@ -179,8 +167,6 @@ func GetAction(agraph *pbagraph.AGraph, fullValuePath string) (*pbaction.Action,
 
 	value := strings.Join(valueNameComponents[1:], ".")
 
-	log.Printf("AGRAPH: %s %v", value, agraph.Actions)
-	log.Printf("=== %v ===", agraph.Actions[value])
 	for k, v := range agraph.Actions {
 		log.Printf("   %s: %v", k, v)
 	}
@@ -188,7 +174,7 @@ func GetAction(agraph *pbagraph.AGraph, fullValuePath string) (*pbaction.Action,
 		return a, nil
 	}
 
-	return nil, fmt.Errorf("GetAction")
+	return nil, errors.New("GetAction")
 }
 
 // func getResponse[T any](m *pbasync.Operation) (*T, error) {
@@ -205,16 +191,8 @@ func GetAction(agraph *pbagraph.AGraph, fullValuePath string) (*pbaction.Action,
 // 	return out, nil
 // }
 
-func createJob(ctx context.Context, actions *pbagraph.AGraph) {
-	log.Printf("createJob")
-	conn, err := client.Connect("eval-runner.eval.svc.cluster.local:50051")
-	if err != nil {
-		log.Fatalf("did not connect")
-	}
-	defer conn.Close()
-
-	runnerClient := pbrunner.NewRunnerServiceClient(conn)
-	_, err = runnerClient.CreateJob(ctx, &pbrunner.CreateJobRequest{})
+func (s *serverContext) createJob(ctx context.Context, actions *pbagraph.AGraph) {
+	_, err := s.runner.CreateJob(ctx, &pbrunner.CreateJobRequest{})
 	if err != nil {
 		log.Printf("Error in create job")
 	}
@@ -232,7 +210,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 		return nil, err
 	}
 
-	//	createJob(ctx, in.Context.Actions)
+	s.createJob(ctx, in.Context.Actions)
 
 	if !in.SkipCaching {
 		cachedOperation, err := cacheContent.Get(s, mainAction)
@@ -292,7 +270,7 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 	actions.Actions["build"].Config.UnmarshalTo(buildImageConfig)
 	s.log.Info().Str("Image Name", buildImageConfig.ImageName).Msg("BuildConfig")
 
-	operation, err := buildImage(ctx, buildImageConfig)
+	operation, err := s.buildImage(ctx, buildImageConfig)
 
 	// here we should populate a map of results
 	cacheGetResponse := pbcache.GetResponse{}
@@ -398,8 +376,21 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 			Redis: redisClient,
 		})
 
+		conn, err := client.Connect("eval-runner.eval.svc.cluster.local:50051")
+		if err != nil {
+			log.Fatalf("did not connect")
+		}
+		context.runner = pbrunner.NewRunnerServiceClient(conn)
+
+		conn, err = client.Connect("eval-builder.eval.svc.cluster.local:50051")
+		if err != nil {
+			log.Fatalf("did not connect")
+		}
+		context.builder = pbbuilder.NewBuilderServiceClient(conn)
+
 		pbcache.RegisterCacheServiceServer(s, &context)
 		pbasync.RegisterOperationsServer(s, &context)
+
 		reflection.Register(s)
 	}
 }
