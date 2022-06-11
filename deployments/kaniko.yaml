@@ -5,9 +5,9 @@ metadata:
 spec:
 
   hostAliases:
-  - ip: "192.168.1.8"
-    hostnames:
-    - "registry.other.net"
+  # - ip: "192.168.1.8"
+  #   hostnames:
+  #   - "registry.other.net"
   containers:
 
   - name: kaniko
