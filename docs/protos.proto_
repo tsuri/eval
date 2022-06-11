@@ -1,0 +1,15 @@
+message ExecutionResult {
+  oneof result {
+    // we should remember the reason for the failure
+    google.protobuf.Empty failure = 1;
+    google.protobuf.Duration timeout = 2;
+    google.protobuf.Duration success = 3;
+  }
+}
+
+// this is really an S3 reference. Maybe we should support more
+message Reference {
+  string bucket = 1;
+  string key = 2;
+  // type?
+}
