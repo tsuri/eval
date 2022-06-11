@@ -1,4 +1,4 @@
-FROM registry.other.net:5000/eval/base-build AS builder
+FROM kind-registry:5000/eval/base-build AS builder
 
 ARG TARGETS
 
