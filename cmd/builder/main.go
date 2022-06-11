@@ -283,6 +283,8 @@ func buildJobSpec(buildID string, branch string, commitSHA string, targets []str
 								"--insecure-pull",
 								"--skip-tls-verify",
 								"--build-arg", "TARGETS=" + strings.Join(targets, " "),
+								// MAV REGISTRY
+								// "--destination=registry.other.net:5000/eval:" + imageTag,
 								"--destination=kind-registry:5000/eval:" + imageTag,
 								//								"--destination=registry.other.net:5000/eval:" + imageTag,
 								"--context", gitContext,
