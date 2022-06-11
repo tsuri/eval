@@ -251,6 +251,7 @@ func buildJobSpec(buildID string, branch string, commitSHA string, targets []str
 	var ttlSecondsAfterFinished int32 = 10
 
 	gitContext := "git://gitea-service.gitea-repo.svc.cluster.local:3000/mav/eval.git#refs/heads/" + branch + "#" + commitSHA
+	log.Printf("Context: %s", gitContext)
 
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
