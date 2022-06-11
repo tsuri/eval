@@ -17,7 +17,7 @@ func NewBuildImageAction() *pbaction.Action {
 		BaseImage: "debian:buster",
 		CommitPoint: &pbaction.CommitPoint{
 			// use a 'name' of golden here and the replace before sending to the engine
-			CommitSha: "3e771b63822fa1b8320251c972b9617180fde46a",
+			CommitSha: "1937df925312572ef64753e9bf20a208de98b8be",
 			Branch:    "main",
 		},
 		BazelTargets: []string{"//actions/wrapper"},
