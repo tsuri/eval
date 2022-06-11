@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Print("Starting action wrapper 2")
+	log.Print("Starting action wrapper 3")
 
 	out, err := exec.Command("/app/actions/generate/generate_/generate").Output()
 	log.Err(err).Msg("generate")

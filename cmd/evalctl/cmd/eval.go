@@ -333,6 +333,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
 	knownActionGraphs := agraph.KnownActionGraphs()
+	fmt.Printf("TODO: NEED TO APPLY SUBSTITUTIONS (SHA AND BRANCH)\n")
 
 	if bazelTargets, present := substitutionMap["image.build.bazel_targets"]; present {
 		config := knownActionGraphs["image"].Actions["build"].Config
@@ -348,6 +349,21 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 				fmt.Println("error")
 			}
 			//			fmt.Printf(">>> %T: %v", c, c)
+			knownActionGraphs["image"].Actions["build"].Config = c
+		}
+	}
+
+	if commit_sha, present := substitutionMap["image.build.commit_sha"]; present {
+		config := knownActionGraphs["image"].Actions["build"].Config
+		//		fmt.Printf(">>> %T: %v\n", config, config)
+
+		buildConfig := pbaction.BuildImageConfig{}
+		if err = config.UnmarshalTo(&buildConfig); err == nil {
+			buildConfig.CommitSha = commit_sha
+			c, err := anypb.New(&buildConfig)
+			if err != nil {
+				fmt.Println("error")
+			}
 			knownActionGraphs["image"].Actions["build"].Config = c
 		}
 	}
