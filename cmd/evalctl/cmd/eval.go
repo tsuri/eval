@@ -353,13 +353,13 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if commit_sha, present := substitutionMap["image.build.commit_sha"]; present {
+	if commitSha, present := substitutionMap["image.build.commit_sha"]; present {
 		config := knownActionGraphs["image"].Actions["build"].Config
 		//		fmt.Printf(">>> %T: %v\n", config, config)
 
 		buildConfig := pbaction.BuildImageConfig{}
 		if err = config.UnmarshalTo(&buildConfig); err == nil {
-			buildConfig.CommitSha = commit_sha
+			buildConfig.CommitPoint.CommitSha = commitSha
 			c, err := anypb.New(&buildConfig)
 			if err != nil {
 				fmt.Println("error")
