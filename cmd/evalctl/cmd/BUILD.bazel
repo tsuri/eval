@@ -17,7 +17,7 @@ go_library(
         "//proto/context",
         "//proto/engine",
         "//proto/types",
-        "@com_github_alexeyco_simpletable//:go_default_library",
+        "@com_github_alexeyco_simpletable//:simpletable",
         "@com_github_gosuri_uitable//:uitable",
         "@com_github_kyokomi_emoji//:emoji",
         "@com_github_spf13_cobra//:cobra",
