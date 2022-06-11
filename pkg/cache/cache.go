@@ -12,6 +12,15 @@ import (
 // 	Put(K, V)
 // }
 
+// Cache config
+//
+// KeyMap : a function mapping a key to a cache slot
+// ValueFilter: a predicate to filter out acceptable values
+// ValueOrder: a sorting function for ordering acceptable values
+//
+// somewhere we need to specify how many values we return.
+// for us is typically one, but 'all' is also useful.
+
 type Document interface {
 	Digest() hash.Hash
 	Compatible(other Document) bool

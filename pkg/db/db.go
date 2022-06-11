@@ -11,7 +11,7 @@ import (
 func NewDB(service string, schema ...any) (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(fmt.Sprintf("/data/sqlite/%s.db", service)),
 		&gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info),
+			Logger: logger.Default.LogMode(logger.Error),
 		})
 	if err != nil {
 		panic("failed to connect database")

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strings"
 
@@ -57,12 +56,13 @@ func (s *serverContext) buildImage(ctx context.Context, config *pbaction.BuildIm
 }
 
 type serverContext struct {
-	log     *zerolog.Logger
-	v       *viper.Viper
-	db      *gorm.DB
-	cache   *cache.Cache
-	runner  pbrunner.RunnerServiceClient
-	builder pbbuilder.BuilderServiceClient
+	log       *zerolog.Logger
+	v         *viper.Viper
+	db        *gorm.DB
+	cache     *cache.Cache
+	runner    pbrunner.RunnerServiceClient
+	builder   pbbuilder.BuilderServiceClient
+	builderOp pbasync.OperationsClient
 }
 
 type CacheInfo struct {
@@ -133,7 +133,6 @@ func (c *CacheBackend) Get(s *serverContext, action *pbaction.Action) (string, e
 	_ = action.Config.UnmarshalTo(&buildConfig)
 
 	if cv, present := c.data[digest]; present {
-		s.log.Info().Str("CACHE", fmt.Sprintf("%v", cv)).Msg("****************")
 		for _, c := range cv {
 			cachedBuildConfig := pbaction.BuildImageConfig{}
 			if err := c.Action.Config.UnmarshalTo(&cachedBuildConfig); err == nil {
@@ -176,20 +175,6 @@ func GetAction(agraph *pbagraph.AGraph, fullValuePath string) (*pbaction.Action,
 
 	return nil, errors.New("GetAction")
 }
-
-// func getResponse[T any](m *pbasync.Operation) (*T, error) {
-// 	r := m.GetResponse()
-// 	if r == nil {
-// 		return nil, errors.New("failed to get operation response")
-// 	}
-
-// 	out := &T{}
-// 	if err := r.UnmarshalTo(out); err {
-// 		return nil, err
-// 	}
-
-// 	return out, nil
-// }
 
 func (s *serverContext) createJob(ctx context.Context, actions *pbagraph.AGraph) {
 	_, err := s.runner.CreateJob(ctx, &pbrunner.CreateJobRequest{})
@@ -287,11 +272,6 @@ func (s *serverContext) Get(ctx context.Context, in *pbcache.GetRequest) (*pbasy
 
 	cacheContent.Put(digest, id.String(), actions.Actions["build"])
 
-	// cacheContent[digest] = append(cacheContent[digest], cacheValue{
-	// 	Action:    actions.Actions[0],
-	// 	Operation: id.String(),
-	// })
-
 	return &pbasync.Operation{
 		Name:   id.String(),
 		Done:   operation.Done,
@@ -303,17 +283,18 @@ func (s *serverContext) GetOperation(ctx context.Context, in *pbasync.GetOperati
 	if lastResult, present := cacheContent.upstreamOperation[in.Name]; present && lastResult.Done {
 		return &lastResult, nil
 	}
-	// ok, a filure to connect here doesn' return error
-	conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
-	if err != nil {
-		log.Fatalf("did not connect")
-	}
-	defer conn.Close()
 
-	client := pbasync.NewOperationsClient(conn)
+	// // ok, a filure to connect here doesn' return error
+	// conn, err := client.Connect("eval-builder.eval.svc.cluster.local:50051")
+	// if err != nil {
+	// 	log.Fatalf("did not connect")
+	// }
+	// defer conn.Close()
+
+	// client := pbasync.NewOperationsClient(conn)
 
 	if operationID, ok := downstreamOperation[in.Name]; ok {
-		operation, err := client.GetOperation(ctx,
+		operation, err := s.builderOp.GetOperation(ctx,
 			&pbasync.GetOperationRequest{
 				Name: operationID,
 			})
@@ -387,6 +368,7 @@ func serviceRegister(server server.Server) func(*grpc.Server) {
 			log.Fatalf("did not connect")
 		}
 		context.builder = pbbuilder.NewBuilderServiceClient(conn)
+		context.builderOp = pbasync.NewOperationsClient(conn)
 
 		pbcache.RegisterCacheServiceServer(s, &context)
 		pbasync.RegisterOperationsServer(s, &context)

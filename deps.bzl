@@ -60,6 +60,13 @@ def go_dependencies():
         sum = "h1:Hs82Z41s6SdL1CELW+XaDYmOH4hkBN4/N9og/AsOv7E=",
         version = "v0.0.0-20190717042225-c3de453c63f4",
     )
+    go_repository(
+        name = "com_github_alexeyco_simpletable",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/alexeyco/simpletable",
+        sum = "h1:ZQ+LvJ4bmoeHb+dclF64d0LX+7QAi7awsfCrptZrpHk=",
+        version = "v1.0.0",
+    )
 
     go_repository(
         name = "com_github_anmitsu_go_shlex",
@@ -1633,8 +1640,8 @@ def go_dependencies():
         name = "com_github_mattn_go_runewidth",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/mattn/go-runewidth",
-        sum = "h1:UnlwIPBGaTZfPQ6T1IGzPI0EkYAQmT9fAEJ/poFC63o=",
-        version = "v0.0.2",
+        sum = "h1:Y41i/hVW3Pgwr8gV+J23B9YEY0zxjptBuCWEaxmAOow=",
+        version = "v0.0.12",
     )
 
     go_repository(
@@ -2153,6 +2160,13 @@ def go_dependencies():
         importpath = "github.com/rcrowley/go-metrics",
         sum = "h1:9ZKAASQSHhDYGoxY8uLVpewe1GDZ2vu2Tr/vTdVAkFQ=",
         version = "v0.0.0-20181016184325-3113b8401b8a",
+    )
+    go_repository(
+        name = "com_github_rivo_uniseg",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/rivo/uniseg",
+        sum = "h1:+2KBaVoUmb9XzDsrx/Ct0W/EYOSFf/nWTauy++DprtY=",
+        version = "v0.1.0",
     )
 
     go_repository(

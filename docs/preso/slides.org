@@ -23,6 +23,8 @@ by: Maurizio Vitale
 
 Nothing is faster than doing no work
 
+Simplicity is not easy
+
   This is not an MVP. It is a prototype.
   It will be thrown away.
 
@@ -45,6 +47,8 @@ Nothing is faster than doing no work
   forever -- Sandy Metz
 
 - Less is esponentially more -- Rob Pike
+
+- Be concerned with the values not the cost
   
 * This is my slide
 ** A List

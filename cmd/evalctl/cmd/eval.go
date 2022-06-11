@@ -19,6 +19,7 @@ import (
 	pbengine "eval/proto/engine"
 	pbtypes "eval/proto/types"
 
+	"github.com/alexeyco/simpletable"
 	"github.com/gosuri/uitable"
 	"github.com/kyokomi/emoji"
 	"github.com/spf13/cobra"
@@ -43,6 +44,14 @@ var evalCmd = &cobra.Command{
 	Args:              cobra.ExactArgs(1),
 	Run:               evalCmdImpl,
 	ValidArgsFunction: completeTargets,
+}
+
+var attachCmd = &cobra.Command{
+	Use:   "attach",
+	Short: "connect to a previous evaluation",
+	Long:  `you can get the results of a prior evaluation, waiting for it if needed`,
+	Args:  cobra.ExactArgs(1),
+	Run:   attachCmdImpl,
 }
 
 func completeTargets(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -92,6 +101,7 @@ func GenerateCompletions() []string {
 
 func init() {
 	rootCmd.AddCommand(evalCmd)
+	rootCmd.AddCommand(attachCmd)
 	evalCmd.PersistentFlags().VarP(
 		enumflag.New(&executionEngine, "engine", ExecutionEngineIds, enumflag.EnumCaseInsensitive),
 		"engine", "e",
@@ -194,7 +204,81 @@ func ppScalar(v *pbtypes.ScalarValue) string {
 	}
 }
 
+func waitCompletion(ctx context.Context, operationName string) {
+	var conn *grpc.ClientConn
+	conn, err := client.NewConnection("engine.eval.net:443",
+		filepath.Join(baseDir, caCert),
+		filepath.Join(baseDir, clientCert),
+		filepath.Join(baseDir, clientKey))
+	if err != nil {
+		log.Fatalf("did not connect: %s", err)
+	}
+	defer conn.Close()
+
+	evalOperations := pbasync.NewOperationsClient(conn)
+	operation, err := evalOperations.GetOperation(ctx,
+		&pbasync.GetOperationRequest{
+			Name: operationName,
+		})
+	if err != nil {
+		fmt.Printf("get operation error: %v", err)
+	}
+
+	first := true
+	for !operation.Done {
+		if first {
+			first = false
+			emoji.Printf("Hold my :beer:\n\n")
+		}
+		operation, err = evalOperations.GetOperation(ctx,
+			&pbasync.GetOperationRequest{
+				Name: operationName,
+			})
+
+		time.Sleep(5000 * time.Millisecond)
+	}
+
+	response := new(pbengine.EvalResponse)
+	if err := operation.GetResponse().UnmarshalTo(response); err != nil {
+		log.Fatal("Cannot unmarhshal result")
+	}
+
+	emoji.Printf(":magic_wand: Evaluation %s\n\n", operation.Name)
+
+	for k, v := range response.Values {
+		// TODO we should chose whether o have k on  aseparate line depending on its length
+		//		fmt.Println(k)
+		table := uitable.New()
+		table.MaxColWidth = 78
+		for i, el := range v.Fields {
+			if i != 0 {
+				k = ""
+			}
+			table.AddRow(k, el.Name, ppScalar(el.Value))
+		}
+		fmt.Println(table)
+	}
+
+	fmt.Println("-------------------------------")
+	atable := simpletable.New()
+	atable.SetStyle(simpletable.StyleCompactLite)
+	atable.Header = &simpletable.Header{
+		Cells: []*simpletable.Cell{
+			{Align: simpletable.AlignCenter, Text: "Field"},
+			{Align: simpletable.AlignCenter, Text: "Value"},
+		},
+	}
+	fmt.Println(atable.String())
+	fmt.Println("-------------------------------")
+}
+
+func attachCmdImpl(cmd *cobra.Command, args []string) {
+	fmt.Printf("Attaching to %s", args[0])
+}
+
 func evalCmdImpl(cmd *cobra.Command, args []string) {
+	evalStart := time.Now()
+
 	var conn *grpc.ClientConn
 	conn, err := client.NewConnection("engine.eval.net:443",
 		filepath.Join(baseDir, caCert),
@@ -235,11 +319,16 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatalf("Cannot get workspace head references")
 	}
 
-	// tags, err := git.GetTags(workspaceTop)
-	// if err != nil {
-	// 	fmt.Printf("Cannot get tags: %v", err)
-	// }
-	// fmt.Printf("Tags: %v", tags)
+	// we should get tags from the remote, not from the local repo. Somebody might have
+	// changed them. For the demo this is ok.
+	tags, err := git.GetTags(workspaceTop)
+	if err != nil {
+		fmt.Printf("Cannot get tags: %v", err)
+	}
+	for tag, commit := range tags {
+		fmt.Printf("Tag: %s Branch: %s Sha: %s\n", tag, commit.Branch, commit.Hash)
+	}
+	fmt.Println("")
 
 	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
@@ -263,7 +352,7 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// TODO here we want to suppoer multiple values. In this case we would have to send in
+	// TODO here we want to support multiple values. In this case we would have to send in
 	// a minimal set of graphs.
 	fullValuePath := wantedValues[0]
 	graphName := strings.Split(fullValuePath, ".")[0]
@@ -279,10 +368,18 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 			Actions: actionGraph,
 			Substitutions: []*pbcontext.Substitution{
 				{
+					// later will be something like:
+					// Variable: "...branch=dev",
+					// e.g. a variable branch with a value 'dev' will be replaced with
+					// workspace branch
 					Variable: "workspace_branch",
 					Value:    workspace_branch,
 				},
 				{
+					// later will be something like:
+					// Variable: "...commit_sha=dev",
+					// e.g. a variable commit_sha with a value 'dev' will be replaced with
+					// workspace branch
 					Variable: "workspace_commit_sha",
 					Value:    workspace_commit_sha,
 				},
@@ -312,12 +409,17 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 	// sort the slice by keys
 	sort.Strings(valueNames)
 
-	if !operation.Done {
-		emoji.Printf("Hold my :beer:\n\n")
-	}
+	//	waitCompletion(ctx, operation.Name)
+	//	return
 
 	evalOperations := pbasync.NewOperationsClient(conn)
+
+	first := true
 	for !operation.Done {
+		if first {
+			first = false
+			emoji.Printf("Hold my :beer:\n\n")
+		}
 		operation, err = evalOperations.GetOperation(ctx,
 			&pbasync.GetOperationRequest{
 				Name: operation.Name,
@@ -330,13 +432,16 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		log.Fatal("Cannot unmarhshal result")
 	}
 
-	emoji.Printf(":magic_wand: Evaluation %s\n\n", operation.Name)
+	evalDuration := time.Now().Sub(evalStart)
+	emoji.Printf(":magic_wand: Evaluation %s (%s)\n\n", operation.Name, evalDuration)
 
 	for k, v := range response.Values {
 		// TODO we should chose whether o have k on  aseparate line depending on its length
 		//		fmt.Println(k)
 		table := uitable.New()
 		table.MaxColWidth = 78
+		table.AddRow("compare.baseline.train.features.generate.images")
+		table.AddRow("")
 		for i, el := range v.Fields {
 			if i != 0 {
 				k = ""
@@ -345,4 +450,16 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println(table)
 	}
+
+	// atable := simpletable.New()
+	// //	atable.SetStyle(simpletable.StyleCompactLite)
+	// atable.SetStyle(simpletable.StyleDefault)
+	// atable.Header = &simpletable.Header{
+	// 	Cells: []*simpletable.Cell{
+	// 		{Align: simpletable.AlignCenter, Text: "Field"},
+	// 		{Align: simpletable.AlignCenter, Text: "Value"},
+	// 	},
+	// }
+	// fmt.Println(atable.String())
+
 }
