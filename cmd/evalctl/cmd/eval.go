@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"eval/pkg/git"
 	"eval/pkg/grpc/client"
 	pbaction "eval/proto/action"
+	pbagraph "eval/proto/agraph"
 	pbasync "eval/proto/async_service"
 	pbcontext "eval/proto/context"
 	pbengine "eval/proto/engine"
@@ -25,6 +27,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/thediveo/enumflag"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -81,7 +84,27 @@ var substitutionMap = make(map[string]string)
 
 var skipCaching bool
 
+func dumpFields(object proto.Message) {
+	fmt.Println()
+	fields := object.ProtoReflect().Descriptor().Fields()
+	for i := 0; i < fields.Len(); i++ {
+		fmt.Printf("Field: %v\n", fields.Get(i))
+	}
+}
+
 func GenerateCompletions() []string {
+	dumpFields(&pbaction.CommitPoint{})
+	dumpFields(&pbaction.BuildImageConfig{})
+	dumpFields(&pbaction.Action{})
+	fmt.Println("------------------")
+	dumpFields(agraph.KnownActionGraphs()["image"].Actions["build"].Config)
+	fmt.Println("------------------")
+
+	// fields := (&pbaction.BuildImageConfig{}).ProtoReflect().Descriptor().Fields()
+	// for i := 0; i < fields.Len(); i++ {
+	// 	fmt.Printf("Field: %v\n", fields.Get(i))
+	// }
+
 	return []string{
 		"compare.baseline.train.features.generate",
 		"compare.baseline.train.features.generate.images",
@@ -276,6 +299,45 @@ func attachCmdImpl(cmd *cobra.Command, args []string) {
 	fmt.Printf("Attaching to %s", args[0])
 }
 
+func valueGraphBuckets(values []string) map[string][]string {
+	uniqueValues := unique(values)
+	result := make(map[string][]string)
+
+	for _, v := range uniqueValues {
+		vl := strings.Split(v, ".")
+		graphName := vl[0]
+		if valueList, present := result[graphName]; present {
+			valueList = append(valueList, v)
+		} else {
+			result[graphName] = []string{v}
+		}
+	}
+	fmt.Printf("RESULT: %v\n", result)
+	return result
+}
+
+type valueRequest struct {
+	g  *pbagraph.AGraph
+	vl []string
+}
+
+func actionGraphs(values []string, substitutionMap map[string]string) ([]valueRequest, error) {
+	availableGraphs := agraph.KnownActionGraphs()
+
+	buckets := valueGraphBuckets(values)
+	fmt.Printf("buckets: %v\n", buckets)
+	result := make([]valueRequest, 0, len(buckets))
+	for k, vl := range buckets {
+		if g, present := availableGraphs[k]; present {
+			result = append(result, valueRequest{g: g, vl: vl})
+		} else {
+			return nil, errors.New(fmt.Sprintf("Invalid value, graph %s unkown", k))
+		}
+	}
+	fmt.Printf("REQUESTS: %v\n", result)
+	return result, nil
+}
+
 func evalCmdImpl(cmd *cobra.Command, args []string) {
 	evalStart := time.Now()
 
@@ -300,6 +362,17 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	wantedValues := args
 
+	resolvedGraphs, err := actionGraphs(wantedValues, substitutionMap)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return
+	}
+
+	fmt.Println("------------------------")
+	for _, valueRequest := range resolvedGraphs {
+		agraph.Dump(valueRequest.g)
+	}
+	fmt.Println("------------------------")
 	// we should do this check only when a commit sha is not passed (for build, so it is tricky; the
 	// reason we can do it is that the build action doesn't depend on the commit sha, only the
 	// image build. In that case all we need to check that the desired sha is available in repo.
@@ -332,7 +405,13 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 
 	//	buildImageConfig := createBuildImageConfig(substitutionMap)
 
+	fmt.Printf("Substirutions:\n")
+	for k, v := range substitutionMap {
+		fmt.Printf("%s: %s\n", k, v)
+	}
+
 	knownActionGraphs := agraph.KnownActionGraphs()
+
 	fmt.Printf("TODO: NEED TO APPLY SUBSTITUTIONS (SHA AND BRANCH)\n")
 
 	if bazelTargets, present := substitutionMap["image.build.bazel_targets"]; present {
@@ -388,16 +467,18 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 					// Variable: "...branch=dev",
 					// e.g. a variable branch with a value 'dev' will be replaced with
 					// workspace branch
-					Variable: "workspace_branch",
-					Value:    workspace_branch,
+					Variable:     "...branch",
+					ReplaceValue: "dev",
+					Value:        workspace_branch,
 				},
 				{
 					// later will be something like:
 					// Variable: "...commit_sha=dev",
 					// e.g. a variable commit_sha with a value 'dev' will be replaced with
 					// workspace branch
-					Variable: "workspace_commit_sha",
-					Value:    workspace_commit_sha,
+					Variable:     "...commit_sha",
+					ReplaceValue: "dev",
+					Value:        workspace_commit_sha,
 				},
 			},
 		},
@@ -466,16 +547,4 @@ func evalCmdImpl(cmd *cobra.Command, args []string) {
 		}
 		fmt.Println(table)
 	}
-
-	// atable := simpletable.New()
-	// //	atable.SetStyle(simpletable.StyleCompactLite)
-	// atable.SetStyle(simpletable.StyleDefault)
-	// atable.Header = &simpletable.Header{
-	// 	Cells: []*simpletable.Cell{
-	// 		{Align: simpletable.AlignCenter, Text: "Field"},
-	// 		{Align: simpletable.AlignCenter, Text: "Value"},
-	// 	},
-	// }
-	// fmt.Println(atable.String())
-
 }

@@ -11,15 +11,26 @@ option go_package = "eval/proto/action";
 message CommitPoint {
   // Name denotes a symbolic commit, whose exact sha will be computed from the list of
   // substitutions. Can be "golden" or "dev" for the demo
+  // TODO this should be oneof symbolic commit or resolved commit
+  // but commit_required probably should stay out.
   string name            = 1;
   string branch          = 2;
   string commit_sha      = 3;
+  // TODO although this is typically a "min_ci", no reason for not making this a list
   string commit_required = 4;
+}
+
+// TODO we should use Image instead of the base_image+commit_point in Action and BuildImageConfig
+message Image {
+  string base_image        = 1;
+  CommitPoint commit_point = 2;
 }
 
 message Action {
   string kind                      = 1;		// should be enum of builtin/custom?
   //  string name                  = 2;
+
+  // TODO maybe inputs and outputs should be maps.
   repeated channel.Channel inputs  = 3;
   repeated channel.Channel outputs = 4;
 
