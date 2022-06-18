@@ -44,6 +44,8 @@ message Action {
   google.protobuf.Any config       = 7;
 }
 
+// most likely we'll have to use typedvalues here, so that we can have a uniform
+// configuration object. Maybe we can still use protobufs as "schema"
 message BuildImageConfig {
   // image_name and image_tag are not really used for hashing
   // We can use it in two ways:

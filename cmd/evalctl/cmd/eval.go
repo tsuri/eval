@@ -28,6 +28,8 @@ import (
 	"github.com/thediveo/enumflag"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -90,7 +92,25 @@ func dumpFields(object proto.Message) {
 	for i := 0; i < fields.Len(); i++ {
 		fmt.Printf("Field: %v\n", fields.Get(i))
 	}
+
+	fmt.Println("--")
+	m := object.ProtoReflect()
+	m.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
+		fmt.Printf("Field: %v\n\tValue: %v\n", fd.FullName, v)
+		opts := fd.Options().(*descriptorpb.FieldOptions)
+		fmt.Printf("Options: %v\n", opts)
+		return true
+	})
+	fmt.Println("^^")
 }
+
+// func decode(a *anypb.Any, o *proto.Message) error {
+// 	err := a.UnmarshalTo(*o)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func GenerateCompletions() []string {
 	dumpFields(&pbaction.CommitPoint{})
@@ -98,6 +118,10 @@ func GenerateCompletions() []string {
 	dumpFields(&pbaction.Action{})
 	fmt.Println("------------------")
 	dumpFields(agraph.KnownActionGraphs()["image"].Actions["build"].Config)
+	// bc := pbaction.BuildImageConfig{}
+	// if err := decode(agraph.KnownActionGraphs()["image"].Actions["build"].Config, &bc); err != nil {
+	// 	fmt.Printf("Cannot decode: %v", err)
+	// }
 	fmt.Println("------------------")
 
 	// fields := (&pbaction.BuildImageConfig{}).ProtoReflect().Descriptor().Fields()
