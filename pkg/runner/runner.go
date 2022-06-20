@@ -13,17 +13,17 @@ const (
 	Skipped
 )
 
-func (s taskStatus) String() string {
-	return [...]string{
-		"Unknown",
-		"Blocked",
-		"Queued",
-		"Running",
-		"Succeded",
-		"Failed",
-		"Lost",
-		"Skipped"}[s]
-}
+// func (s taskStatus) String() string {
+// 	return [...]string{
+// 		"Unknown",
+// 		"Blocked",
+// 		"Queued",
+// 		"Running",
+// 		"Succeded",
+// 		"Failed",
+// 		"Lost",
+// 		"Skipped"}[s]
+// }
 
 type bachJob struct {
 	name string

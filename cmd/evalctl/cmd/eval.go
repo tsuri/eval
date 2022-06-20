@@ -87,6 +87,7 @@ var substitutionMap = make(map[string]string)
 var skipCaching bool
 
 func dumpFields(object proto.Message) {
+
 	fmt.Println()
 	fields := object.ProtoReflect().Descriptor().Fields()
 	for i := 0; i < fields.Len(); i++ {

@@ -1,8 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+load("//build:stringer.bzl", "stringer")
 
 go_library(
     name = "runner",
-    srcs = ["runner.go"],
+    srcs = ["runner.go",
+#            ":gen-taskstatus-stringer"
+            ":taskstatus-string",
+            ],
     importpath = "eval/pkg/runner",
     visibility = ["//visibility:public"],
 )
@@ -12,3 +16,24 @@ go_test(
     srcs = ["runner_test.go"],
     embed = [":runner"],
 )
+
+stringer("runner.go", "taskStatus", name="taskstatus-string")
+
+# genrule(
+# name = "gen-taskstatus-stringer",
+# srcs = [
+#     "runner.go",
+# ],
+# outs = ["taskstatus_string.go"],
+# cmd = """
+#    GO_REL_PATH=`dirname $(location @go_sdk//:bin/go)`
+#    GO_ABS_PATH=`cd $$GO_REL_PATH && pwd`
+#    env PATH=$$GO_ABS_PATH HOME=$(GENDIR) \
+#    $(location @org_golang_x_tools//cmd/stringer:stringer) -output=$@ \
+#    -type=taskStatus $(location runner.go)
+# """,
+# tools = [
+#     "@go_sdk//:bin/go",
+#     "@org_golang_x_tools//cmd/stringer",
+# ],
+# )
