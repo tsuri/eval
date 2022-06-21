@@ -20,5 +20,5 @@ go_test(
 stringer(
     name="taskstatus-string",
     src="runner.go",
-    typ="taskStatus",
+    type="taskStatus",
 )
