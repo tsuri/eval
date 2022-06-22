@@ -1,0 +1,28 @@
+#+TITLE: Values
+
+Values are objects we're interested in.
+
+* Atomic types
+- bool
+- string
+- int
+- float
+- timestamp
+- duration
+
+* Aggregates
+- ordered: array
+- unordered: bags
+
+- duplicates: allowed/not not-allowed
+
+- named: dictionaried/maps/structure
+
+- tables
+  - schema
+  - implemenation: sqlite/rats/parquet
+
+* specialized (these are kind of atomic)
+- logs
+- platform files
+- stack files
