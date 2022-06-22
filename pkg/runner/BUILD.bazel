@@ -3,10 +3,10 @@ load("//build:stringer.bzl", "stringer")
 
 go_library(
     name = "runner",
-    srcs = ["runner.go",
-#            ":gen-taskstatus-stringer"
-            ":taskstatus-string",
-            ],
+    srcs = [
+        #            ":gen-taskstatus-stringer"
+        "runner.go",
+    ],
     importpath = "eval/pkg/runner",
     visibility = ["//visibility:public"],
 )
@@ -18,7 +18,7 @@ go_test(
 )
 
 stringer(
-    name="taskstatus-string",
-    src="runner.go",
-    type="taskStatus",
+    name = "taskstatus-string",
+    src = "runner.go",
+    type = "taskStatus",
 )

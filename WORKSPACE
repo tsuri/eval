@@ -42,6 +42,17 @@ go_dependencies()
 
 gazelle_dependencies()
 
+# This commit is tagged as v1.3
+bazel_gomock_commit = "fde78c91cf1783cc1e33ba278922ba67a6ee2a84"
+http_archive(
+    name = "bazel_gomock",
+    sha256 = "692421b0c5e04ae4bc0bfff42fb1ce8671fe68daee2b8d8ea94657bb1fcddc0a",
+    strip_prefix = "bazel_gomock-{v}".format(v = bazel_gomock_commit),
+    urls = [
+        "https://github.com/jmhodges/bazel_gomock/archive/{v}.tar.gz".format(v = bazel_gomock_commit),
+    ],
+)
+
 # rules_proto defines abstract rules for building Protocol Buffers.
 # This was working, tried a newer one for imprting google well known protos.
 # Didn't work for that, but the newer version seems ok, so keeping it for now.

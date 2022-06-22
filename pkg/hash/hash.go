@@ -8,7 +8,7 @@ import (
 )
 
 type Hasher interface {
-	Hash() []byte
+	Hash(o any) []byte
 }
 
 type BuildConfig struct {

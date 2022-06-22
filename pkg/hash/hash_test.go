@@ -4,6 +4,8 @@ import (
 	"eval/pkg/hash"
 	"fmt"
 	"testing"
+
+	"github.com/golang/mock/gomock"
 )
 
 type Channel struct {
@@ -54,4 +56,16 @@ func TestMisc(t *testing.T) {
 	fmt.Printf("Result: %v\n", hash.Hash(v))
 	//nb := hash.BuildConfig{}
 	fmt.Printf("Result: %v\n", hash.Hash(bi.Action))
+}
+
+func TestMock(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	o := "foo"
+
+	m := NewMockHasher(ctrl)
+	m.EXPECT().Hash(gomock.Eq(o)).Return([]byte("foo"))
+
+	m.Hash(o)
 }
