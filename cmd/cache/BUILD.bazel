@@ -20,7 +20,7 @@ go_library(
         "//pkg/grpc/server",
         "//pkg/sizeof",
         "//pkg/types",
-        "//proto/action",
+        "//proto/action/v1:action",
         "//proto/agraph",
         "//proto/async_service",
         "//proto/builder",

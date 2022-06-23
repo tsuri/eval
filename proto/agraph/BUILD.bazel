@@ -6,7 +6,7 @@ proto_library(
     name = "agraph_proto",
     srcs = ["agraph.proto"],
     visibility = ["//visibility:public"],
-    deps = ["//proto/action:action_proto"],
+    deps = ["//proto/action/v1:action_proto"],
 )
 
 go_proto_library(
@@ -14,7 +14,7 @@ go_proto_library(
     importpath = "eval/proto/agraph",
     proto = ":agraph_proto",
     visibility = ["//visibility:public"],
-    deps = ["//proto/action"],
+    deps = ["//proto/action/v1:action"],
 )
 
 go_library(

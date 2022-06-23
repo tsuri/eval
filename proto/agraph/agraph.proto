@@ -3,13 +3,13 @@ syntax = "proto3";
 
 package agraph;
 
-import "proto/action/action.proto";
+import "proto/action/v1/action.proto";
 
 option go_package = "eval/proto/agraph";
 
 message AGraph {
   string name = 1;
-  map<string,action.Action> actions = 3;
+  map<string,proto.action.v1.Action> actions = 3;
 }
 
 

@@ -12,7 +12,7 @@ go_library(
         "//pkg/agraph",
         "//pkg/git",
         "//pkg/grpc/client",
-        "//proto/action",
+        "//proto/action/v1:action",
         "//proto/agraph",
         "//proto/async_service",
         "//proto/context",

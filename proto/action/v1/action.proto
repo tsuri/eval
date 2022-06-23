@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 
-package action;
+package proto.action.v1;
 
 import "proto/channel/channel.proto";
 import "google/protobuf/any.proto";
