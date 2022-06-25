@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ ! ${BAZELISK_SKIP_WRAPPER} ]]; then
+    echo "bazelisk is required (https://github.com/bazelbuild/bazelisk)"
+    echo
+    echo "tl;dr:"
+    echo "go install github.com/bazelbuild/bazelisk@latest"
+    echo "(unless you have special settings this gives you ~/go/bin/bazelisk)"
+    echo
+    echo "if you have bazel installed, it is probably a script. In this case you can"
+    echo "replace it with the bazelisk script or 'alias bazel=bazelisk'"
+    exit 1
+fi
+
+exec -a "$0" "${BAZEL_REAL}" "$@"
+
