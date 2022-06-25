@@ -215,6 +215,13 @@ def go_dependencies():
         sum = "h1:TYi4+3m5t6K48TGI9AUdb+IzbnSxvnvUMfuitfgcfuo=",
         version = "v0.6.0",
     )
+    go_repository(
+        name = "com_github_benbjohnson_clock",
+        build_file_proto_mode = "disable_global",
+        importpath = "github.com/benbjohnson/clock",
+        sum = "h1:ip6w0uFQkncKQ979AypyG0ER7mqUSBdKLOgAle/AT8A=",
+        version = "v1.3.0",
+    )
 
     go_repository(
         name = "com_github_beorn7_perks",
@@ -2591,8 +2598,8 @@ def go_dependencies():
         name = "com_github_yuin_goldmark",
         build_file_proto_mode = "disable_global",
         importpath = "github.com/yuin/goldmark",
-        sum = "h1:OtISOGfH6sOWa1/qXqqAiOIAO6Z5J3AEAE18WAq6BiQ=",
-        version = "v1.4.0",
+        sum = "h1:/vn0k+RBvwlxEmP5E7SZMqNxPhfMVFEJiykr15/0XKM=",
+        version = "v1.4.1",
     )
 
     go_repository(
@@ -3144,6 +3151,28 @@ def go_dependencies():
         importpath = "go.uber.org/atomic",
         sum = "h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=",
         version = "v1.7.0",
+    )
+    go_repository(
+        name = "org_uber_go_config",
+        build_file_proto_mode = "disable_global",
+        importpath = "go.uber.org/config",
+        sum = "h1:upnMPpMm6WlbZtXoasNkK4f0FhxwS+W4Iqz5oNznehQ=",
+        version = "v1.4.0",
+    )
+
+    go_repository(
+        name = "org_uber_go_dig",
+        build_file_proto_mode = "disable_global",
+        importpath = "go.uber.org/dig",
+        sum = "h1:VmGvIH45/aapXPQkaOrK5u4B5B7jxZB98HM/utx0eME=",
+        version = "v1.14.0",
+    )
+    go_repository(
+        name = "org_uber_go_fx",
+        build_file_proto_mode = "disable_global",
+        importpath = "go.uber.org/fx",
+        sum = "h1:S42dZ6Pok8hQ3jxKwo6ZMYcCgHQA/wAS/gnpRa1Pksg=",
+        version = "v1.17.1",
     )
 
     go_repository(

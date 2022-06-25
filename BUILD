@@ -32,6 +32,7 @@ k8s_objects(
         "//cmd/engine:dev",
         "//cmd/runner:dev",
         "//cmd/builder:dev",
+        "//cmd/ui:dev",
     ],
 )
 

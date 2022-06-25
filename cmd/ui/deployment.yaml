@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: eval
+  name: ui
+  labels:
+    app: eval-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eval-ui
+  template:
+    metadata:
+      labels:
+        app: eval-ui
+        group: eval-services
+    spec:
+      volumes:
+      - name: data
+        hostPath:
+          path: /data  # matches kind containerPath:
+      - name: cluster-certificates
+        secret:
+          secretName: cluster-certificates
+      - name: config-volume
+        configMap:
+          name: ui-config
+      containers:
+      - name: ui
+        image: localhost:5000/main:dev
+        env:
+          - name: GRPC_TRACE
+            value: all
+        ports:
+        - containerPort: 50051
+          name: grpc
+          #        readinessProbe:
+          #tcpSocket:
+          #  port: grpc
+          #initialDelaySeconds: 5
+          #periodSeconds: 15
+          #        li#venessProbe:
+          #tcpSocket:
+          #  port: grpc
+          #initialDelaySeconds: 15
+          #periodSeconds: 30
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: data
+          mountPath: /data
+        - name: cluster-certificates
+          mountPath: /data/eval/certificates
+          readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: eval
+  name: eval-ui
+  labels:
+    app: eval-ui
+spec:
+  selector:
+    app: eval-ui
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ui-config
+  namespace: eval
+data:
+  config.yaml: |
+      eval.grpc.port: 50051
+      log.console.level: debug
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ui-tls
+  namespace: eval
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
+    nginx.ingress.kubernetes.io/proxy-body-size: 10M
+spec:
+  tls:
+    - hosts:
+        - ui.eval.net
+      secretName: cluster-certificates
+  rules:
+  - host: ui.eval.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: eval-ui
+            port:
+              number: 8081

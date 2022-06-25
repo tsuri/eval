@@ -1,0 +1,9 @@
+application:
+  name: config-demo
+
+database:
+  username: foo
+  password: bar
+
+logger:
+  logginglevel: info

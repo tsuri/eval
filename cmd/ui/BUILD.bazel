@@ -1,0 +1,72 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_layer",
+    "container_push",
+)
+load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
+
+filegroup(
+    name = "config",
+    srcs = ["config.yaml"],
+)
+
+go_library(
+    name = "ui_lib",
+    srcs = ["main.go"],
+    importpath = "eval/cmd/ui",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@org_uber_go_config//:config",
+        "@org_uber_go_fx//:fx",
+        "@org_uber_go_fx//fxevent",
+    ],
+)
+
+go_binary(
+    name = "ui",
+    data = [":config"],
+    embed = [":ui_lib"],
+    visibility = ["//visibility:public"],
+)
+
+container_image(
+    name = "container",
+    base = "@distroless_base_debian10//image",
+    cmd = [
+        "/dist/ui",
+    ],
+    directory = "/dist",
+    files = [
+        ":ui",
+        ":config",
+    ],
+    visibility = ["//:__pkg__"],
+    workdir = "/dist",
+)
+
+# container_push(
+#     name = "push",
+#     image = ":container",
+#     visibility = ["//:__pkg__"],
+#     format = "Docker",
+#     registry = "localhost:5001",
+#     repository = "main",
+#     tag = "dev",
+#     )
+
+k8s_object(
+    name = "dev",
+    # cluster as in `kubectl config view --minify -o=jsonpath='{.contexts[0].context.cluster}'`
+    cluster = "kind-eval",
+    context = "kind-eval",
+    images = {
+        "localhost:5000/main:dev": ":container",
+    },
+    kind = "deployment",
+    # A template of a Kubernetes Deployment object yaml.
+    template = ":deployment.yaml",
+    # really should be only //:eval but we a package_group to avoid dependency cycles
+    visibility = ["//visibility:public"],
+)
