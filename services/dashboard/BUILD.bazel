@@ -2,6 +2,13 @@ load("@npm//@bazel/typescript:index.bzl", "ts_project")
 load("@npm//http-server:index.bzl", "http_server")
 load("@npm//sass:index.bzl", "sass")
 load("@npm//webpack-cli:index.bzl", webpack = "webpack_cli")
+load("@io_bazel_rules_k8s//k8s:object.bzl", "k8s_object")
+load(
+    "@io_bazel_rules_docker//container:container.bzl",
+    "container_image",
+    "container_layer",
+    "container_push",
+)
 
 sass(
     name = "styles",
@@ -48,4 +55,37 @@ http_server(
         "index.html",
     ],
     templated_args = ["."],
+)
+
+
+container_image(
+    name = "container",
+#    base = "@distroless_base_debian10//image",
+    base = "@alpine_linux_amd64_nginx//image",
+    # cmd = [
+    #     "/bin/ls",
+    # ],
+#    directory = "/dist",
+    directory = "/usr/share/nginx/html",
+    files = [
+        "app.bundle.js",
+        "index.html",
+    ],
+    visibility = ["//:__pkg__"],
+    workdir = "/",
+)
+
+k8s_object(
+    name = "dev",
+    # cluster as in `kubectl config view --minify -o=jsonpath='{.contexts[0].context.cluster}'`
+    cluster = "kind-eval",
+    context = "kind-eval",
+    images = {
+        "localhost:5000/main:dev": ":container",
+    },
+    kind = "deployment",
+    # A template of a Kubernetes Deployment object yaml.
+    template = ":deployment.yaml",
+    # really should be only //:eval but we a package_group to avoid dependency cycles
+    visibility = ["//visibility:public"],
 )

@@ -36,6 +36,13 @@ k8s_objects(
     ],
 )
 
+k8s_objects(
+    name = "dashboard",
+    objects = [
+        "//services/dashboard:dev",
+    ],
+)
+
 # genrule(
 #     name = "stamper",
 #     outs = ["stamper.out"],

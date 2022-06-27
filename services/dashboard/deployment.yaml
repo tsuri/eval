@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: eval
+  name: dashboard
+  labels:
+    app: eval-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eval-dashboard
+  template:
+    metadata:
+      labels:
+        app: eval-dashboard
+        group: eval-services
+    spec:
+      volumes:
+      - name: data
+        hostPath:
+          path: /data  # matches kind containerPath:
+      - name: cluster-certificates
+        secret:
+          secretName: cluster-certificates
+      - name: config-volume
+        configMap:
+          name: dashboard-config
+      containers:
+      - name: dashboard
+        image: localhost:5000/main:dev
+        env:
+          - name: GRPC_TRACE
+            value: all
+        ports:
+        - containerPort: 50051
+          name: grpc
+        - containerPort: 80
+          name: http
+        - containerPort: 443
+          name: https
+        # readinessProbe:
+        #   tcpSocket:
+        #     port: grpc
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 15
+        # livenessProbe:
+        #   tcpSocket:
+        #     port: grpc
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 30
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config
+        - name: data
+          mountPath: /data
+        - name: cluster-certificates
+          mountPath: /data/eval/certificates
+          readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: eval
+  name: eval-dashboard
+  labels:
+    app: eval-dashboard
+spec:
+  selector:
+    app: eval-dashboard
+  ports:
+    - name: http
+      port: 5080
+      targetPort: 443
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard-config
+  namespace: eval
+data:
+  config.yaml: |
+      eval.grpc.port: 50051
+      log.console.level: debug
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: dashboard-tls
+  namespace: eval
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
+    nginx.ingress.kubernetes.io/proxy-body-size: 10M
+spec:
+  tls:
+    - hosts:
+        - dashboard.eval.net
+      secretName: cluster-certificates
+  rules:
+  - host: dashboard.eval.net
+    http:
+      paths:
+      - path: /ui
+        pathType: Prefix
+        backend:
+          service:
+            name: eval-dashboard
+            port:
+              number: 5080

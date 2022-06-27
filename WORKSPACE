@@ -102,6 +102,13 @@ load(
 )
 
 container_pull(
+    name = "alpine_linux_amd64_nginx",
+    registry = "index.docker.io",
+    repository = "library/nginx",
+    tag = "1.23-alpine",
+)
+
+container_pull(
     name = "distroless_base_debian10",
     registry = "gcr.io",
     repository = "distroless/base-debian10",
@@ -122,7 +129,6 @@ container_pull(
     # https://console.cloud.google.com/gcr/images/distroless/GLOBAL/base-debian10
     digest = "sha256:8ca4526452afe5d03f53c41c76c4ddb079734eb99913aff7069bfd0d72457726",
 )
-
 
 # This requires rules_docker to be fully instantiated before
 # it is pulled in.

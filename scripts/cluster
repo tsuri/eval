@@ -76,4 +76,4 @@ kubectl apply -f deployments/redis.yaml
 kubectl apply -f deployments/rabbitmq.yaml
 kubectl apply -f deployments/asynqmon.yaml
 
-bazel run :eval.apply
+bazelisk run :eval.apply
