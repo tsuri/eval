@@ -95,7 +95,7 @@ spec:
   tls:
     - hosts:
         - engine.eval.net
-      secretName: cluster-certificates
+      secretName: engine-cluster-certificates
   rules:
   - host: engine.eval.net
     http:

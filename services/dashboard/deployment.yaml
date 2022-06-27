@@ -69,7 +69,7 @@ spec:
   selector:
     app: eval-dashboard
   ports:
-    - name: http
+    - name: https
       port: 5080
       targetPort: 443
     - name: grpc
@@ -100,7 +100,7 @@ spec:
   tls:
     - hosts:
         - dashboard.eval.net
-      secretName: cluster-certificates
+      secretName: dashboard-cluster-certificates
   rules:
   - host: dashboard.eval.net
     http:

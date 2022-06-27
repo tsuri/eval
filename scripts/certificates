@@ -16,7 +16,10 @@ certstrap --depot-path ${CERTIFICATE_DIR} init          \
           --passphrase ""
 
 
-CLOUD_SERVICES="engine.eval.net"
+# allow multiple services. This requires extracting the first component and use it as a secret name
+# below
+#CLOUD_SERVICES="engine.eval.net"
+CLOUD_SERVICES="engine.eval.net dashboard.eval.net"
 CLI_SERVICES="evalctl"
 
 for SERVICE in ${CLI_SERVICES} ${CLOUD_SERVICES}; do
@@ -28,8 +31,16 @@ done
 # Furthermore, we don't have much choice as to the filenames as these are
 # what the nginx ingress assumes by default
 for SERVICE in ${CLOUD_SERVICES}; do
-    kubectl -n eval create secret generic cluster-certificates      \
+    SERVICE_NAME=${SERVICE%%.*}
+    kubectl -n eval create secret generic ${SERVICE_NAME}-cluster-certificates      \
             --from-file=tls.crt=${CERTIFICATE_DIR}/${SERVICE}.crt       \
             --from-file=tls.key=${CERTIFICATE_DIR}/${SERVICE}.key       \
             --from-file=ca.crt=${CERTIFICATE_DIR}/evalCA.crt
+    # temp only
+    if [[ ${SERVICE_NAME} == "engine" ]]; then
+        kubectl -n eval create secret generic cluster-certificates      \
+                --from-file=tls.crt=${CERTIFICATE_DIR}/${SERVICE}.crt       \
+                --from-file=tls.key=${CERTIFICATE_DIR}/${SERVICE}.key       \
+                --from-file=ca.crt=${CERTIFICATE_DIR}/evalCA.crt
+    fi
 done
