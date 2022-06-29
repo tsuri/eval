@@ -40,6 +40,7 @@ k8s_objects(
     name = "dashboard",
     objects = [
         "//services/dashboard:dev",
+#        "//services/dashboard-go:dev",
     ],
 )
 

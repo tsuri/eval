@@ -39,8 +39,8 @@ container_image(
     ],
     directory = "/dist",
     files = [
-        ":ui",
         ":config",
+        ":ui",
     ],
     visibility = ["//:__pkg__"],
     workdir = "/dist",

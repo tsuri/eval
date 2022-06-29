@@ -70,8 +70,11 @@ spec:
     app: eval-dashboard
   ports:
     - name: https
-      port: 5080
+      port: 443
       targetPort: 443
+    - name: http
+      port: 80
+      targetPort: 80
     - name: grpc
       port: 50051
       targetPort: 50051
@@ -97,10 +100,10 @@ metadata:
     nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
     nginx.ingress.kubernetes.io/proxy-body-size: 10M
 spec:
-  tls:
-    - hosts:
-        - dashboard.eval.net
-      secretName: dashboard-cluster-certificates
+  # tls:
+  #   - hosts:
+  #       - dashboard.eval.net
+  #     secretName: dashboard-cluster-certificates
   rules:
   - host: dashboard.eval.net
     http:
@@ -111,4 +114,4 @@ spec:
           service:
             name: eval-dashboard
             port:
-              number: 5080
+              number: 80

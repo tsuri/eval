@@ -57,22 +57,26 @@ http_server(
     templated_args = ["."],
 )
 
+container_layer(
+    name = "nginx_config",
+    directory = "/etc/nginx/conf.d/",
+    files = [
+        "default.conf",
+    ],
+)
 
 container_image(
     name = "container",
-#    base = "@distroless_base_debian10//image",
+    #    base = "@distroless_base_debian10//image",
     base = "@alpine_linux_amd64_nginx//image",
-    # cmd = [
-    #     "/bin/ls",
-    # ],
-#    directory = "/dist",
-    directory = "/usr/share/nginx/html",
+    directory = "/usr/share/nginx/html/ui",
     files = [
         "app.bundle.js",
         "index.html",
     ],
     visibility = ["//:__pkg__"],
     workdir = "/",
+    layers = [":nginx_config"],
 )
 
 k8s_object(
