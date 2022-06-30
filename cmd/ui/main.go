@@ -102,12 +102,23 @@ func NewHandler(logger *log.Logger) (http.Handler, error) {
 	}), nil
 }
 
+func NewConfigHandler(arg string) func(*log.Logger) (http.Handler, error) {
+	return func(logger *log.Logger) (http.Handler, error) {
+		logger.Printf("Executing NewHandler %s.", arg)
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			logger.Print("Got a request.")
+			//		tm := time.Now()
+			w.Write([]byte("The time is: "))
+		}), nil
+	}
+}
+
 func main() {
 	app := fx.New(
 		fx.Provide(
 			LoadConfig,
 			NewLogger,
-			NewHandler,
+			NewConfigHandler("configured"),
 			NewMux,
 		),
 		fx.Invoke(Register),
