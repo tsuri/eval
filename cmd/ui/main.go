@@ -11,7 +11,8 @@ import (
 	"go.uber.org/fx/fxevent"
 )
 
-func NewLogger(c Configuration) *log.Logger {
+func NewLogger(c Database) *log.Logger {
+	//func NewLogger(c Configuration) *log.Logger {
 	logger := log.New(os.Stdout, "" /* prefix */, 0 /* flags */)
 	logger.Printf("Executing NewLogger. %v", c)
 	return logger
@@ -28,6 +29,27 @@ type Configuration struct {
 	Logger struct {
 		LoggingLevel string `[yaml: logging_level]`
 	}
+}
+
+type Database struct {
+	Username string
+	Password string
+}
+
+func LoadDatabase() (Database, error) {
+	var c Database
+
+	cfg, err := config.NewYAML(config.File("./config.yaml"))
+	if err != nil {
+		return c, err
+	}
+
+	if err := cfg.Get("database").Populate(&c); err != nil {
+		return c, err
+	}
+
+	return c, nil
+
 }
 
 func LoadConfig() (Configuration, error) {
@@ -117,6 +139,7 @@ func main() {
 	app := fx.New(
 		fx.Provide(
 			LoadConfig,
+			LoadDatabase,
 			NewLogger,
 			NewConfigHandler("configured"),
 			NewMux,
