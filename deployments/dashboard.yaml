@@ -304,3 +304,29 @@ spec:
       volumes:
         - name: tmp-volume
           emptyDir: {}
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: cluster-tls
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/client-body-buffer-size: 1M
+    nginx.ingress.kubernetes.io/proxy-body-size: 10M
+spec:
+  tls:
+    - hosts:
+        - cluster.eval.net
+      secretName: engine-cluster-certificates
+  rules:
+  - host: cluster.eval.net
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 443

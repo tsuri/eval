@@ -21,5 +21,10 @@
     "scripts": {
         "build": "bazel build //...",
         "serve": "ibazel run :server"
+    },
+    "dependencies": {
+        "gatsby-remark-mermaid": "^2.1.0",
+        "gatsby-transformer-remark": "^5.17.0",
+        "puppeteer": "^15.3.0"
     }
 }
