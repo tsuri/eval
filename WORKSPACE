@@ -1,4 +1,4 @@
-workspace(name = "com_github_tsuri_eval")
+workspace(name = "eval")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
