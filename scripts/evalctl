@@ -1,4 +1,11 @@
 #!/bin/bash
 # -*- Ehi Emacs, this is shell-script -*-
 
-bazelisk run --ui_event_filters=-info,-stdout,-stderr --noshow_progress cmd/evalctl:evalctl  -- "$@"
+#bazelisk run --ui_event_filters=-info,-stdout,-stderr --noshow_progress cmd/evalctl:evalctl  -- "$@"
+SECONDS=0
+echo -n "Building..."
+bazelisk build --ui_event_filters=-info,-stdout,-stderr --noshow_progress cmd/evalctl:evalctl > /dev/null 2>&1
+duration=$SECONDS
+echo "$(($duration / 60)) minutes and $(($duration % 60)) seconds elapsed."
+echo done
+./bazel-bin/cmd/evalctl/evalctl_/evalctl "$@"
