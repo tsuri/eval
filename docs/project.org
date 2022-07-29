@@ -1,4 +1,9 @@
+#+hugo_base_dir: ~/eval/hugo
+#+export_hugo_section: main
 * Development Log
+:PROPERTIES:
+:EXPORT_HUGO_SECTION: main
+:END:
 ** Week 1
   - initial bazel setup for go, protobufs, docker and kubernetes rules
   - setup of a local kubernetes cluster using kind
