@@ -178,4 +178,44 @@ yarn_install(
     yarn_lock = "//:yarn.lock",
 )
 
+# Update these to latest
+RULES_HUGO_COMMIT = "2927451ff7fff708292eb7eb68ca278457c5dd78"
+RULES_HUGO_SHA256 = "f076f8098d95e4d3636918eed0b8f09c252f62ac992ba5e396f10c6cf2137849"
 
+http_archive(
+    name = "build_stack_rules_hugo",
+    url = "https://github.com/stackb/rules_hugo/archive/%s.zip" % RULES_HUGO_COMMIT,
+#    sha256 = RULES_HUGO_SHA256,
+    strip_prefix = "rules_hugo-%s" % RULES_HUGO_COMMIT
+)
+
+load("@build_stack_rules_hugo//hugo:rules.bzl", "hugo_repository", "github_hugo_theme")
+
+#
+# Load hugo binary itself
+#
+# Optionally, load a specific version of Hugo, with the 'version' argument
+hugo_repository(
+    name = "hugo",
+    extended = True,
+    version = "0.101.0",
+)
+
+#
+# This makes a filegroup target "@com_github_yihui_hugo_xmin//:files"
+# available to your build files
+#
+github_hugo_theme(
+    name = "com_github_google_docsy",
+    owner = "google",
+    repo = "docsy",
+    commit = "6d751420bd1a54b4707071aa4a5dc8db615c0fda",
+    sha256 = "d2f7b339a531dc299e1267a623eaa5d3e06125be2b6795acb9b3d28c0546f88f",
+    build_file_content = """
+filegroup(
+    name = "files",
+    srcs = glob(["**/*"], exclude=["userguide/**"]), 
+    visibility = ["//visibility:public"],
+)
+"""
+)
